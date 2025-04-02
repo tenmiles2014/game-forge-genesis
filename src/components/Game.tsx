@@ -20,6 +20,7 @@ const Game: React.FC = () => {
   const [position, setPosition] = useState(INITIAL_BLOCK_POSITION);
   const [gameOver, setGameOver] = useState(false);
   const [gamePaused, setGamePaused] = useState(true);
+  const [linesCleared, setLinesCleared] = useState(0);
   
   // Initialize game grid
   const initializeGrid = useCallback(() => {
@@ -42,6 +43,7 @@ const Game: React.FC = () => {
   const resetGame = () => {
     setGrid(initializeGrid());
     setScore(0);
+    setLinesCleared(0);
     setCurrentBlock(getRandomBlockPattern());
     setNextBlock(getRandomBlockPattern());
     setPosition(INITIAL_BLOCK_POSITION);
@@ -139,6 +141,7 @@ const Game: React.FC = () => {
     if (rowsCleared > 0) {
       const pointsScored = rowsCleared * rowsCleared * 100;
       setScore(prevScore => prevScore + pointsScored);
+      setLinesCleared(prev => prev + rowsCleared);
       toast({
         title: `${rowsCleared} rows cleared!`,
         description: `+${pointsScored} points`,
@@ -288,7 +291,7 @@ const Game: React.FC = () => {
         
         <div className="flex flex-col justify-between gap-4 w-full md:w-60">
           <div className="space-y-6">
-            <ScoreDisplay score={score} />
+            <ScoreDisplay score={score} linesCleared={linesCleared} />
             
             <div className="p-4 rounded-lg bg-black bg-opacity-30">
               <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-4">Next Block</h3>

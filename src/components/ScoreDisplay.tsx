@@ -9,11 +9,13 @@ interface ScoreDisplayProps {
 const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, linesCleared }) => {
   const [animate, setAnimate] = useState(false);
   const [lastLinesCleared, setLastLinesCleared] = useState(0);
+  const [recentlyCleared, setRecentlyCleared] = useState(0);
   
   useEffect(() => {
     // Only animate when new lines are cleared
     if (linesCleared > lastLinesCleared) {
       const clearedNow = linesCleared - lastLinesCleared;
+      setRecentlyCleared(clearedNow);
       setLastLinesCleared(linesCleared);
       setAnimate(true);
       
@@ -32,10 +34,10 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, linesCleared }) => {
         <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-1">SCORE</h3>
         <p className={`text-4xl font-bold text-white ${animate ? 'animate-scale-in' : ''}`}>{score}</p>
         
-        {animate && lastLinesCleared > 0 && (
+        {animate && recentlyCleared > 0 && (
           <div className="mt-2 animate-fade-in">
-            <p className={`text-sm font-medium ${getLinesClearedColor(lastLinesCleared - lastLinesCleared)}`}>
-              +{lastLinesCleared - lastLinesCleared} LINES CLEARED!
+            <p className={`text-sm font-medium ${getLinesClearedColor(recentlyCleared)}`}>
+              +{recentlyCleared} LINES CLEARED!
             </p>
           </div>
         )}
