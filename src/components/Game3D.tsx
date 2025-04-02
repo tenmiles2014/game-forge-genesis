@@ -126,6 +126,11 @@ const Game3D: React.FC = () => {
       return false;
     }
     
+    // Ensure y is never negative
+    if (newY < 0) {
+      return false;
+    }
+    
     const pattern3D = get3DPattern(pattern);
     
     for (let y = 0; y < pattern3D.length; y++) {
@@ -296,6 +301,9 @@ const Game3D: React.FC = () => {
     if (direction === 'backward') newZ += 1;
     if (direction === 'down') newY += 1;
     
+    // Ensure y is never negative
+    newY = Math.max(0, newY);
+    
     // Ensure new position is within bounds
     if (isValidPosition(currentBlock.shape, newX, newY, newZ)) {
       setPosition({ x: newX, y: newY, z: newZ });
@@ -336,27 +344,32 @@ const Game3D: React.FC = () => {
           shape: newPattern
         });
       } else {
-        // Try adjusting position to make rotation valid
-        // Try shifting left/right/forward/backward
+        // Try adjusting position to make rotation valid (wall kick)
+        // Try shifting left/right/forward/backward and up to ensure piece is inside grid
         const offsets = [
-          { x: -1, z: 0 },  // left
-          { x: 1, z: 0 },   // right
-          { x: 0, z: -1 },  // forward
-          { x: 0, z: 1 }    // backward
+          { x: -1, y: 0, z: 0 },  // left
+          { x: 1, y: 0, z: 0 },   // right
+          { x: 0, y: 0, z: -1 },  // forward
+          { x: 0, y: 0, z: 1 },   // backward
+          { x: -1, y: 0, z: -1 }, // left-forward
+          { x: 1, y: 0, z: -1 },  // right-forward
+          { x: -1, y: 0, z: 1 },  // left-backward
+          { x: 1, y: 0, z: 1 },   // right-backward
         ];
         
         let validPositionFound = false;
         
         for (const offset of offsets) {
           const newX = position.x + offset.x;
+          const newY = Math.max(0, position.y + offset.y); // Ensure y is never negative
           const newZ = position.z + offset.z;
           
-          if (isValidPosition(newPattern, newX, position.y, newZ)) {
+          if (isValidPosition(newPattern, newX, newY, newZ)) {
             setCurrentBlock({
               ...currentBlock,
               shape: newPattern
             });
-            setPosition({ ...position, x: newX, z: newZ });
+            setPosition({ x: newX, y: newY, z: newZ });
             validPositionFound = true;
             break;
           }
@@ -377,9 +390,7 @@ const Game3D: React.FC = () => {
   const dropBlock = () => {
     if (gameOver || !controlsEnabled || gamePaused) return;
     
-    // Keep track of the current block's shape and position
-    const currentShape = [...currentBlock.shape];
-    let newY = position.y;
+    let newY = Math.max(0, position.y); // Ensure starting at or above y=0
     
     // Find the lowest valid position
     while (isValidPosition(currentBlock.shape, position.x, newY + 1, position.z)) {
@@ -389,7 +400,7 @@ const Game3D: React.FC = () => {
     // Update position without changing shape
     setPosition({ ...position, y: newY });
     
-    // Place the block
+    // Place the block without rotating it
     placeBlock();
   };
 
