@@ -128,7 +128,7 @@ const Game3D: React.FC = () => {
     return false;
   };
 
-  // Check if the position is valid
+  // Check if the position is valid (no collision with existing blocks)
   const isValidPosition = (pattern: number[][], newX: number, newY: number, newZ: number) => {
     // First check boundaries
     if (wouldExceedBoundary(pattern, newX, newY, newZ)) {
@@ -140,49 +140,53 @@ const Game3D: React.FC = () => {
       return false;
     }
     
-    const pattern3D = get3DPattern(pattern);
-    
-    for (let y = 0; y < pattern3D.length; y++) {
-      for (let x = 0; x < pattern3D[y].length; x++) {
-        for (let z = 0; z < pattern3D[y][x].length; z++) {
-          if (pattern3D[y][x][z]) {
-            const gridX = newX + x;
-            const gridY = newY + y;
-            const gridZ = newZ + z;
-            
-            // Check collision
-            if (grid[gridY] && grid[gridY][gridX] && grid[gridY][gridX][gridZ] !== 0) {
-              return false;
-            }
+    // Check collision with existing blocks
+    for (let y = 0; y < pattern.length; y++) {
+      for (let x = 0; x < pattern[y].length; x++) {
+        if (pattern[y][x]) {
+          const gridX = newX + x;
+          const gridY = newY;
+          const gridZ = newZ + y;
+          
+          // Skip positions outside the grid (already checked by wouldExceedBoundary)
+          if (
+            gridX < 0 || gridX >= GRID_SIZE ||
+            gridY < 0 || gridY >= GRID_SIZE ||
+            gridZ < 0 || gridZ >= GRID_SIZE
+          ) {
+            continue;
+          }
+          
+          // Check if there's already a block at this position
+          if (grid[gridY][gridX][gridZ] !== 0) {
+            return false;
           }
         }
       }
     }
+    
     return true;
   };
 
   // Place the current block on the grid
   const placeBlock = () => {
     const newGrid = JSON.parse(JSON.stringify(grid)); // Deep copy
-    const pattern3D = get3DPattern(currentBlock.shape);
     
     // Add the block to the grid
-    for (let y = 0; y < pattern3D.length; y++) {
-      for (let x = 0; x < pattern3D[y].length; x++) {
-        for (let z = 0; z < pattern3D[y][x].length; z++) {
-          if (pattern3D[y][x][z]) {
-            const gridX = position.x + x;
-            const gridY = position.y + y;
-            const gridZ = position.z + z;
-            
-            if (
-              gridX >= 0 && gridX < GRID_SIZE &&
-              gridY >= 0 && gridY < GRID_SIZE &&
-              gridZ >= 0 && gridZ < GRID_SIZE
-            ) {
-              // Store color information in the grid (as an integer representing the color index)
-              newGrid[gridY][gridX][gridZ] = getColorIndex(currentBlock.color);
-            }
+    for (let y = 0; y < currentBlock.shape.length; y++) {
+      for (let x = 0; x < currentBlock.shape[y].length; x++) {
+        if (currentBlock.shape[y][x]) {
+          const gridX = position.x + x;
+          const gridY = position.y;
+          const gridZ = position.z + y;
+          
+          if (
+            gridX >= 0 && gridX < GRID_SIZE &&
+            gridY >= 0 && gridY < GRID_SIZE &&
+            gridZ >= 0 && gridZ < GRID_SIZE
+          ) {
+            // Store color information in the grid
+            newGrid[gridY][gridX][gridZ] = getColorIndex(currentBlock.color);
           }
         }
       }
@@ -197,7 +201,7 @@ const Game3D: React.FC = () => {
     setCurrentBlock(nextBlock);
     setNextBlock(getRandomBlockPattern());
     
-    // Reset position to the top of the grid, not below it
+    // Reset position to the top of the grid
     setPosition({...INITIAL_POSITION, y: 0});
     
     // Check if game is over
