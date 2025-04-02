@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
@@ -47,7 +48,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
             blocks.push(
               <mesh 
                 key={`${x}-${y}-${z}`} 
-                position={[x, y + 0.5, z]} 
+                position={[x, y, z]} 
                 castShadow
                 receiveShadow
               >
@@ -67,14 +68,20 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
   const renderCurrentBlock = useMemo(() => {
     const blocks = [];
     const pattern = currentBlock.shape;
+    const gridSize = grid.length || 10;
     
     for (let y = 0; y < pattern.length; y++) {
       for (let x = 0; x < pattern[y].length; x++) {
         if (pattern[y][x]) {
+          // Ensure the block stays within grid boundaries
+          const posX = Math.max(0, Math.min(gridSize - 1, position.x + x));
+          const posY = Math.max(0, Math.min(gridSize - 1, position.y));
+          const posZ = Math.max(0, Math.min(gridSize - 1, position.z + y));
+          
           blocks.push(
             <mesh 
               key={`current-${y}-${x}`} 
-              position={[position.x + x, position.y + 0.5, position.z + y]} 
+              position={[posX, posY, posZ]} 
               castShadow
             >
               <boxGeometry args={[1, 1, 1]} />
@@ -90,7 +97,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
     
     return blocks;
-  }, [currentBlock, position, blockColor]);
+  }, [currentBlock, position, blockColor, grid.length]);
 
   // Render grid boundaries
   const renderGridBoundaries = useMemo(() => {
