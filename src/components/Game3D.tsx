@@ -10,8 +10,8 @@ import BlockPreview from './BlockPreview';
 import GameTimer from './GameTimer';
 import LevelDisplay from './LevelDisplay';
 import ViewControls, { ViewPoint } from './ViewControls';
-import { Button } from "@/components/ui/button";
-import { Play, Pause } from "lucide-react";
+import GuidelineOverlay from './GuidelineOverlay';
+import { Pause } from "lucide-react";
 
 // Constants
 const GRID_SIZE = 10;
@@ -674,21 +674,21 @@ const Game3D: React.FC = () => {
 
   // Render game
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen p-4">
-      <h1 className="text-3xl md:text-4xl font-bold mb-6 text-white text-center">
+    <div className="flex flex-col justify-center items-center min-h-screen p-2 md:p-4">
+      <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white text-center">
         3D Block Busters
       </h1>
       
-      <div className="game-container rounded-lg overflow-hidden max-w-5xl w-full flex flex-col md:flex-row gap-6 p-6 bg-black bg-opacity-30">
-        <div className="flex-1">
-          <div className="flex justify-between items-center mb-2">
+      <div className="game-container rounded-lg overflow-hidden w-full max-w-[1400px] flex flex-col md:flex-row gap-4 bg-black bg-opacity-30">
+        <div className="flex-1 min-h-[550px] md:min-h-[650px]">
+          <div className="flex justify-end items-center mb-2 p-2">
             <ViewControls 
               viewPoints={VIEW_POINTS} 
               onSelectView={handleViewChange}
             />
           </div>
           
-          <div className="game-board rounded-lg overflow-hidden h-[500px]">
+          <div className="game-board rounded-lg overflow-hidden h-[500px] md:h-[600px]">
             <Canvas camera={{ position: currentView.position, fov: 50 }}>
               <ambientLight intensity={0.5} />
               <pointLight position={[10, 10, 10]} />
@@ -706,32 +706,9 @@ const Game3D: React.FC = () => {
               />
             </Canvas>
           </div>
-          
-          {/* Start/Stop Button */}
-          <div className="flex justify-center mt-4">
-            <Button 
-              onClick={toggleGamePause} 
-              variant="outline" 
-              size="lg"
-              className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300 w-32"
-              disabled={gameOver}
-            >
-              {gamePaused ? (
-                <>
-                  <Play className="mr-2 h-5 w-5" />
-                  Start
-                </>
-              ) : (
-                <>
-                  <Pause className="mr-2 h-5 w-5" />
-                  Pause
-                </>
-              )}
-            </Button>
-          </div>
         </div>
         
-        <div className="flex flex-col justify-between gap-4 w-full md:w-60">
+        <div className="flex flex-col justify-between gap-4 w-full md:w-64 p-4">
           <div className="space-y-4">
             <ScoreDisplay score={score} />
             
@@ -750,24 +727,13 @@ const Game3D: React.FC = () => {
                 <BlockPreview block={nextBlock} className="w-24 h-24" />
               </div>
             </div>
-
-            <div className="p-4 rounded-lg bg-black bg-opacity-30">
-              <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Controls</h3>
-              <div className="text-xs text-gray-400 space-y-1">
-                <p>Arrow Keys: Move X/Z</p>
-                <p>S: Move Down</p>
-                <p>W: Move Up</p>
-                <p>Z/X: Rotate</p>
-                <p>Space: Drop</p>
-              </div>
-            </div>
           </div>
           
           <GameControls3D 
-            onRotate={rotateBlock}
-            onMove={moveBlock}
-            onDrop={dropBlock}
             onReset={resetGame}
+            onStartPause={toggleGamePause}
+            isPaused={gamePaused}
+            gameOver={gameOver}
           />
         </div>
       </div>
@@ -777,6 +743,8 @@ const Game3D: React.FC = () => {
           <p className="text-xl text-white mb-3">Game Over! Final Score: {score} | Level: {level}</p>
         </div>
       )}
+      
+      <GuidelineOverlay />
     </div>
   );
 };

@@ -59,10 +59,21 @@ const GameTimer: React.FC<GameTimerProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  // Calculate progress percentage
+  const progressPercentage = (seconds / timeLimit) * 100;
+
   return (
     <div className="p-4 rounded-lg bg-black bg-opacity-30">
       <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Time</h3>
-      <div className="text-2xl font-mono text-white">{formatTime(seconds)}</div>
+      <div className="flex flex-col">
+        <div className="text-2xl font-mono text-white">{formatTime(seconds)}</div>
+        <div className="mt-2 h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-game-blue transition-all duration-300 ease-linear"
+            style={{ width: `${progressPercentage}%` }}
+          />
+        </div>
+      </div>
     </div>
   );
 };
