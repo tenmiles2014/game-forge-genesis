@@ -91,7 +91,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
     
     return blocks;
-  }, [currentBlock, position]);
+  }, [currentBlock, position, blockColor]);
 
   // Render grid boundaries
   const renderGridBoundaries = useMemo(() => {
