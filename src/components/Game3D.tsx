@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { toast } from "@/components/ui/use-toast";
-import GameControls from './GameControls3D';
+import GameControls3D from './GameControls3D';
 import { BlockPattern, getRandomBlockPattern } from './BlockPatterns';
 import ScoreDisplay from './ScoreDisplay';
 import Grid3D from './Grid3D';
