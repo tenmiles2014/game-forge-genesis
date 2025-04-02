@@ -16,11 +16,19 @@ const GameTimer: React.FC<GameTimerProps> = ({
 }) => {
   const [seconds, setSeconds] = useState(timeLimit);
   
+  // Reset timer when time limit changes or when isActive changes
+  useEffect(() => {
+    setSeconds(timeLimit);
+  }, [timeLimit, isActive]);
+  
   // Memoize the timeUp callback to avoid triggering in render
   const handleTimeUp = useCallback(() => {
-    if (onTimeUp) onTimeUp();
-  }, [onTimeUp]);
+    if (seconds <= 0 && onTimeUp) {
+      onTimeUp();
+    }
+  }, [onTimeUp, seconds]);
 
+  // Timer effect with separate cleanup function
   useEffect(() => {
     let interval: number | undefined;
     
@@ -28,26 +36,21 @@ const GameTimer: React.FC<GameTimerProps> = ({
       interval = window.setInterval(() => {
         setSeconds(prevSeconds => {
           const newTime = prevSeconds - 1;
-          if (newTime <= 0) {
-            clearInterval(interval);
-            // Schedule the callback outside of render
-            setTimeout(() => handleTimeUp(), 0);
-            return 0;
-          }
-          return newTime;
+          return Math.max(0, newTime); // Ensure we never go below 0
         });
       }, 1000);
+    } else if (seconds <= 0 && isActive) {
+      // If time is up and timer is active, call the handler
+      handleTimeUp();
     }
     
+    // Clean up timer
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval !== undefined) {
+        clearInterval(interval);
+      }
     };
   }, [isActive, seconds, handleTimeUp]);
-
-  // Reset timer when time limit changes (new level)
-  useEffect(() => {
-    setSeconds(timeLimit);
-  }, [timeLimit]);
 
   // Format time as MM:SS
   const formatTime = (totalSeconds: number): string => {

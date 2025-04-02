@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -396,20 +397,21 @@ const Game3D: React.FC = () => {
     }
   };
   
+  // FIX: Ensure dropBlock doesn't rotate the block, just finds the lowest valid position
   const dropBlock = () => {
     if (gameOver || !controlsEnabled || gamePaused) return;
     
-    let newY = Math.max(0, position.y); // Ensure starting at or above y=0
+    let newY = position.y;
     
-    // Find the lowest valid position
+    // Find the lowest valid position without rotating
     while (isValidPosition(currentBlock.shape, position.x, newY + 1, position.z)) {
       newY++;
     }
     
-    // Update position without changing shape
+    // Update position
     setPosition({ ...position, y: newY });
     
-    // Place the block without rotating it
+    // Place the block
     placeBlock();
   };
 
