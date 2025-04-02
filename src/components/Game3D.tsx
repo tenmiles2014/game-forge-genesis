@@ -7,10 +7,14 @@ import { BlockPattern, getRandomBlockPattern } from './BlockPatterns';
 import ScoreDisplay from './ScoreDisplay';
 import Grid3D from './Grid3D';
 import BlockPreview from './BlockPreview';
+import GameTimer from './GameTimer';
+import LevelDisplay from './LevelDisplay';
 
 // Constants
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: 0, z: 4 };
+const MAX_LEVEL = 99;
+const BASE_TIME_LIMIT = 60; // seconds for level 1
 
 const Game3D: React.FC = () => {
   // Game state
@@ -21,7 +25,17 @@ const Game3D: React.FC = () => {
   const [position, setPosition] = useState(INITIAL_POSITION);
   const [gameOver, setGameOver] = useState(false);
   const [controlsEnabled, setControlsEnabled] = useState(true);
+  const [level, setLevel] = useState(1);
+  const [timeLimit, setTimeLimit] = useState(BASE_TIME_LIMIT);
+  const [timerActive, setTimerActive] = useState(false);
   const orbitControlsRef = useRef(null);
+
+  // Calculate time limit based on level
+  useEffect(() => {
+    // Time decreases as level increases, but never below 10 seconds
+    const newTimeLimit = Math.max(10, Math.floor(BASE_TIME_LIMIT - (level * 0.5)));
+    setTimeLimit(newTimeLimit);
+  }, [level]);
 
   // Initialize game grid
   const initializeGrid = () => {
@@ -53,6 +67,8 @@ const Game3D: React.FC = () => {
     setPosition(INITIAL_POSITION);
     setGameOver(false);
     setControlsEnabled(true);
+    setLevel(1);
+    setTimerActive(true);
   };
 
   // Convert 2D pattern to 3D (place in xz plane)
@@ -76,8 +92,35 @@ const Game3D: React.FC = () => {
     return pattern3D;
   };
 
+  // Check if the block would exceed boundaries
+  const wouldExceedBoundary = (pattern: number[][], newX: number, newY: number, newZ: number) => {
+    for (let y = 0; y < pattern.length; y++) {
+      for (let x = 0; x < pattern[y].length; x++) {
+        if (pattern[y][x]) {
+          const gridX = newX + x;
+          const gridY = newY;
+          const gridZ = newZ + y;
+          
+          if (
+            gridX < 0 || gridX >= GRID_SIZE ||
+            gridY < 0 || gridY >= GRID_SIZE ||
+            gridZ < 0 || gridZ >= GRID_SIZE
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
   // Check if the position is valid
   const isValidPosition = (pattern: number[][], newX: number, newY: number, newZ: number) => {
+    // First check boundaries
+    if (wouldExceedBoundary(pattern, newX, newY, newZ)) {
+      return false;
+    }
+    
     const pattern3D = get3DPattern(pattern);
     
     for (let y = 0; y < pattern3D.length; y++) {
@@ -87,15 +130,6 @@ const Game3D: React.FC = () => {
             const gridX = newX + x;
             const gridY = newY + y;
             const gridZ = newZ + z;
-            
-            // Check boundaries
-            if (
-              gridX < 0 || gridX >= GRID_SIZE || 
-              gridY < 0 || gridY >= GRID_SIZE || 
-              gridZ < 0 || gridZ >= GRID_SIZE
-            ) {
-              return false;
-            }
             
             // Check collision
             if (grid[gridY] && grid[gridY][gridX] && grid[gridY][gridX][gridZ] !== 0) {
@@ -138,7 +172,7 @@ const Game3D: React.FC = () => {
     setGrid(newGrid);
     
     // Check for completed layers
-    clearCompleteLayers(newGrid);
+    const layersCleared = clearCompleteLayers(newGrid);
     
     // Get next block
     setCurrentBlock(nextBlock);
@@ -149,10 +183,24 @@ const Game3D: React.FC = () => {
     if (!isValidPosition(nextBlock.shape, INITIAL_POSITION.x, INITIAL_POSITION.y, INITIAL_POSITION.z)) {
       setGameOver(true);
       setControlsEnabled(false);
+      setTimerActive(false);
       toast({
         title: "Game Over!",
-        description: `Final score: ${score}`,
+        description: `Final score: ${score} | Level: ${level}`,
       });
+    }
+    
+    // Check for level up
+    if (layersCleared > 0 && level < MAX_LEVEL) {
+      const layerThreshold = Math.ceil(level / 5) + 1; // More layers needed for level up as you progress
+      if (layersCleared >= layerThreshold) {
+        const newLevel = Math.min(MAX_LEVEL, level + 1);
+        setLevel(newLevel);
+        toast({
+          title: `Level Up!`,
+          description: `You are now on level ${newLevel}`,
+        });
+      }
     }
   };
 
@@ -199,9 +247,10 @@ const Game3D: React.FC = () => {
       }
     }
     
-    // Update score
+    // Calculate bonus points based on level
     if (layersCleared > 0) {
-      const pointsScored = layersCleared * layersCleared * 100;
+      const levelMultiplier = 1 + (level * 0.1); // Higher levels give more points
+      const pointsScored = Math.floor(layersCleared * layersCleared * 100 * levelMultiplier);
       setScore(prevScore => prevScore + pointsScored);
       toast({
         title: `${layersCleared} layers cleared!`,
@@ -210,6 +259,19 @@ const Game3D: React.FC = () => {
     }
     
     setGrid([...grid]);
+    return layersCleared;
+  };
+
+  // Handle time up
+  const handleTimeUp = () => {
+    if (!gameOver) {
+      setGameOver(true);
+      setControlsEnabled(false);
+      toast({
+        title: "Time's Up!",
+        description: `Final score: ${score} | Level: ${level}`,
+      });
+    }
   };
 
   // Game controls
@@ -352,8 +414,16 @@ const Game3D: React.FC = () => {
         </div>
         
         <div className="flex flex-col justify-between gap-4 w-full md:w-60">
-          <div className="space-y-6">
+          <div className="space-y-4">
             <ScoreDisplay score={score} />
+            
+            <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
+            
+            <GameTimer 
+              isActive={timerActive} 
+              onTimeUp={handleTimeUp} 
+              timeLimit={timeLimit} 
+            />
             
             <div className="p-4 rounded-lg bg-black bg-opacity-30">
               <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-4">Next Block</h3>
@@ -384,7 +454,7 @@ const Game3D: React.FC = () => {
       
       {gameOver && (
         <div className="mt-6 animate-scale-in">
-          <p className="text-xl text-white mb-3">Game Over! Final Score: {score}</p>
+          <p className="text-xl text-white mb-3">Game Over! Final Score: {score} | Level: {level}</p>
         </div>
       )}
     </div>
