@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
@@ -115,12 +114,13 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     const gridSize = grid.length || 10;
     
     return (
-      <mesh position={[gridSize/2 - 0.5, gridSize - 0.25, gridSize/2 - 0.5]}>
+      <mesh position={[gridSize/2 - 0.5, gridSize - 0.5, gridSize/2 - 0.5]}>
         <boxGeometry args={[gridSize, 0.1, gridSize]} />
         <meshStandardMaterial 
           color="#ff3333"
           transparent={true}
-          opacity={0.3}
+          opacity={0.1}
+          wireframe={true}
         />
       </mesh>
     );
