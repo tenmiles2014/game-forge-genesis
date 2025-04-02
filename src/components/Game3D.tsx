@@ -11,11 +11,11 @@ import GameTimer from './GameTimer';
 import LevelDisplay from './LevelDisplay';
 import ViewControls, { ViewPoint } from './ViewControls';
 import GuidelineOverlay from './GuidelineOverlay';
-import { Pause } from "lucide-react";
+import Grid3DLabels from './Grid3DLabels';
 
 // Constants
 const GRID_SIZE = 10;
-const INITIAL_POSITION = { x: 4, y: 0, z: 4 }; // Start at the top
+const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
@@ -111,7 +111,7 @@ const Game3D: React.FC = () => {
     setScore(0);
     setCurrentBlock(getRandomBlockPattern());
     setNextBlock(getRandomBlockPattern());
-    setPosition({...INITIAL_POSITION}); // Start at the top
+    setPosition({...INITIAL_POSITION}); // Start at the top of the grid
     setGameOver(false);
     setControlsEnabled(true);
     setLevel(1);
@@ -123,27 +123,6 @@ const Game3D: React.FC = () => {
       clearInterval(gravityTimerRef.current);
       gravityTimerRef.current = null;
     }
-  };
-
-  // Convert 2D pattern to 3D (place in xz plane)
-  const get3DPattern = (pattern: number[][]) => {
-    const pattern3D: number[][][] = [];
-    const height = pattern.length;
-    const width = pattern[0].length;
-    
-    for (let y = 0; y < 1; y++) {
-      const layer: number[][] = [];
-      for (let x = 0; x < height; x++) {
-        const row: number[] = [];
-        for (let z = 0; z < width; z++) {
-          row.push(pattern[x][z]);
-        }
-        layer.push(row);
-      }
-      pattern3D.push(layer);
-    }
-    
-    return pattern3D;
   };
 
   // Check if the block would exceed boundaries
@@ -441,7 +420,7 @@ const Game3D: React.FC = () => {
     if (direction === 'right') newX += 1;
     if (direction === 'forward') newZ -= 1;
     if (direction === 'backward') newZ += 1;
-    if (direction === 'down') newY += 1;
+    if (direction === 'down') newY -= 1; // Fixed: Move DOWN decreases Y (block falls)
     
     // Ensure new position is within bounds
     if (isValidPosition(currentBlock.shape, newX, newY, newZ)) {
@@ -533,8 +512,8 @@ const Game3D: React.FC = () => {
     let newY = position.y;
     
     // Find the lowest valid position while maintaining the current block shape
-    while (isValidPosition(currentBlock.shape, position.x, newY + 1, position.z)) {
-      newY++;
+    while (isValidPosition(currentBlock.shape, position.x, newY - 1, position.z)) {
+      newY--; // Fixed: decrease Y to drop to the bottom
     }
     
     // Update position without changing the block orientation
@@ -668,7 +647,7 @@ const Game3D: React.FC = () => {
             />
           </div>
           
-          <div className="game-board rounded-lg overflow-hidden h-[500px] md:h-[600px]">
+          <div className="game-board rounded-lg overflow-hidden h-[500px] md:h-[600px] relative">
             <Canvas camera={{ position: currentView.position, fov: 50 }}>
               <ambientLight intensity={0.5} />
               <pointLight position={[10, 10, 10]} />
@@ -685,6 +664,7 @@ const Game3D: React.FC = () => {
                 target={currentView.target || [4.5, 4.5, 4.5]}
               />
             </Canvas>
+            <Grid3DLabels />
           </div>
         </div>
         
