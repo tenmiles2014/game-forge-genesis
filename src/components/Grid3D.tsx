@@ -75,7 +75,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
         if (pattern[y][x]) {
           // Calculate absolute positions
           const posX = position.x + x;
-          const posY = Math.max(0, position.y); // Ensure y is never negative
+          const posY = position.y;  // Using exact y position without offset
           const posZ = position.z + y;
           
           // Skip rendering blocks that would be outside the grid
