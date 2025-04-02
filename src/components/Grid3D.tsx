@@ -48,7 +48,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
             blocks.push(
               <mesh 
                 key={`${x}-${y}-${z}`} 
-                position={[x, y, z]} 
+                position={[x, y + 0.5, z]} 
                 castShadow
                 receiveShadow
               >
@@ -75,7 +75,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
           blocks.push(
             <mesh 
               key={`current-${y}-${x}`} 
-              position={[position.x + x, position.y, position.z + y]} 
+              position={[position.x + x, position.y + 0.5, position.z + y]} 
               castShadow
             >
               <boxGeometry args={[1, 1, 1]} />
