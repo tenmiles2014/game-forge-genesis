@@ -206,12 +206,12 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     const gridSize = grid.length || 10;
     
     return (
-      <mesh position={[gridSize/2 - 0.5, 0, gridSize/2 - 0.5]}>
+      <mesh position={[gridSize/2 - 0.5, gridSize - 1, gridSize/2 - 0.5]}>
         <boxGeometry args={[gridSize, 0.1, gridSize]} />
         <meshStandardMaterial 
-          color="#ff3333"
+          color="#F2FCE2"  // Soft green from the color palette
           transparent={true}
-          opacity={0.1}
+          opacity={0.2}
         />
       </mesh>
     );
