@@ -5,35 +5,47 @@ import { Label } from "@/components/ui/label";
 const Grid3DLabels: React.FC = () => {
   return (
     <div className="grid-labels absolute w-full h-full pointer-events-none">
-      {/* Top label */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 mt-2">
+      {/* Top label with indicator ball */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 mt-2 flex flex-col items-center">
+        <div className="w-3 h-3 rounded-full bg-white mb-1 shadow-glow"></div>
         <Label className="text-white bg-black bg-opacity-70 px-3 py-1 rounded-md font-semibold">Top</Label>
       </div>
       
-      {/* Bottom label */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 mb-2">
+      {/* Bottom label with indicator ball */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 mb-2 flex flex-col items-center">
+        <div className="w-3 h-3 rounded-full bg-white mb-1 shadow-glow"></div>
         <Label className="text-white bg-black bg-opacity-70 px-3 py-1 rounded-md font-semibold">Bottom</Label>
       </div>
       
-      {/* Left label */}
-      <div className="absolute top-1/2 left-0 -translate-y-1/2 ml-2">
+      {/* Left label with indicator ball */}
+      <div className="absolute top-1/2 left-0 -translate-y-1/2 ml-2 flex items-center">
+        <div className="w-3 h-3 rounded-full bg-white mr-1 shadow-glow"></div>
         <Label className="text-white bg-black bg-opacity-70 px-3 py-1 rounded-md font-semibold">Left</Label>
       </div>
       
-      {/* Right label */}
-      <div className="absolute top-1/2 right-0 -translate-y-1/2 mr-2">
+      {/* Right label with indicator ball */}
+      <div className="absolute top-1/2 right-0 -translate-y-1/2 mr-2 flex items-center">
+        <div className="w-3 h-3 rounded-full bg-white mr-1 shadow-glow"></div>
         <Label className="text-white bg-black bg-opacity-70 px-3 py-1 rounded-md font-semibold">Right</Label>
       </div>
       
-      {/* Front label */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2">
+      {/* Front label with indicator ball */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 flex flex-col items-center">
+        <div className="w-3 h-3 rounded-full bg-white mb-1 shadow-glow"></div>
         <Label className="text-white bg-black bg-opacity-70 px-3 py-1 rounded-md font-semibold">Front</Label>
       </div>
       
-      {/* Back label */}
-      <div className="absolute bottom-1/3 left-1/2 -translate-x-1/2">
+      {/* Back label with indicator ball */}
+      <div className="absolute bottom-1/3 left-1/2 -translate-x-1/2 flex flex-col items-center">
+        <div className="w-3 h-3 rounded-full bg-white mb-1 shadow-glow"></div>
         <Label className="text-white bg-black bg-opacity-70 px-3 py-1 rounded-md font-semibold">Back</Label>
       </div>
+
+      <style jsx>{`
+        .shadow-glow {
+          box-shadow: 0 0 5px 2px rgba(255, 255, 255, 0.7);
+        }
+      `}</style>
     </div>
   );
 };

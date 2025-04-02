@@ -330,14 +330,15 @@ const Game3D: React.FC = () => {
   const applyGravityToBlocks = (grid: number[][][]) => {
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
-        for (let y = GRID_SIZE - 2; y >= 0; y--) {
+        for (let y = 1; y < GRID_SIZE; y++) {
           if (grid[y][x][z] !== 0) {
             let newY = y;
-            while (newY + 1 < GRID_SIZE && grid[newY + 1][x][z] === 0) {
-              newY++;
+            
+            while (newY > 0 && grid[newY - 1][x][z] === 0) {
+              newY--;
             }
             
-            if (newY > y) {
+            if (newY < y) {
               grid[newY][x][z] = grid[y][x][z];
               grid[y][x][z] = 0;
             }
