@@ -5,6 +5,7 @@ interface GameTimerProps {
   isActive: boolean;
   onTimeUp: () => void;
   timeLimit: number; // in seconds
+  level: number; // Add level prop to adjust speed
 }
 
 const DEFAULT_TIME_LIMIT = 180; // 3 minutes in seconds
@@ -12,7 +13,8 @@ const DEFAULT_TIME_LIMIT = 180; // 3 minutes in seconds
 const GameTimer: React.FC<GameTimerProps> = ({ 
   isActive, 
   onTimeUp, 
-  timeLimit = DEFAULT_TIME_LIMIT // Default to 3 minutes if not specified
+  timeLimit = DEFAULT_TIME_LIMIT, // Default to 3 minutes if not specified
+  level = 1 // Default level is 1
 }) => {
   const [seconds, setSeconds] = useState(timeLimit);
   

@@ -5,7 +5,7 @@ import { Gamepad, RotateCcw, RotateCw, ArrowDown, ArrowUp, ArrowLeft, ArrowRight
 
 interface GameControls3DProps {
   onRotate: (axis: 'x' | 'y' | 'z') => void;
-  onMove: (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => void;
+  onMove: (direction: 'left' | 'right' | 'forward' | 'backward' | 'down' | 'up') => void; // Updated to include 'up'
   onDrop: () => void;
   onReset: () => void;
   className?: string;
@@ -69,17 +69,17 @@ const GameControls3D: React.FC<GameControls3DProps> = ({
           variant="outline"
           size="icon"
           className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300 aspect-square"
-          onClick={() => onRotate('z')}
+          onClick={() => onMove('up')}
         >
-          <RotateCcw className="h-4 w-4" />
+          <ArrowUp className="h-4 w-4" />
         </Button>
         <Button 
           variant="outline"
           size="icon"
           className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300 aspect-square"
-          onClick={() => onRotate('x')}
+          onClick={() => onRotate('z')}
         >
-          <RotateCw className="h-4 w-4" />
+          <RotateCcw className="h-4 w-4" />
         </Button>
       </div>
       
@@ -101,6 +101,15 @@ const GameControls3D: React.FC<GameControls3DProps> = ({
           Reset
         </Button>
       </div>
+      
+      <Button 
+        variant="outline"
+        className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300"
+        onClick={() => onRotate('x')}
+      >
+        <RotateCw className="h-5 w-5 mr-1" />
+        Rotate X
+      </Button>
     </div>
   );
 };

@@ -18,6 +18,7 @@ const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: 0, z: 4 };
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
+const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
 
 // Predefined camera viewpoints
 const VIEW_POINTS: ViewPoint[] = [
@@ -43,12 +44,19 @@ const Game3D: React.FC = () => {
   const [gamePaused, setGamePaused] = useState(true); // Game starts paused
   const orbitControlsRef = useRef(null);
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
+  const gravityTimerRef = useRef<number | null>(null);
 
   // Calculate time limit based on level
   useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(BASE_TIME_LIMIT - (level * 2)));
     setTimeLimit(newTimeLimit);
   }, [level]);
+
+  // Calculate drop speed based on level
+  const getDropSpeed = () => {
+    // Decrease speed as level increases (faster drops)
+    return Math.max(100, BASE_DROP_SPEED - (level * 50));
+  };
 
   // Initialize game grid
   const initializeGrid = () => {
@@ -72,6 +80,32 @@ const Game3D: React.FC = () => {
     resetGame();
   }, []);
 
+  // Set up gravity
+  useEffect(() => {
+    if (gamePaused || gameOver) {
+      // Clear gravity timer when game is paused or over
+      if (gravityTimerRef.current) {
+        clearInterval(gravityTimerRef.current);
+        gravityTimerRef.current = null;
+      }
+      return;
+    }
+
+    // Create gravity effect - block automatically falls down over time
+    const dropSpeed = getDropSpeed();
+    
+    gravityTimerRef.current = window.setInterval(() => {
+      moveBlock('down');
+    }, dropSpeed);
+
+    return () => {
+      if (gravityTimerRef.current) {
+        clearInterval(gravityTimerRef.current);
+        gravityTimerRef.current = null;
+      }
+    };
+  }, [gamePaused, gameOver, level, position]);
+
   const resetGame = () => {
     setGrid(initializeGrid());
     setScore(0);
@@ -83,6 +117,12 @@ const Game3D: React.FC = () => {
     setLevel(1);
     setTimerActive(false);
     setGamePaused(true);
+    
+    // Clear any existing gravity timer
+    if (gravityTimerRef.current) {
+      clearInterval(gravityTimerRef.current);
+      gravityTimerRef.current = null;
+    }
   };
 
   // Convert 2D pattern to 3D (place in xz plane)
@@ -204,6 +244,21 @@ const Game3D: React.FC = () => {
     
     // Reset position to the top of the grid
     const newPosition = {...INITIAL_POSITION, y: 0};
+    
+    // Check if game is over by seeing if the new block can be placed at the initial position
+    if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
+      setGameOver(true);
+      setControlsEnabled(false);
+      setTimerActive(false);
+      setGamePaused(true);
+      toast({
+        title: "Game Over!",
+        description: `No space for new block. Final score: ${score} | Level: ${level}`,
+      });
+      return; // Exit early
+    }
+    
+    // Set the position for the new block
     setPosition(newPosition);
     
     // Check for level up
@@ -232,50 +287,138 @@ const Game3D: React.FC = () => {
     return colorMap[color] || 0;
   };
 
-  // Clear completed layers
+  // Clear completed layers - new implementation to check for any full row of 10 blocks in any direction
   const clearCompleteLayers = (grid: number[][][]) => {
     let layersCleared = 0;
+    const gridCopy = JSON.parse(JSON.stringify(grid)); // Deep copy for operations
     
-    // Check each Y layer
-    for (let y = GRID_SIZE - 1; y >= 0; y--) {
-      let layerFull = true;
+    // Check for rows, columns, and layers with 10 blocks filled in any direction
+    
+    // Check Y layers (horizontal planes)
+    for (let y = 0; y < GRID_SIZE; y++) {
+      // Check rows in X direction on this Y layer
+      for (let z = 0; z < GRID_SIZE; z++) {
+        let rowFull = true;
+        for (let x = 0; x < GRID_SIZE; x++) {
+          if (gridCopy[y][x][z] === 0) {
+            rowFull = false;
+            break;
+          }
+        }
+        
+        if (rowFull) {
+          // Clear this row
+          for (let x = 0; x < GRID_SIZE; x++) {
+            gridCopy[y][x][z] = 0;
+          }
+          layersCleared++;
+        }
+      }
       
-      // Check if the layer is full
+      // Check rows in Z direction on this Y layer
+      for (let x = 0; x < GRID_SIZE; x++) {
+        let rowFull = true;
+        for (let z = 0; z < GRID_SIZE; z++) {
+          if (gridCopy[y][x][z] === 0) {
+            rowFull = false;
+            break;
+          }
+        }
+        
+        if (rowFull) {
+          // Clear this row
+          for (let z = 0; z < GRID_SIZE; z++) {
+            gridCopy[y][x][z] = 0;
+          }
+          layersCleared++;
+        }
+      }
+    }
+    
+    // Check vertical columns (Y direction)
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let z = 0; z < GRID_SIZE; z++) {
+        let columnFull = true;
+        for (let y = 0; y < GRID_SIZE; y++) {
+          if (gridCopy[y][x][z] === 0) {
+            columnFull = false;
+            break;
+          }
+        }
+        
+        if (columnFull) {
+          // Clear this column
+          for (let y = 0; y < GRID_SIZE; y++) {
+            gridCopy[y][x][z] = 0;
+          }
+          layersCleared++;
+        }
+      }
+    }
+    
+    // Check if any full horizontal layer exists
+    for (let y = 0; y < GRID_SIZE; y++) {
+      let layerFull = true;
       for (let x = 0; x < GRID_SIZE && layerFull; x++) {
         for (let z = 0; z < GRID_SIZE && layerFull; z++) {
-          if (grid[y][x][z] === 0) {
+          if (gridCopy[y][x][z] === 0) {
             layerFull = false;
           }
         }
       }
       
       if (layerFull) {
-        // Remove the layer by shifting down all layers above it
-        for (let moveY = y; moveY > 0; moveY--) {
-          grid[moveY] = JSON.parse(JSON.stringify(grid[moveY - 1]));
+        // Clear the entire layer
+        for (let x = 0; x < GRID_SIZE; x++) {
+          for (let z = 0; z < GRID_SIZE; z++) {
+            gridCopy[y][x][z] = 0;
+          }
         }
-        
-        // Create an empty layer at the top
-        grid[0] = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
-        
         layersCleared++;
-        y++; // Check this level again
       }
     }
     
-    // Calculate bonus points based on level
+    // Apply gravity to make blocks fall after clearing
+    applyGravityToBlocks(gridCopy);
+    
+    // Calculate bonus points based on level and layers cleared
     if (layersCleared > 0) {
       const levelMultiplier = 1 + (level * 0.1); // Higher levels give more points
-      const pointsScored = Math.floor(layersCleared * layersCleared * 100 * levelMultiplier);
+      const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier); // 10 points per line cleared
       setScore(prevScore => prevScore + pointsScored);
       toast({
-        title: `${layersCleared} layers cleared!`,
+        title: `${layersCleared} lines cleared!`,
         description: `+${pointsScored} points`,
       });
     }
     
-    setGrid([...grid]);
+    setGrid([...gridCopy]);
     return layersCleared;
+  };
+  
+  // Apply gravity to make blocks fall down after clearing lines
+  const applyGravityToBlocks = (grid: number[][][]) => {
+    // For each column in the grid
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let z = 0; z < GRID_SIZE; z++) {
+        // Start from the bottom and move blocks down
+        for (let y = GRID_SIZE - 2; y >= 0; y--) {
+          if (grid[y][x][z] !== 0) {
+            // Find how far this block can fall
+            let newY = y;
+            while (newY + 1 < GRID_SIZE && grid[newY + 1][x][z] === 0) {
+              newY++;
+            }
+            
+            // If the block can move down, move it
+            if (newY > y) {
+              grid[newY][x][z] = grid[y][x][z];
+              grid[y][x][z] = 0;
+            }
+          }
+        }
+      }
+    }
   };
 
   // Handle time up
@@ -292,7 +435,7 @@ const Game3D: React.FC = () => {
   };
 
   // Game controls
-  const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
+  const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down' | 'up') => {
     if (gameOver || !controlsEnabled || gamePaused) return;
     
     let newX = position.x;
@@ -304,6 +447,7 @@ const Game3D: React.FC = () => {
     if (direction === 'forward') newZ -= 1;
     if (direction === 'backward') newZ += 1;
     if (direction === 'down') newY += 1;
+    if (direction === 'up') newY -= 1;
     
     // Ensure y is never negative
     newY = Math.max(0, newY);
@@ -485,6 +629,9 @@ const Game3D: React.FC = () => {
         case 's':  // Move down
           moveBlock('down');
           break;
+        case 'w':  // Move up (new control)
+          moveBlock('up');
+          break;
         default:
           break;
       }
@@ -594,6 +741,7 @@ const Game3D: React.FC = () => {
               isActive={timerActive} 
               onTimeUp={handleTimeUp} 
               timeLimit={timeLimit} 
+              level={level}
             />
             
             <div className="p-4 rounded-lg bg-black bg-opacity-30">
@@ -608,6 +756,7 @@ const Game3D: React.FC = () => {
               <div className="text-xs text-gray-400 space-y-1">
                 <p>Arrow Keys: Move X/Z</p>
                 <p>S: Move Down</p>
+                <p>W: Move Up</p>
                 <p>Z/X: Rotate</p>
                 <p>Space: Drop</p>
               </div>
