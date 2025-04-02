@@ -144,7 +144,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
       {renderCurrentBlock}
       {renderGridBoundaries}
       {renderHeightLimit}
-      <gridHelper args={[10, 10]} position={[4.5, 0, 4.5]} />
+      <gridHelper args={[10, 10]} position={[4.5, -0.5, 4.5]} />
     </group>
   );
 };
