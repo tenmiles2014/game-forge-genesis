@@ -12,6 +12,7 @@ import LevelDisplay from './LevelDisplay';
 import ViewControls, { ViewPoint } from './ViewControls';
 import GuidelineOverlay from './GuidelineOverlay';
 import Grid3DLabels from './Grid3DLabels';
+import Gyroscope from './Gyroscope';
 
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
@@ -595,6 +596,7 @@ const Game3D: React.FC = () => {
               />
             </Canvas>
             <Grid3DLabels />
+            <Gyroscope size={100} className="hidden md:block" />
           </div>
         </div>
         
