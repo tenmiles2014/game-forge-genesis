@@ -9,6 +9,8 @@ import Grid3D from './Grid3D';
 import BlockPreview from './BlockPreview';
 import GameTimer from './GameTimer';
 import LevelDisplay from './LevelDisplay';
+import { Button } from "@/components/ui/button";
+import { Play, Pause } from "lucide-react";
 
 // Constants
 const GRID_SIZE = 10;
@@ -28,6 +30,7 @@ const Game3D: React.FC = () => {
   const [level, setLevel] = useState(1);
   const [timeLimit, setTimeLimit] = useState(BASE_TIME_LIMIT);
   const [timerActive, setTimerActive] = useState(false);
+  const [gamePaused, setGamePaused] = useState(true); // Game starts paused
   const orbitControlsRef = useRef(null);
 
   // Calculate time limit based on level
@@ -68,7 +71,8 @@ const Game3D: React.FC = () => {
     setGameOver(false);
     setControlsEnabled(true);
     setLevel(1);
-    setTimerActive(true);
+    setTimerActive(false);
+    setGamePaused(true);
   };
 
   // Convert 2D pattern to 3D (place in xz plane)
@@ -267,6 +271,7 @@ const Game3D: React.FC = () => {
     if (!gameOver) {
       setGameOver(true);
       setControlsEnabled(false);
+      setGamePaused(true);
       toast({
         title: "Time's Up!",
         description: `Final score: ${score} | Level: ${level}`,
@@ -276,7 +281,7 @@ const Game3D: React.FC = () => {
 
   // Game controls
   const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
-    if (gameOver || !controlsEnabled) return;
+    if (gameOver || !controlsEnabled || gamePaused) return;
     
     let newX = position.x;
     let newY = position.y;
@@ -298,7 +303,7 @@ const Game3D: React.FC = () => {
   };
   
   const rotateBlock = (axis: 'x' | 'y' | 'z') => {
-    if (gameOver || !controlsEnabled) return;
+    if (gameOver || !controlsEnabled || gamePaused) return;
     
     const rotatedPattern = [...currentBlock.shape];
     
@@ -331,7 +336,7 @@ const Game3D: React.FC = () => {
   };
   
   const dropBlock = () => {
-    if (gameOver || !controlsEnabled) return;
+    if (gameOver || !controlsEnabled || gamePaused) return;
     
     // Keep track of the current block's shape and position
     const currentShape = [...currentBlock.shape];
@@ -349,10 +354,54 @@ const Game3D: React.FC = () => {
     placeBlock();
   };
 
+  // Toggle game pause state
+  const toggleGamePause = () => {
+    if (gameOver) return;
+    
+    const newPausedState = !gamePaused;
+    setGamePaused(newPausedState);
+    setTimerActive(!newPausedState);
+    setControlsEnabled(!newPausedState);
+    
+    if (newPausedState) {
+      toast({
+        title: "Game Paused",
+        description: "Take a breather!",
+      });
+    } else {
+      toast({
+        title: "Game Resumed",
+        description: "Let's go!",
+      });
+    }
+  };
+
+  // Start the game
+  const startGame = () => {
+    if (!gamePaused) return; // Already running
+    
+    setGamePaused(false);
+    setTimerActive(true);
+    setControlsEnabled(true);
+    
+    toast({
+      title: "Game Started",
+      description: "Good luck!",
+    });
+  };
+
+  // Fix for blocks appearing under the grid surface
+  useEffect(() => {
+    // Ensure blocks never start below the grid surface
+    if (position.y < 0) {
+      setPosition({ ...position, y: 0 });
+    }
+  }, [position]);
+
   // Handle keyboard controls
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!controlsEnabled) return;
+      if (!controlsEnabled || gamePaused) return;
       
       switch (event.key) {
         case 'ArrowLeft':
@@ -389,7 +438,7 @@ const Game3D: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [position, currentBlock, grid, gameOver, controlsEnabled]);
+  }, [position, currentBlock, grid, gameOver, controlsEnabled, gamePaused]);
 
   // Render game
   return (
@@ -416,6 +465,29 @@ const Game3D: React.FC = () => {
                 maxDistance={30}
               />
             </Canvas>
+          </div>
+          
+          {/* Start/Stop Button */}
+          <div className="flex justify-center mt-4">
+            <Button 
+              onClick={toggleGamePause} 
+              variant="outline" 
+              size="lg"
+              className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300 w-32"
+              disabled={gameOver}
+            >
+              {gamePaused ? (
+                <>
+                  <Play className="mr-2 h-5 w-5" />
+                  Start
+                </>
+              ) : (
+                <>
+                  <Pause className="mr-2 h-5 w-5" />
+                  Pause
+                </>
+              )}
+            </Button>
           </div>
         </div>
         
