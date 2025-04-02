@@ -198,14 +198,16 @@ const Game3D: React.FC = () => {
     const layersCleared = clearCompleteLayers(newGrid);
     
     // Get next block
-    setCurrentBlock(nextBlock);
+    const nextBlockPattern = nextBlock;
+    setCurrentBlock(nextBlockPattern);
     setNextBlock(getRandomBlockPattern());
     
     // Reset position to the top of the grid
-    setPosition({...INITIAL_POSITION, y: 0});
+    const newPosition = {...INITIAL_POSITION, y: 0};
+    setPosition(newPosition);
     
-    // Check if game is over
-    if (!isValidPosition(nextBlock.shape, INITIAL_POSITION.x, 0, INITIAL_POSITION.z)) {
+    // Fix: Properly check if game is over by checking if the new block can be placed at the initial position
+    if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
       setGameOver(true);
       setControlsEnabled(false);
       setTimerActive(false);
