@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -23,6 +23,24 @@ const Arrow = ({ direction, color }: { direction: [number, number, number], colo
   // Calculate rotation to align with the target direction
   const arrowHelper = new THREE.ArrowHelper(normalizedDir, position, length);
   const rotation = new THREE.Euler().setFromQuaternion(arrowHelper.quaternion);
+
+  // Create a texture for the label
+  const labelTexture = React.useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = color;
+    ctx.font = '24px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const label = direction[0] === 1 ? 'X' : direction[1] === 1 ? 'Y' : 'Z';
+    ctx.fillText(label, 32, 16);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+  }, [direction, color]);
   
   return (
     <group rotation={rotation}>
@@ -41,23 +59,7 @@ const Arrow = ({ direction, color }: { direction: [number, number, number], colo
       {/* Label */}
       <mesh position={[0, length + 0.2, 0]}>
         <sprite>
-          <spriteMaterial>
-            <canvasTexture attach="map">
-              {(() => {
-                const canvas = document.createElement('canvas');
-                canvas.width = 64;
-                canvas.height = 32;
-                const ctx = canvas.getContext('2d')!;
-                ctx.fillStyle = color;
-                ctx.font = '24px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                const label = direction[0] === 1 ? 'X' : direction[1] === 1 ? 'Y' : 'Z';
-                ctx.fillText(label, 32, 16);
-                return canvas;
-              })()}
-            </canvasTexture>
-          </spriteMaterial>
+          <spriteMaterial map={labelTexture} />
         </sprite>
       </mesh>
     </group>
