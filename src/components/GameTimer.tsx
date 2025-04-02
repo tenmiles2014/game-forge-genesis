@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface GameTimerProps {
   isActive: boolean;
@@ -9,6 +9,11 @@ interface GameTimerProps {
 
 const GameTimer: React.FC<GameTimerProps> = ({ isActive, onTimeUp, timeLimit }) => {
   const [seconds, setSeconds] = useState(timeLimit);
+  
+  // Memoize the timeUp callback to avoid triggering in render
+  const handleTimeUp = useCallback(() => {
+    if (onTimeUp) onTimeUp();
+  }, [onTimeUp]);
 
   useEffect(() => {
     let interval: number | undefined;
@@ -18,21 +23,20 @@ const GameTimer: React.FC<GameTimerProps> = ({ isActive, onTimeUp, timeLimit }) 
         setSeconds(prevSeconds => {
           const newTime = prevSeconds - 1;
           if (newTime <= 0) {
-            if (onTimeUp) onTimeUp();
             clearInterval(interval);
+            // Schedule the callback outside of render
+            setTimeout(() => handleTimeUp(), 0);
             return 0;
           }
           return newTime;
         });
       }, 1000);
-    } else if (seconds === 0) {
-      if (onTimeUp) onTimeUp();
     }
     
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, seconds, onTimeUp]);
+  }, [isActive, seconds, handleTimeUp]);
 
   // Reset timer when time limit changes (new level)
   useEffect(() => {

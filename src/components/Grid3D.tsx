@@ -70,24 +70,16 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     const pattern = currentBlock.shape;
     const gridSize = grid.length || 10;
     
-    // Check if the current block pattern would exceed grid boundaries
-    const wouldExceedBoundary = (posX: number, posY: number, posZ: number) => {
-      return (
-        posX < 0 || posX >= gridSize ||
-        posY < 0 || posY >= gridSize ||
-        posZ < 0 || posZ >= gridSize
-      );
-    };
-    
     for (let y = 0; y < pattern.length; y++) {
       for (let x = 0; x < pattern[y].length; x++) {
         if (pattern[y][x]) {
+          // Calculate absolute positions
           const posX = position.x + x;
           const posY = position.y;
           const posZ = position.z + y;
           
           // Skip rendering blocks that would be outside the grid
-          if (wouldExceedBoundary(posX, posY, posZ)) {
+          if (posX < 0 || posX >= gridSize || posY < 0 || posY >= gridSize || posZ < 0 || posZ >= gridSize) {
             continue;
           }
           

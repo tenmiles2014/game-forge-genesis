@@ -288,6 +288,7 @@ const Game3D: React.FC = () => {
     if (direction === 'backward') newZ += 1;
     if (direction === 'down') newY += 1;
     
+    // Ensure new position is within bounds
     if (isValidPosition(currentBlock.shape, newX, newY, newZ)) {
       setPosition({ x: newX, y: newY, z: newZ });
     } else if (direction === 'down') {
@@ -361,7 +362,7 @@ const Game3D: React.FC = () => {
         case 'ArrowDown':
           moveBlock('backward');
           break;
-        case ' ':  // Space key
+        case ' ':  // Space key - only drop, don't rotate
           dropBlock();
           break;
         case 'z':  // Rotate around z-axis
