@@ -225,6 +225,11 @@ const Game: React.FC = () => {
 
   // Render the current block on top of the grid
   const renderGridWithCurrentBlock = () => {
+    // Make sure grid is initialized
+    if (!grid || grid.length === 0) {
+      return initializeGrid();
+    }
+    
     // Create a deep copy of the grid
     const displayGrid = grid.map(row => [...row]);
     
@@ -235,6 +240,7 @@ const Game: React.FC = () => {
           const gridRow = position.row + r;
           const gridCol = position.col + c;
           
+          // Check if the position is within grid bounds before setting
           if (
             gridRow >= 0 && 
             gridRow < GRID_ROWS && 
