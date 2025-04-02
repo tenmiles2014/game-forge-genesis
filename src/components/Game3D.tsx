@@ -14,7 +14,7 @@ import LevelDisplay from './LevelDisplay';
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: 0, z: 4 };
 const MAX_LEVEL = 99;
-const BASE_TIME_LIMIT = 60; // seconds for level 1
+const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 
 const Game3D: React.FC = () => {
   // Game state
@@ -32,8 +32,8 @@ const Game3D: React.FC = () => {
 
   // Calculate time limit based on level
   useEffect(() => {
-    // Time decreases as level increases, but never below 10 seconds
-    const newTimeLimit = Math.max(10, Math.floor(BASE_TIME_LIMIT - (level * 0.5)));
+    // Time decreases as level increases, but never below 60 seconds
+    const newTimeLimit = Math.max(60, Math.floor(BASE_TIME_LIMIT - (level * 2)));
     setTimeLimit(newTimeLimit);
   }, [level]);
 

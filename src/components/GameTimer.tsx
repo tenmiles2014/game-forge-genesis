@@ -7,7 +7,13 @@ interface GameTimerProps {
   timeLimit: number; // in seconds
 }
 
-const GameTimer: React.FC<GameTimerProps> = ({ isActive, onTimeUp, timeLimit }) => {
+const DEFAULT_TIME_LIMIT = 180; // 3 minutes in seconds
+
+const GameTimer: React.FC<GameTimerProps> = ({ 
+  isActive, 
+  onTimeUp, 
+  timeLimit = DEFAULT_TIME_LIMIT // Default to 3 minutes if not specified
+}) => {
   const [seconds, setSeconds] = useState(timeLimit);
   
   // Memoize the timeUp callback to avoid triggering in render
