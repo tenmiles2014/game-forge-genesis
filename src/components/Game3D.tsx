@@ -10,7 +10,7 @@ import BlockPreview from './BlockPreview';
 
 // Constants
 const GRID_SIZE = 10;
-const INITIAL_POSITION = { x: Math.floor(GRID_SIZE / 2) - 1, y: 0, z: Math.floor(GRID_SIZE / 2) - 1 };
+const INITIAL_POSITION = { x: 4, y: 0, z: 4 };
 
 const Game3D: React.FC = () => {
   // Game state
@@ -347,8 +347,6 @@ const Game3D: React.FC = () => {
                 minDistance={10}
                 maxDistance={30}
               />
-              <gridHelper args={[GRID_SIZE, GRID_SIZE]} />
-              <axesHelper args={[5]} />
             </Canvas>
           </div>
         </div>
