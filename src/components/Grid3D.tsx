@@ -52,7 +52,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
                 castShadow
                 receiveShadow
               >
-                <boxGeometry args={[1, 1, 1]} />
+                <boxGeometry args={[0.95, 0.95, 0.95]} />
                 <meshStandardMaterial color={getColor(grid[y][x][z])} />
               </mesh>
             );
@@ -89,7 +89,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
               position={[posX, posY, posZ]} 
               castShadow
             >
-              <boxGeometry args={[1, 1, 1]} />
+              <boxGeometry args={[0.95, 0.95, 0.95]} />
               <meshStandardMaterial 
                 color={blockColor} 
                 transparent={true} 

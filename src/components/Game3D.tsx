@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -67,7 +68,7 @@ const Game3D: React.FC = () => {
     setScore(0);
     setCurrentBlock(getRandomBlockPattern());
     setNextBlock(getRandomBlockPattern());
-    setPosition(INITIAL_POSITION);
+    setPosition({...INITIAL_POSITION, y: 0}); // Ensure starting at y=0
     setGameOver(false);
     setControlsEnabled(true);
     setLevel(1);
@@ -181,10 +182,12 @@ const Game3D: React.FC = () => {
     // Get next block
     setCurrentBlock(nextBlock);
     setNextBlock(getRandomBlockPattern());
-    setPosition(INITIAL_POSITION);
+    
+    // Reset position to the top of the grid, not below it
+    setPosition({...INITIAL_POSITION, y: 0});
     
     // Check if game is over
-    if (!isValidPosition(nextBlock.shape, INITIAL_POSITION.x, INITIAL_POSITION.y, INITIAL_POSITION.z)) {
+    if (!isValidPosition(nextBlock.shape, INITIAL_POSITION.x, 0, INITIAL_POSITION.z)) {
       setGameOver(true);
       setControlsEnabled(false);
       setTimerActive(false);
@@ -326,11 +329,47 @@ const Game3D: React.FC = () => {
         }
       }
       
+      // Check if the rotated position is valid
       if (isValidPosition(newPattern, position.x, position.y, position.z)) {
         setCurrentBlock({
           ...currentBlock,
           shape: newPattern
         });
+      } else {
+        // Try adjusting position to make rotation valid
+        // Try shifting left/right/forward/backward
+        const offsets = [
+          { x: -1, z: 0 },  // left
+          { x: 1, z: 0 },   // right
+          { x: 0, z: -1 },  // forward
+          { x: 0, z: 1 }    // backward
+        ];
+        
+        let validPositionFound = false;
+        
+        for (const offset of offsets) {
+          const newX = position.x + offset.x;
+          const newZ = position.z + offset.z;
+          
+          if (isValidPosition(newPattern, newX, position.y, newZ)) {
+            setCurrentBlock({
+              ...currentBlock,
+              shape: newPattern
+            });
+            setPosition({ ...position, x: newX, z: newZ });
+            validPositionFound = true;
+            break;
+          }
+        }
+        
+        // If no valid position found, don't rotate
+        if (!validPositionFound) {
+          // Toast to indicate rotation not possible
+          toast({
+            title: "Can't rotate",
+            description: "Not enough space to rotate block",
+          });
+        }
       }
     }
   };
@@ -343,14 +382,14 @@ const Game3D: React.FC = () => {
     let newY = position.y;
     
     // Find the lowest valid position
-    while (isValidPosition(currentShape, position.x, newY + 1, position.z)) {
+    while (isValidPosition(currentBlock.shape, position.x, newY + 1, position.z)) {
       newY++;
     }
     
     // Update position without changing shape
     setPosition({ ...position, y: newY });
     
-    // Place the block with its original shape
+    // Place the block
     placeBlock();
   };
 
