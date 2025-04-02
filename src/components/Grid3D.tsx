@@ -125,43 +125,15 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
   const renderHeightLimit = useMemo(() => {
     const gridSize = grid.length || 10;
     
-    // Add directional indicators
-    const renderAxis = () => {
-      return (
-        <group>
-          {/* X-axis (red) */}
-          <mesh position={[gridSize/2, -0.5, -0.5]}>
-            <boxGeometry args={[gridSize, 0.1, 0.1]} />
-            <meshStandardMaterial color="red" />
-          </mesh>
-          
-          {/* Y-axis (green) */}
-          <mesh position={[-0.5, gridSize/2, -0.5]}>
-            <boxGeometry args={[0.1, gridSize, 0.1]} />
-            <meshStandardMaterial color="green" />
-          </mesh>
-          
-          {/* Z-axis (blue) */}
-          <mesh position={[-0.5, -0.5, gridSize/2]}>
-            <boxGeometry args={[0.1, 0.1, gridSize]} />
-            <meshStandardMaterial color="blue" />
-          </mesh>
-        </group>
-      );
-    };
-    
     return (
-      <>
-        <mesh position={[gridSize/2 - 0.5, 0, gridSize/2 - 0.5]}>
-          <boxGeometry args={[gridSize, 0.1, gridSize]} />
-          <meshStandardMaterial 
-            color="#ff3333"
-            transparent={true}
-            opacity={0.1}
-          />
-        </mesh>
-        {renderAxis()}
-      </>
+      <mesh position={[gridSize/2 - 0.5, 0, gridSize/2 - 0.5]}>
+        <boxGeometry args={[gridSize, 0.1, gridSize]} />
+        <meshStandardMaterial 
+          color="#ff3333"
+          transparent={true}
+          opacity={0.1}
+        />
+      </mesh>
     );
   }, [grid]);
 

@@ -13,14 +13,12 @@ import ViewControls, { ViewPoint } from './ViewControls';
 import GuidelineOverlay from './GuidelineOverlay';
 import Grid3DLabels from './Grid3DLabels';
 
-// Constants
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
 
-// Predefined camera viewpoints
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
   { name: "Top View", position: [4.5, 25, 4.5], target: [4.5, 0, 4.5] },
@@ -30,7 +28,6 @@ const VIEW_POINTS: ViewPoint[] = [
 ];
 
 const Game3D: React.FC = () => {
-  // Game state
   const [grid, setGrid] = useState<number[][][]>([]);
   const [score, setScore] = useState(0);
   const [currentBlock, setCurrentBlock] = useState<BlockPattern>(getRandomBlockPattern());
@@ -41,24 +38,20 @@ const Game3D: React.FC = () => {
   const [level, setLevel] = useState(1);
   const [timeLimit, setTimeLimit] = useState(BASE_TIME_LIMIT);
   const [timerActive, setTimerActive] = useState(false);
-  const [gamePaused, setGamePaused] = useState(true); // Game starts paused
+  const [gamePaused, setGamePaused] = useState(true);
   const orbitControlsRef = useRef(null);
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
 
-  // Calculate time limit based on level
   useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(BASE_TIME_LIMIT - (level * 2)));
     setTimeLimit(newTimeLimit);
   }, [level]);
 
-  // Calculate drop speed based on level
   const getDropSpeed = () => {
-    // Decrease speed as level increases (faster drops)
     return Math.max(100, BASE_DROP_SPEED - (level * 50));
   };
 
-  // Initialize game grid
   const initializeGrid = () => {
     const newGrid: number[][][] = [];
     for (let y = 0; y < GRID_SIZE; y++) {
@@ -66,7 +59,7 @@ const Game3D: React.FC = () => {
       for (let x = 0; x < GRID_SIZE; x++) {
         const row: number[] = [];
         for (let z = 0; z < GRID_SIZE; z++) {
-          row.push(0); // 0 means empty
+          row.push(0);
         }
         layer.push(row);
       }
@@ -75,15 +68,12 @@ const Game3D: React.FC = () => {
     return newGrid;
   };
 
-  // Initialize game
   useEffect(() => {
     resetGame();
   }, []);
 
-  // Set up gravity
   useEffect(() => {
     if (gamePaused || gameOver) {
-      // Clear gravity timer when game is paused or over
       if (gravityTimerRef.current) {
         clearInterval(gravityTimerRef.current);
         gravityTimerRef.current = null;
@@ -91,7 +81,6 @@ const Game3D: React.FC = () => {
       return;
     }
 
-    // Create gravity effect - block automatically falls down over time
     const dropSpeed = getDropSpeed();
     
     gravityTimerRef.current = window.setInterval(() => {
@@ -111,21 +100,19 @@ const Game3D: React.FC = () => {
     setScore(0);
     setCurrentBlock(getRandomBlockPattern());
     setNextBlock(getRandomBlockPattern());
-    setPosition({...INITIAL_POSITION}); // Start at the top of the grid
+    setPosition({...INITIAL_POSITION});
     setGameOver(false);
     setControlsEnabled(true);
     setLevel(1);
     setTimerActive(false);
     setGamePaused(true);
     
-    // Clear any existing gravity timer
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
       gravityTimerRef.current = null;
     }
   };
 
-  // Check if the block would exceed boundaries
   const wouldExceedBoundary = (pattern: number[][], newX: number, newY: number, newZ: number) => {
     for (let y = 0; y < pattern.length; y++) {
       for (let x = 0; x < pattern[y].length; x++) {
@@ -147,14 +134,11 @@ const Game3D: React.FC = () => {
     return false;
   };
 
-  // Check if the position is valid (no collision with existing blocks)
   const isValidPosition = (pattern: number[][], newX: number, newY: number, newZ: number) => {
-    // First check boundaries
     if (wouldExceedBoundary(pattern, newX, newY, newZ)) {
       return false;
     }
     
-    // Check collision with existing blocks
     for (let y = 0; y < pattern.length; y++) {
       for (let x = 0; x < pattern[y].length; x++) {
         if (pattern[y][x]) {
@@ -162,7 +146,6 @@ const Game3D: React.FC = () => {
           const gridY = newY;
           const gridZ = newZ + y;
           
-          // Skip positions outside the grid (already checked by wouldExceedBoundary)
           if (
             gridX < 0 || gridX >= GRID_SIZE ||
             gridY < 0 || gridY >= GRID_SIZE ||
@@ -171,7 +154,6 @@ const Game3D: React.FC = () => {
             continue;
           }
           
-          // Check if there's already a block at this position
           if (grid[gridY][gridX][gridZ] !== 0) {
             return false;
           }
@@ -182,11 +164,8 @@ const Game3D: React.FC = () => {
     return true;
   };
 
-  // Place the current block on the grid
   const placeBlock = () => {
-    const newGrid = JSON.parse(JSON.stringify(grid)); // Deep copy
-    
-    // Add the block to the grid
+    const newGrid = JSON.parse(JSON.stringify(grid));
     for (let y = 0; y < currentBlock.shape.length; y++) {
       for (let x = 0; x < currentBlock.shape[y].length; x++) {
         if (currentBlock.shape[y][x]) {
@@ -199,7 +178,6 @@ const Game3D: React.FC = () => {
             gridY >= 0 && gridY < GRID_SIZE &&
             gridZ >= 0 && gridZ < GRID_SIZE
           ) {
-            // Store color information in the grid
             newGrid[gridY][gridX][gridZ] = getColorIndex(currentBlock.color);
           }
         }
@@ -208,18 +186,14 @@ const Game3D: React.FC = () => {
     
     setGrid(newGrid);
     
-    // Check for completed layers
     const layersCleared = clearCompleteLayers(newGrid);
     
-    // Get next block
     const nextBlockPattern = nextBlock;
     setCurrentBlock(nextBlockPattern);
     setNextBlock(getRandomBlockPattern());
     
-    // Reset position to the top of the grid
     const newPosition = {...INITIAL_POSITION};
     
-    // Check if game is over by seeing if the new block can be placed at the initial position
     if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
       setGameOver(true);
       setControlsEnabled(false);
@@ -229,15 +203,13 @@ const Game3D: React.FC = () => {
         title: "Game Over!",
         description: `No space for new block. Final score: ${score} | Level: ${level}`,
       });
-      return; // Exit early
+      return;
     }
     
-    // Set the position for the new block
     setPosition(newPosition);
     
-    // Check for level up
     if (layersCleared > 0 && level < MAX_LEVEL) {
-      const layerThreshold = Math.ceil(level / 5) + 1; // More layers needed for level up as you progress
+      const layerThreshold = Math.ceil(level / 5) + 1;
       if (layersCleared >= layerThreshold) {
         const newLevel = Math.min(MAX_LEVEL, level + 1);
         setLevel(newLevel);
@@ -249,7 +221,6 @@ const Game3D: React.FC = () => {
     }
   };
 
-  // Map color names to integer indices
   const getColorIndex = (color: string): number => {
     const colorMap: Record<string, number> = {
       'blue': 1,
@@ -261,16 +232,11 @@ const Game3D: React.FC = () => {
     return colorMap[color] || 0;
   };
 
-  // Clear completed layers - implementation to check for any full row of 10 blocks in any direction
   const clearCompleteLayers = (grid: number[][][]) => {
     let layersCleared = 0;
-    const gridCopy = JSON.parse(JSON.stringify(grid)); // Deep copy for operations
+    const gridCopy = JSON.parse(JSON.stringify(grid));
     
-    // Check for rows, columns, and layers with 10 blocks filled in any direction
-    
-    // Check Y layers (horizontal planes)
     for (let y = 0; y < GRID_SIZE; y++) {
-      // Check rows in X direction on this Y layer
       for (let z = 0; z < GRID_SIZE; z++) {
         let rowFull = true;
         for (let x = 0; x < GRID_SIZE; x++) {
@@ -281,7 +247,6 @@ const Game3D: React.FC = () => {
         }
         
         if (rowFull) {
-          // Clear this row
           for (let x = 0; x < GRID_SIZE; x++) {
             gridCopy[y][x][z] = 0;
           }
@@ -289,7 +254,6 @@ const Game3D: React.FC = () => {
         }
       }
       
-      // Check rows in Z direction on this Y layer
       for (let x = 0; x < GRID_SIZE; x++) {
         let rowFull = true;
         for (let z = 0; z < GRID_SIZE; z++) {
@@ -300,7 +264,6 @@ const Game3D: React.FC = () => {
         }
         
         if (rowFull) {
-          // Clear this row
           for (let z = 0; z < GRID_SIZE; z++) {
             gridCopy[y][x][z] = 0;
           }
@@ -309,7 +272,6 @@ const Game3D: React.FC = () => {
       }
     }
     
-    // Check vertical columns (Y direction)
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         let columnFull = true;
@@ -321,7 +283,6 @@ const Game3D: React.FC = () => {
         }
         
         if (columnFull) {
-          // Clear this column
           for (let y = 0; y < GRID_SIZE; y++) {
             gridCopy[y][x][z] = 0;
           }
@@ -330,7 +291,6 @@ const Game3D: React.FC = () => {
       }
     }
     
-    // Check if any full horizontal layer exists
     for (let y = 0; y < GRID_SIZE; y++) {
       let layerFull = true;
       for (let x = 0; x < GRID_SIZE && layerFull; x++) {
@@ -342,7 +302,6 @@ const Game3D: React.FC = () => {
       }
       
       if (layerFull) {
-        // Clear the entire layer
         for (let x = 0; x < GRID_SIZE; x++) {
           for (let z = 0; z < GRID_SIZE; z++) {
             gridCopy[y][x][z] = 0;
@@ -352,13 +311,11 @@ const Game3D: React.FC = () => {
       }
     }
     
-    // Apply gravity to make blocks fall after clearing
     applyGravityToBlocks(gridCopy);
     
-    // Calculate bonus points based on level and layers cleared
     if (layersCleared > 0) {
-      const levelMultiplier = 1 + (level * 0.1); // Higher levels give more points
-      const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier); // 10 points per line cleared
+      const levelMultiplier = 1 + (level * 0.1);
+      const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
       setScore(prevScore => prevScore + pointsScored);
       toast({
         title: `${layersCleared} lines cleared!`,
@@ -369,22 +326,17 @@ const Game3D: React.FC = () => {
     setGrid([...gridCopy]);
     return layersCleared;
   };
-  
-  // Apply gravity to make blocks fall down after clearing lines
+
   const applyGravityToBlocks = (grid: number[][][]) => {
-    // For each column in the grid
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
-        // Start from the bottom and move blocks down
         for (let y = GRID_SIZE - 2; y >= 0; y--) {
           if (grid[y][x][z] !== 0) {
-            // Find how far this block can fall
             let newY = y;
             while (newY + 1 < GRID_SIZE && grid[newY + 1][x][z] === 0) {
               newY++;
             }
             
-            // If the block can move down, move it
             if (newY > y) {
               grid[newY][x][z] = grid[y][x][z];
               grid[y][x][z] = 0;
@@ -395,7 +347,6 @@ const Game3D: React.FC = () => {
     }
   };
 
-  // Handle time up
   const handleTimeUp = () => {
     if (!gameOver) {
       setGameOver(true);
@@ -408,7 +359,6 @@ const Game3D: React.FC = () => {
     }
   };
 
-  // Game controls
   const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
     if (gameOver || !controlsEnabled || gamePaused) return;
     
@@ -420,31 +370,26 @@ const Game3D: React.FC = () => {
     if (direction === 'right') newX += 1;
     if (direction === 'forward') newZ -= 1;
     if (direction === 'backward') newZ += 1;
-    if (direction === 'down') newY -= 1; // Fixed: Move DOWN decreases Y (block falls)
+    if (direction === 'down') newY -= 1;
     
-    // Ensure new position is within bounds
     if (isValidPosition(currentBlock.shape, newX, newY, newZ)) {
       setPosition({ x: newX, y: newY, z: newZ });
     } else if (direction === 'down') {
-      // If we can't move down, place the block
       placeBlock();
     }
   };
-  
+
   const rotateBlock = (axis: 'x' | 'y' | 'z') => {
     if (gameOver || !controlsEnabled || gamePaused) return;
     
     const rotatedPattern = [...currentBlock.shape];
     
-    // Rotate the 2D pattern
     if (axis === 'x' || axis === 'z') {
       const numRows = rotatedPattern.length;
       const numCols = rotatedPattern[0].length;
       
-      // Create a new 2D array with swapped dimensions
       const newPattern: number[][] = Array(numCols).fill(0).map(() => Array(numRows).fill(0));
       
-      // Perform rotation
       for (let r = 0; r < numRows; r++) {
         for (let c = 0; c < numCols; c++) {
           if (axis === 'z') {
@@ -455,24 +400,21 @@ const Game3D: React.FC = () => {
         }
       }
       
-      // Check if the rotated position is valid
       if (isValidPosition(newPattern, position.x, position.y, position.z)) {
         setCurrentBlock({
           ...currentBlock,
           shape: newPattern
         });
       } else {
-        // Try adjusting position to make rotation valid (wall kick)
-        // Try shifting left/right/forward/backward to ensure piece is inside grid
         const offsets = [
-          { x: -1, y: 0, z: 0 },  // left
-          { x: 1, y: 0, z: 0 },   // right
-          { x: 0, y: 0, z: -1 },  // forward
-          { x: 0, y: 0, z: 1 },   // backward
-          { x: -1, y: 0, z: -1 }, // left-forward
-          { x: 1, y: 0, z: -1 },  // right-forward
-          { x: -1, y: 0, z: 1 },  // left-backward
-          { x: 1, y: 0, z: 1 },   // right-backward
+          { x: -1, y: 0, z: 0 },
+          { x: 1, y: 0, z: 0 },
+          { x: 0, y: 0, z: -1 },
+          { x: 0, y: 0, z: 1 },
+          { x: -1, y: 0, z: -1 },
+          { x: 1, y: 0, z: -1 },
+          { x: -1, y: 0, z: 1 },
+          { x: 1, y: 0, z: 1 },
         ];
         
         let validPositionFound = false;
@@ -493,9 +435,7 @@ const Game3D: React.FC = () => {
           }
         }
         
-        // If no valid position found, don't rotate
         if (!validPositionFound) {
-          // Toast to indicate rotation not possible
           toast({
             title: "Can't rotate",
             description: "Not enough space to rotate block",
@@ -504,28 +444,23 @@ const Game3D: React.FC = () => {
       }
     }
   };
-  
-  // Fix the dropBlock function to ensure it goes down to the bottom correctly
+
   const dropBlock = () => {
     if (gameOver || !controlsEnabled || gamePaused) return;
     
     let newY = position.y;
     
-    // Find the lowest valid position while maintaining the current block shape
     while (isValidPosition(currentBlock.shape, position.x, newY - 1, position.z)) {
-      newY--; // Fixed: decrease Y to drop to the bottom
+      newY--;
     }
     
-    // Update position without changing the block orientation
     setPosition({ ...position, y: newY });
     
-    // Place the block without any rotation
     setTimeout(() => {
       placeBlock();
     }, 0);
   };
 
-  // Toggle game pause state
   const toggleGamePause = () => {
     if (gameOver) return;
     
@@ -547,9 +482,8 @@ const Game3D: React.FC = () => {
     }
   };
 
-  // Start the game
   const startGame = () => {
-    if (!gamePaused) return; // Already running
+    if (!gamePaused) return;
     
     setGamePaused(false);
     setTimerActive(true);
@@ -561,7 +495,6 @@ const Game3D: React.FC = () => {
     });
   };
 
-  // Handle keyboard controls
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!controlsEnabled || gamePaused) return;
@@ -603,22 +536,19 @@ const Game3D: React.FC = () => {
     };
   }, [position, currentBlock, grid, gameOver, controlsEnabled, gamePaused]);
 
-  // Handle view change
   const handleViewChange = (viewPoint: ViewPoint) => {
     setCurrentView(viewPoint);
     
     if (orbitControlsRef.current) {
       const controls = orbitControlsRef.current as any;
       
-      // Reset camera position
       if (controls.object) {
         controls.object.position.set(...viewPoint.position);
         
-        // Set target if provided, otherwise use default center
         if (viewPoint.target) {
           controls.target.set(...viewPoint.target);
         } else {
-          controls.target.set(4.5, 4.5, 4.5);  // Center of the grid
+          controls.target.set(4.5, 4.5, 4.5);
         }
         
         controls.update();
@@ -631,7 +561,6 @@ const Game3D: React.FC = () => {
     });
   };
 
-  // Render game
   return (
     <div className="flex flex-col justify-center items-center min-h-screen p-2 md:p-4">
       <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white text-center">
