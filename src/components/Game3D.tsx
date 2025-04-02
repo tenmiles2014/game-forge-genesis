@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -10,6 +9,7 @@ import Grid3D from './Grid3D';
 import BlockPreview from './BlockPreview';
 import GameTimer from './GameTimer';
 import LevelDisplay from './LevelDisplay';
+import ViewControls, { ViewPoint } from './ViewControls';
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 
@@ -18,6 +18,15 @@ const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: 0, z: 4 };
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
+
+// Predefined camera viewpoints
+const VIEW_POINTS: ViewPoint[] = [
+  { name: "Default", position: [15, 15, 15] },
+  { name: "Top View", position: [4.5, 25, 4.5], target: [4.5, 0, 4.5] },
+  { name: "Side View", position: [25, 5, 4.5], target: [0, 5, 4.5] },
+  { name: "Front View", position: [4.5, 5, 25], target: [4.5, 5, 0] },
+  { name: "Corner View", position: [20, 10, 20] },
+];
 
 const Game3D: React.FC = () => {
   // Game state
@@ -33,10 +42,10 @@ const Game3D: React.FC = () => {
   const [timerActive, setTimerActive] = useState(false);
   const [gamePaused, setGamePaused] = useState(true); // Game starts paused
   const orbitControlsRef = useRef(null);
+  const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
 
   // Calculate time limit based on level
   useEffect(() => {
-    // Time decreases as level increases, but never below 60 seconds
     const newTimeLimit = Math.max(60, Math.floor(BASE_TIME_LIMIT - (level * 2)));
     setTimeLimit(newTimeLimit);
   }, [level]);
@@ -490,6 +499,34 @@ const Game3D: React.FC = () => {
     };
   }, [position, currentBlock, grid, gameOver, controlsEnabled, gamePaused]);
 
+  // Handle view change
+  const handleViewChange = (viewPoint: ViewPoint) => {
+    setCurrentView(viewPoint);
+    
+    if (orbitControlsRef.current) {
+      const controls = orbitControlsRef.current as any;
+      
+      // Reset camera position
+      if (controls.object) {
+        controls.object.position.set(...viewPoint.position);
+        
+        // Set target if provided, otherwise use default center
+        if (viewPoint.target) {
+          controls.target.set(...viewPoint.target);
+        } else {
+          controls.target.set(4.5, 4.5, 4.5);  // Center of the grid
+        }
+        
+        controls.update();
+      }
+    }
+    
+    toast({
+      title: `View Changed`,
+      description: `Now viewing from ${viewPoint.name}`,
+    });
+  };
+
   // Render game
   return (
     <div className="flex flex-col justify-center items-center min-h-screen p-4">
@@ -499,8 +536,15 @@ const Game3D: React.FC = () => {
       
       <div className="game-container rounded-lg overflow-hidden max-w-5xl w-full flex flex-col md:flex-row gap-6 p-6 bg-black bg-opacity-30">
         <div className="flex-1">
+          <div className="flex justify-between items-center mb-2">
+            <ViewControls 
+              viewPoints={VIEW_POINTS} 
+              onSelectView={handleViewChange}
+            />
+          </div>
+          
           <div className="game-board rounded-lg overflow-hidden h-[500px]">
-            <Canvas camera={{ position: [15, 15, 15], fov: 50 }}>
+            <Canvas camera={{ position: currentView.position, fov: 50 }}>
               <ambientLight intensity={0.5} />
               <pointLight position={[10, 10, 10]} />
               <Grid3D 
@@ -513,6 +557,7 @@ const Game3D: React.FC = () => {
                 enabled={controlsEnabled}
                 minDistance={10}
                 maxDistance={30}
+                target={currentView.target || [4.5, 4.5, 4.5]}
               />
             </Canvas>
           </div>
