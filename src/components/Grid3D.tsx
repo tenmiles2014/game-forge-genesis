@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
 
@@ -6,10 +6,24 @@ interface Grid3DProps {
   grid: number[][][];
   currentBlock: BlockPattern;
   position: { x: number; y: number; z: number };
+  linesCleared: number;
 }
 
-const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
-  // Color mapping
+const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesCleared }) => {
+  const [flashEffect, setFlashEffect] = useState(false);
+  const previousLinesClearedRef = React.useRef(linesCleared);
+
+  useEffect(() => {
+    if (linesCleared > previousLinesClearedRef.current) {
+      setFlashEffect(true);
+      const timer = setTimeout(() => {
+        setFlashEffect(false);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+    previousLinesClearedRef.current = linesCleared;
+  }, [linesCleared]);
+
   const getColor = (colorIndex: number) => {
     const colors = {
       1: new THREE.Color('#3b82f6'), // blue
@@ -21,7 +35,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return colors[colorIndex as keyof typeof colors] || new THREE.Color('gray');
   };
 
-  // Get current block's color as THREE.Color
   const blockColor = useMemo(() => {
     const colorMap: Record<string, THREE.Color> = {
       'blue': new THREE.Color('#3b82f6'),
@@ -33,13 +46,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return colorMap[currentBlock.color] || new THREE.Color('gray');
   }, [currentBlock.color]);
 
-  // Calculate ghost position (where block will land)
   const ghostPosition = useMemo(() => {
     let lowestValidY = position.y;
     const pattern = currentBlock.shape;
     const gridSize = grid.length || 10;
     
-    // Loop downward until we find a collision or hit the bottom
     while (lowestValidY > 0) {
       let collision = false;
       
@@ -50,7 +61,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
             const posY = lowestValidY - 1;
             const posZ = position.z + y;
             
-            // Check if we'd hit the bottom or another block
             if (
               posY < 0 || 
               (posX >= 0 && posX < gridSize && 
@@ -71,7 +81,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return { x: position.x, y: lowestValidY, z: position.z };
   }, [grid, currentBlock.shape, position]);
 
-  // Render placed blocks from grid
   const renderPlacedBlocks = useMemo(() => {
     const blocks = [];
     if (!grid || grid.length === 0) return blocks;
@@ -101,13 +110,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return blocks;
   }, [grid]);
 
-  // Render ghost block (prediction)
   const renderGhostBlock = useMemo(() => {
     const blocks = [];
     const pattern = currentBlock.shape;
     const gridSize = grid.length || 10;
     
-    // Only render if the ghost is lower than the current position
     if (ghostPosition.y < position.y) {
       for (let y = 0; y < pattern.length; y++) {
         for (let x = 0; x < pattern[y].length; x++) {
@@ -116,7 +123,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
             const posY = ghostPosition.y;
             const posZ = ghostPosition.z + y;
             
-            // Skip rendering blocks that would be outside the grid
             if (posX < 0 || posX >= gridSize || posY < 0 || posY >= gridSize || posZ < 0 || posZ >= gridSize) {
               continue;
             }
@@ -144,7 +150,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return blocks;
   }, [currentBlock.shape, ghostPosition, position.y, blockColor, grid.length]);
 
-  // Render current falling block
   const renderCurrentBlock = useMemo(() => {
     const blocks = [];
     const pattern = currentBlock.shape;
@@ -153,12 +158,10 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     for (let y = 0; y < pattern.length; y++) {
       for (let x = 0; x < pattern[y].length; x++) {
         if (pattern[y][x]) {
-          // Calculate absolute positions
           const posX = position.x + x;
           const posY = position.y;
           const posZ = position.z + y;
           
-          // Skip rendering blocks that would be outside the grid
           if (posX < 0 || posX >= gridSize || posY < 0 || posY >= gridSize || posZ < 0 || posZ >= gridSize) {
             continue;
           }
@@ -184,7 +187,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return blocks;
   }, [currentBlock, position, blockColor, grid.length]);
 
-  // Render grid boundaries
   const renderGridBoundaries = useMemo(() => {
     const gridSize = grid.length || 10;
     
@@ -201,7 +203,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     );
   }, [grid]);
 
-  // Render height limit indicator
   const renderHeightLimit = useMemo(() => {
     const gridSize = grid.length || 10;
     
@@ -209,13 +210,34 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
       <mesh position={[gridSize/2 - 0.5, gridSize - 1, gridSize/2 - 0.5]}>
         <boxGeometry args={[gridSize, 0.1, gridSize]} />
         <meshStandardMaterial 
-          color="#F2FCE2"  // Soft green from the color palette
+          color="#F2FCE2" 
           transparent={true}
           opacity={0.2}
         />
       </mesh>
     );
   }, [grid]);
+
+  const renderFlashEffect = useMemo(() => {
+    if (!flashEffect) return null;
+    
+    const gridSize = grid.length || 10;
+    
+    return (
+      <pointLight
+        position={[gridSize/2 - 0.5, gridSize/2, gridSize/2 - 0.5]}
+        intensity={2}
+        distance={20}
+        decay={2}
+        color="#FFFFFF"
+      >
+        <mesh>
+          <sphereGeometry args={[0.5, 16, 8]} />
+          <meshBasicMaterial color="#FFFFFF" transparent={true} opacity={0.7} />
+        </mesh>
+      </pointLight>
+    );
+  }, [flashEffect, grid]);
 
   return (
     <group>
@@ -224,7 +246,9 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
       {renderGhostBlock}
       {renderGridBoundaries}
       {renderHeightLimit}
+      {renderFlashEffect}
       <gridHelper args={[10, 10]} position={[4.5, -0.5, 4.5]} />
+      <ambientLight intensity={0.5} />
     </group>
   );
 };

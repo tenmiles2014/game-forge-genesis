@@ -42,6 +42,7 @@ const Game3D: React.FC = () => {
   const [gamePaused, setGamePaused] = useState(true);
   const orbitControlsRef = useRef(null);
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
+  const [linesCleared, setLinesCleared] = useState(0);
   const gravityTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -99,6 +100,7 @@ const Game3D: React.FC = () => {
   const resetGame = () => {
     setGrid(initializeGrid());
     setScore(0);
+    setLinesCleared(0);
     setCurrentBlock(getRandomBlockPattern());
     setNextBlock(getRandomBlockPattern());
     setPosition({...INITIAL_POSITION});
@@ -318,6 +320,7 @@ const Game3D: React.FC = () => {
       const levelMultiplier = 1 + (level * 0.1);
       const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
       setScore(prevScore => prevScore + pointsScored);
+      setLinesCleared(prev => prev + layersCleared);
       toast({
         title: `${layersCleared} lines cleared!`,
         description: `+${pointsScored} points`,
@@ -586,6 +589,7 @@ const Game3D: React.FC = () => {
                 grid={grid} 
                 currentBlock={currentBlock} 
                 position={position}
+                linesCleared={linesCleared}
               />
               <OrbitControls 
                 ref={orbitControlsRef} 
@@ -602,7 +606,7 @@ const Game3D: React.FC = () => {
         
         <div className="flex flex-col justify-between gap-4 w-full md:w-64 p-4">
           <div className="space-y-4">
-            <ScoreDisplay score={score} />
+            <ScoreDisplay score={score} linesCleared={linesCleared} />
             
             <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
             
