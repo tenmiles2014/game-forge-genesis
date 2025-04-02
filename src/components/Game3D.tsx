@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -11,7 +10,7 @@ import BlockPreview from './BlockPreview';
 
 // Constants
 const GRID_SIZE = 10;
-const INITIAL_POSITION = { x: Math.floor(GRID_SIZE / 2) - 1, y: 0, z: 0 };
+const INITIAL_POSITION = { x: Math.floor(GRID_SIZE / 2) - 1, y: 0, z: Math.floor(GRID_SIZE / 2) - 1 };
 
 const Game3D: React.FC = () => {
   // Game state
