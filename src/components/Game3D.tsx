@@ -15,7 +15,7 @@ import { Pause } from "lucide-react";
 
 // Constants
 const GRID_SIZE = 10;
-const INITIAL_POSITION = { x: 4, y: 0, z: 4 };
+const INITIAL_POSITION = { x: 4, y: 0, z: 4 }; // Start at the top
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
@@ -111,7 +111,7 @@ const Game3D: React.FC = () => {
     setScore(0);
     setCurrentBlock(getRandomBlockPattern());
     setNextBlock(getRandomBlockPattern());
-    setPosition({...INITIAL_POSITION, y: 0}); // Ensure starting at y=0
+    setPosition({...INITIAL_POSITION}); // Start at the top
     setGameOver(false);
     setControlsEnabled(true);
     setLevel(1);
@@ -172,11 +172,6 @@ const Game3D: React.FC = () => {
   const isValidPosition = (pattern: number[][], newX: number, newY: number, newZ: number) => {
     // First check boundaries
     if (wouldExceedBoundary(pattern, newX, newY, newZ)) {
-      return false;
-    }
-    
-    // Ensure y is never negative
-    if (newY < 0) {
       return false;
     }
     
@@ -243,7 +238,7 @@ const Game3D: React.FC = () => {
     setNextBlock(getRandomBlockPattern());
     
     // Reset position to the top of the grid
-    const newPosition = {...INITIAL_POSITION, y: 0};
+    const newPosition = {...INITIAL_POSITION};
     
     // Check if game is over by seeing if the new block can be placed at the initial position
     if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
@@ -287,7 +282,7 @@ const Game3D: React.FC = () => {
     return colorMap[color] || 0;
   };
 
-  // Clear completed layers - new implementation to check for any full row of 10 blocks in any direction
+  // Clear completed layers - implementation to check for any full row of 10 blocks in any direction
   const clearCompleteLayers = (grid: number[][][]) => {
     let layersCleared = 0;
     const gridCopy = JSON.parse(JSON.stringify(grid)); // Deep copy for operations
@@ -435,7 +430,7 @@ const Game3D: React.FC = () => {
   };
 
   // Game controls
-  const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down' | 'up') => {
+  const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
     if (gameOver || !controlsEnabled || gamePaused) return;
     
     let newX = position.x;
@@ -447,10 +442,6 @@ const Game3D: React.FC = () => {
     if (direction === 'forward') newZ -= 1;
     if (direction === 'backward') newZ += 1;
     if (direction === 'down') newY += 1;
-    if (direction === 'up') newY -= 1;
-    
-    // Ensure y is never negative
-    newY = Math.max(0, newY);
     
     // Ensure new position is within bounds
     if (isValidPosition(currentBlock.shape, newX, newY, newZ)) {
@@ -493,7 +484,7 @@ const Game3D: React.FC = () => {
         });
       } else {
         // Try adjusting position to make rotation valid (wall kick)
-        // Try shifting left/right/forward/backward and up to ensure piece is inside grid
+        // Try shifting left/right/forward/backward to ensure piece is inside grid
         const offsets = [
           { x: -1, y: 0, z: 0 },  // left
           { x: 1, y: 0, z: 0 },   // right
@@ -509,7 +500,7 @@ const Game3D: React.FC = () => {
         
         for (const offset of offsets) {
           const newX = position.x + offset.x;
-          const newY = Math.max(0, position.y + offset.y); // Ensure y is never negative
+          const newY = position.y;
           const newZ = position.z + offset.z;
           
           if (isValidPosition(newPattern, newX, newY, newZ)) {
@@ -535,7 +526,7 @@ const Game3D: React.FC = () => {
     }
   };
   
-  // Fix the dropBlock function to ensure it doesn't rotate blocks
+  // Fix the dropBlock function to ensure it goes down to the bottom correctly
   const dropBlock = () => {
     if (gameOver || !controlsEnabled || gamePaused) return;
     
@@ -591,14 +582,6 @@ const Game3D: React.FC = () => {
     });
   };
 
-  // Fix for blocks appearing under the grid surface
-  useEffect(() => {
-    // Ensure blocks never start below the grid surface
-    if (position.y < 0) {
-      setPosition({ ...position, y: 0 });
-    }
-  }, [position]);
-
   // Handle keyboard controls
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -628,9 +611,6 @@ const Game3D: React.FC = () => {
           break;
         case 's':  // Move down
           moveBlock('down');
-          break;
-        case 'w':  // Move up (new control)
-          moveBlock('up');
           break;
         default:
           break;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import GameGrid, { GridCellState } from './GameGrid';
@@ -20,6 +19,7 @@ const Game: React.FC = () => {
   const [nextBlock, setNextBlock] = useState<BlockPattern>(getRandomBlockPattern());
   const [position, setPosition] = useState(INITIAL_BLOCK_POSITION);
   const [gameOver, setGameOver] = useState(false);
+  const [gamePaused, setGamePaused] = useState(true);
   
   // Initialize game grid
   const initializeGrid = useCallback(() => {
@@ -46,6 +46,7 @@ const Game: React.FC = () => {
     setNextBlock(getRandomBlockPattern());
     setPosition(INITIAL_BLOCK_POSITION);
     setGameOver(false);
+    setGamePaused(true);
   };
 
   // Check if the position is valid
@@ -110,6 +111,7 @@ const Game: React.FC = () => {
     // Check if game is over
     if (!isValidPosition(nextBlock.shape, INITIAL_BLOCK_POSITION.row, INITIAL_BLOCK_POSITION.col)) {
       setGameOver(true);
+      setGamePaused(true);
       toast({
         title: "Game Over!",
         description: `Final score: ${score}`,
@@ -148,7 +150,7 @@ const Game: React.FC = () => {
 
   // Game controls
   const moveBlock = (direction: 'left' | 'right' | 'down') => {
-    if (gameOver) return;
+    if (gameOver || gamePaused) return;
     
     let newRow = position.row;
     let newCol = position.col;
@@ -166,7 +168,7 @@ const Game: React.FC = () => {
   };
   
   const rotateBlock = () => {
-    if (gameOver) return;
+    if (gameOver || gamePaused) return;
     
     const rotatedShape = rotateBlockPattern(currentBlock.shape);
     
@@ -179,7 +181,7 @@ const Game: React.FC = () => {
   };
   
   const dropBlock = () => {
-    if (gameOver) return;
+    if (gameOver || gamePaused) return;
     
     let newRow = position.row;
     
@@ -191,10 +193,18 @@ const Game: React.FC = () => {
     setPosition({ row: newRow, col: position.col });
     placeBlock();
   };
+  
+  // Toggle pause/resume game
+  const togglePause = () => {
+    if (gameOver) return;
+    setGamePaused(!gamePaused);
+  };
 
   // Handle keyboard controls
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (gameOver || gamePaused) return;
+      
       switch (event.key) {
         case 'ArrowLeft':
           moveBlock('left');
@@ -221,7 +231,7 @@ const Game: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [position, currentBlock, grid, gameOver]);
+  }, [position, currentBlock, grid, gameOver, gamePaused]);
 
   // Render the current block on top of the grid
   const renderGridWithCurrentBlock = () => {
@@ -289,17 +299,17 @@ const Game: React.FC = () => {
           </div>
           
           <GameControls 
-            onRotate={rotateBlock}
-            onMove={moveBlock}
-            onDrop={dropBlock}
             onReset={resetGame}
+            onStartPause={togglePause}
+            isPaused={gamePaused}
+            gameOver={gameOver}
           />
         </div>
       </div>
       
       {gameOver && (
         <div className="mt-6 animate-scale-in">
-          <p className="text-xl text-white mb-3">Game Over! Final Score: {score}</p>
+          <p className="text-xl text-white mb-3">Game Over! Final score: {score}</p>
         </div>
       )}
     </div>
