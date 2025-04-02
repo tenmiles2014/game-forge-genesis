@@ -31,9 +31,9 @@ const GameTimer: React.FC<GameTimerProps> = ({
         setSeconds(prevSeconds => {
           const newTime = prevSeconds - 1;
           if (newTime <= 0) {
+            // When time reaches zero, call onTimeUp immediately
             if (onTimeUp) {
-              // Schedule callback outside of state update
-              setTimeout(onTimeUp, 0);
+              onTimeUp();
             }
             return 0;
           }

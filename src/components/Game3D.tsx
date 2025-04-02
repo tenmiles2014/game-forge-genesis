@@ -206,17 +206,6 @@ const Game3D: React.FC = () => {
     const newPosition = {...INITIAL_POSITION, y: 0};
     setPosition(newPosition);
     
-    // Fix: Properly check if game is over by checking if the new block can be placed at the initial position
-    if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
-      setGameOver(true);
-      setControlsEnabled(false);
-      setTimerActive(false);
-      toast({
-        title: "Game Over!",
-        description: `Final score: ${score} | Level: ${level}`,
-      });
-    }
-    
     // Check for level up
     if (layersCleared > 0 && level < MAX_LEVEL) {
       const layerThreshold = Math.ceil(level / 5) + 1; // More layers needed for level up as you progress
