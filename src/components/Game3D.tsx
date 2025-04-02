@@ -333,14 +333,19 @@ const Game3D: React.FC = () => {
   const dropBlock = () => {
     if (gameOver || !controlsEnabled) return;
     
+    // Keep track of the current block's shape and position
+    const currentShape = [...currentBlock.shape];
     let newY = position.y;
     
     // Find the lowest valid position
-    while (isValidPosition(currentBlock.shape, position.x, newY + 1, position.z)) {
+    while (isValidPosition(currentShape, position.x, newY + 1, position.z)) {
       newY++;
     }
     
+    // Update position without changing shape
     setPosition({ ...position, y: newY });
+    
+    // Place the block with its original shape
     placeBlock();
   };
 
