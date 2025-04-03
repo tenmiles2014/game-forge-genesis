@@ -7,7 +7,6 @@ import { BlockPattern, getRandomBlockPattern } from './BlockPatterns';
 import ScoreDisplay from './ScoreDisplay';
 import Grid3D from './Grid3D';
 import BlockPreview from './BlockPreview';
-import GameTimer from './GameTimer';
 import LevelDisplay from './LevelDisplay';
 import ViewControls, { ViewPoint } from './ViewControls';
 import GuidelineOverlay from './GuidelineOverlay';
@@ -17,7 +16,6 @@ import Gyroscope from './Gyroscope';
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
 const MAX_LEVEL = 99;
-const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
 
 const VIEW_POINTS: ViewPoint[] = [
@@ -37,17 +35,10 @@ const Game3D: React.FC = () => {
   const [gameOver, setGameOver] = useState(false);
   const [controlsEnabled, setControlsEnabled] = useState(true);
   const [level, setLevel] = useState(1);
-  const [timeLimit, setTimeLimit] = useState(BASE_TIME_LIMIT);
-  const [timerActive, setTimerActive] = useState(false);
   const [gamePaused, setGamePaused] = useState(true);
   const orbitControlsRef = useRef(null);
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    const newTimeLimit = Math.max(60, Math.floor(BASE_TIME_LIMIT - (level * 2)));
-    setTimeLimit(newTimeLimit);
-  }, [level]);
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 50));
@@ -105,7 +96,6 @@ const Game3D: React.FC = () => {
     setGameOver(false);
     setControlsEnabled(true);
     setLevel(1);
-    setTimerActive(false);
     setGamePaused(true);
     
     if (gravityTimerRef.current) {
@@ -198,7 +188,6 @@ const Game3D: React.FC = () => {
     if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
       setGameOver(true);
       setControlsEnabled(false);
-      setTimerActive(false);
       setGamePaused(true);
       toast({
         title: "Game Over!",
@@ -349,18 +338,6 @@ const Game3D: React.FC = () => {
     }
   };
 
-  const handleTimeUp = () => {
-    if (!gameOver) {
-      setGameOver(true);
-      setControlsEnabled(false);
-      setGamePaused(true);
-      toast({
-        title: "Time's Up!",
-        description: `Final score: ${score} | Level: ${level}`,
-      });
-    }
-  };
-
   const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
     if (gameOver || !controlsEnabled || gamePaused) return;
     
@@ -468,7 +445,6 @@ const Game3D: React.FC = () => {
     
     const newPausedState = !gamePaused;
     setGamePaused(newPausedState);
-    setTimerActive(!newPausedState);
     setControlsEnabled(!newPausedState);
     
     if (newPausedState) {
@@ -488,7 +464,6 @@ const Game3D: React.FC = () => {
     if (!gamePaused) return;
     
     setGamePaused(false);
-    setTimerActive(true);
     setControlsEnabled(true);
     
     toast({
@@ -601,13 +576,6 @@ const Game3D: React.FC = () => {
             <ScoreDisplay score={score} />
             
             <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
-            
-            <GameTimer 
-              isActive={timerActive} 
-              onTimeUp={handleTimeUp} 
-              timeLimit={timeLimit} 
-              level={level}
-            />
             
             <div className="p-4 rounded-lg bg-black bg-opacity-30">
               <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-4">Next Block</h3>
