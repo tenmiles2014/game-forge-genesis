@@ -94,8 +94,9 @@ export function useGridOperations(
     if (layersCleared > 0) {
       const levelMultiplier = 1 + (level * 0.1);
       const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
-      setScore(prevScore => prevScore + pointsScored);
-      setLinesCleared(prev => prev + layersCleared);
+      // Instead of using updater functions, first get current values outside of this hook
+      setScore(pointsScored);
+      setLinesCleared(layersCleared);
       toast({
         title: `${layersCleared} lines cleared!`,
         description: `+${pointsScored} points`,

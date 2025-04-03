@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { getRandomBlockPattern } from './BlockPatterns';
@@ -55,15 +54,18 @@ const Game3D: React.FC = () => {
   );
 
   const { clearCompleteLayers, checkIfStackedBlocks } = useGridOperations(
-    grid, setGrid, setScore, setLinesCleared, level, GRID_SIZE, VERTICAL_STACK_LIMIT
+    grid, setGrid, 
+    (points: number) => setScore(prevScore => prevScore + points),
+    (lines: number) => setLinesCleared(prevLines => prevLines + lines),
+    level, 
+    GRID_SIZE, 
+    VERTICAL_STACK_LIMIT
   );
 
-  // Initialize game
   useEffect(() => {
     resetGame();
   }, []);
 
-  // Game timer for gravity
   useEffect(() => {
     if (gamePaused || gameOver) {
       if (gravityTimerRef.current) {
@@ -87,13 +89,11 @@ const Game3D: React.FC = () => {
     };
   }, [gamePaused, gameOver, level, position]);
 
-  // Level-based time limit
   useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(180 - (level * 2)));
     setTimeLimit(newTimeLimit);
   }, [level]);
 
-  // Handle keyboard controls
   const dropBlock = () => {
     if (gameOver || !controlsEnabled || gamePaused) return;
     
@@ -110,7 +110,6 @@ const Game3D: React.FC = () => {
     currentBlock
   });
 
-  // Reset game function
   const resetGame = () => {
     setGrid(initializeGrid());
     setScore(0);
@@ -135,7 +134,6 @@ const Game3D: React.FC = () => {
     });
   };
 
-  // Place block function
   const placeBlock = () => {
     const newGrid = JSON.parse(JSON.stringify(grid));
     for (let y = 0; y < currentBlock.shape.length; y++) {
@@ -193,7 +191,6 @@ const Game3D: React.FC = () => {
     }
   };
 
-  // Game control functions
   const handleTimeUp = () => {
     if (!gameOver) {
       setGameOver(true);
