@@ -22,21 +22,21 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
     console.log(`Generating landing preview: current Y=${position.y}, landing Y=${landingY}`);
     
     // Don't show preview if landing position is the same as current position
-    if (position.y <= landingY) {
+    if (position.y >= landingY) {
       return [];
     }
 
     const elements = [];
     
     // Create ghost blocks at landing position
-    for (let z = 0; z < currentBlock.shape.length; z++) {
-      for (let x = 0; x < currentBlock.shape[z].length; x++) {
-        if (currentBlock.shape[z][x]) {
+    for (let row = 0; row < currentBlock.shape.length; row++) {
+      for (let col = 0; col < currentBlock.shape[row].length; col++) {
+        if (currentBlock.shape[row][col]) {
           // Ghost block at landing position
           elements.push(
             <mesh 
-              key={`landing-${x}-${z}`}
-              position={[position.x + x, landingY, position.z + z]}
+              key={`landing-${col}-${row}`}
+              position={[position.x + col, landingY - row, position.z]}
             >
               <boxGeometry args={[1, 1, 1]} />
               <meshStandardMaterial 
@@ -53,12 +53,13 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
           if (heightDiff > 1) {
             elements.push(
               <mesh
-                key={`line-${x}-${z}`}
+                key={`line-${col}-${row}`}
                 position={[
-                  position.x + x,
-                  position.y - (heightDiff / 2),
-                  position.z + z
+                  position.x + col,
+                  position.y - (row + heightDiff / 2),
+                  position.z
                 ]}
+                rotation={[0, 0, Math.PI / 2]} // Rotate to make cylinder vertical
               >
                 <cylinderGeometry 
                   args={[0.05, 0.05, heightDiff, 6]} 

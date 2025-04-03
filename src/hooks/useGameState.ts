@@ -4,7 +4,7 @@ import { toast } from "@/components/ui/use-toast";
 import { BlockPattern, getRandomBlockPattern } from '../components/BlockPatterns';
 
 const GRID_SIZE = 10;
-const INITIAL_POSITION = { x: 4, y: 8, z: 10 }; // Updated z position to 10
+const INITIAL_POSITION = { x: 4, y: 10, z: 0 }; // Updated: y=10, z=0
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)

@@ -21,7 +21,7 @@ const ActiveBlock: React.FC<ActiveBlockProps> = ({ currentBlock, position }) => 
             return (
               <mesh 
                 key={`current-${x}-${y}`} 
-                position={[position.x + x, position.y, position.z + y]}
+                position={[position.x + x, position.y - y, position.z + 0]} // Updated: y is subtracted to display correctly
               >
                 <boxGeometry args={[1, 1, 1]} />
                 <meshStandardMaterial color={currentBlock.color} />

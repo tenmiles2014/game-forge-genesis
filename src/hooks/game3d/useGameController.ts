@@ -4,7 +4,7 @@ import { getRandomBlockPattern } from '../../components/BlockPatterns';
 
 export function useGameController() {
   const [currentBlock, setCurrentBlock] = useState(getRandomBlockPattern());
-  const [position, setPosition] = useState({ x: 4, y: 0, z: 10 }); // Updated z position to 10
+  const [position, setPosition] = useState({ x: 4, y: 10, z: 0 }); // Updated: y=10, z=0
   const [controlsEnabled, setControlsEnabled] = useState(true);
 
   const orbitControlsRef = useRef(null);
@@ -17,7 +17,7 @@ export function useGameController() {
       case 'right': newPosition.x += 1; break;
       case 'forward': newPosition.z -= 1; break;
       case 'backward': newPosition.z += 1; break;
-      case 'down': newPosition.y += 1; break;
+      case 'down': newPosition.y -= 1; break; // Updated: move down decreases y
     }
 
     setPosition(newPosition);
@@ -26,7 +26,7 @@ export function useGameController() {
 
   const dropBlock = () => {
     setCurrentBlock(getRandomBlockPattern());
-    setPosition({ x: 4, y: 0, z: 10 }); // Updated z position to 10
+    setPosition({ x: 4, y: 10, z: 0 }); // Updated: y=10, z=0
     setControlsEnabled(true);
     return true;
   };
