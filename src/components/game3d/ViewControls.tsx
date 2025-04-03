@@ -36,11 +36,11 @@ const ViewControls: React.FC<ViewControlsProps> = ({
   };
 
   return (
-    <div className="flex justify-center mb-4">
+    <div className="flex flex-wrap justify-center gap-2 mb-4">
       {viewPoints.map((viewPoint, index) => (
         <button
           key={index}
-          className={`px-3 py-1 mx-1 rounded ${
+          className={`px-2 py-1 text-sm sm:text-base sm:px-3 rounded ${
             currentView === viewPoint
               ? 'bg-primary text-primary-foreground'
               : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'

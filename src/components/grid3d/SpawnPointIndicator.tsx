@@ -11,22 +11,21 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({
   gridSize, 
   isGameActive = false 
 }) => {
-  const [radius, setRadius] = useState(gridSize * 1.5);
+  const [radius, setRadius] = useState(gridSize * 1.2);
   const [shrinking, setShrinking] = useState(true);
   const [opacity, setOpacity] = useState(0.7);
   const animationRef = useRef<number | null>(null);
   
   // Animation parameters
-  const minRadius = gridSize * 0.7; // Smallest circle size
-  const maxRadius = gridSize * 1.5; // Largest circle size
-  const shrinkSpeed = 0.03; // Speed of circle shrinking
-  const pulseSpeed = 0.02; // Speed of opacity pulsing
+  const minRadius = gridSize * 0.9; // Smallest circle size
+  const maxRadius = gridSize * 1.2; // Largest circle size
+  const shrinkSpeed = 0.02; // Speed of circle shrinking
   
   useEffect(() => {
     // Only animate if the game is active
     if (!isGameActive) {
       // Reset to static state when game is paused/not started
-      setRadius(gridSize * 1.2);
+      setRadius(gridSize * 1.0);
       setOpacity(0.5);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -44,9 +43,6 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({
           newRadius -= shrinkSpeed;
           if (newRadius <= minRadius) {
             setShrinking(false);
-            // When the circle reaches the grid corners (minRadius), 
-            // simulate level up logic here
-            console.log("Circle reached grid corners - Level up would trigger here");
           }
         } else {
           newRadius += shrinkSpeed;
@@ -60,7 +56,7 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({
       
       // Create pulsing opacity effect
       setOpacity(prevOpacity => {
-        return 0.3 + Math.abs(Math.sin(Date.now() * 0.001) * 0.4);
+        return 0.4 + Math.abs(Math.sin(Date.now() * 0.001) * 0.4);
       });
       
       animationRef.current = requestAnimationFrame(animate);
@@ -76,17 +72,32 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({
     };
   }, [shrinking, gridSize, minRadius, maxRadius, isGameActive]);
   
+  // The spawn position is at the center top of the grid
+  const spawnY = gridSize - 2; // Slightly below top for visibility
+  
   return (
     <group>
-      {/* Circular indicator ring */}
-      <mesh position={[gridSize/2 - 0.5, -0.5, gridSize/2 - 0.5]} rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[radius - 0.2, radius, 64]} />
+      {/* Circular indicator ring at the spawn area */}
+      <mesh position={[gridSize/2 - 0.5, spawnY, gridSize/2 - 0.5]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[radius - 0.4, radius, 64]} />
         <meshBasicMaterial 
           color="#4A9BF7" 
           transparent={true} 
           opacity={opacity} 
           side={THREE.DoubleSide}
         />
+      </mesh>
+      
+      {/* Spawn point marker */}
+      <mesh position={[gridSize/2 - 0.5, spawnY + 0.5, gridSize/2 - 0.5]}>
+        <sphereGeometry args={[0.3, 16, 16]} />
+        <meshBasicMaterial color="#4A9BF7" transparent={true} opacity={0.8} />
+      </mesh>
+      
+      {/* Vertical guide lines from spawn point */}
+      <mesh position={[gridSize/2 - 0.5, spawnY/2, gridSize/2 - 0.5]}>
+        <cylinderGeometry args={[0.05, 0.05, spawnY, 6]} />
+        <meshBasicMaterial color="#4A9BF7" transparent={true} opacity={0.3} />
       </mesh>
     </group>
   );

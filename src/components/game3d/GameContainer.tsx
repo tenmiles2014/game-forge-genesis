@@ -36,11 +36,14 @@ const GameContainer: React.FC<GameContainerProps> = ({
   const isGameActive = !gamePaused && !gameOver;
 
   return (
-    <div className="game-container w-full h-full min-h-[500px] md:min-h-[600px] lg:min-h-[700px] rounded-lg overflow-hidden">
-      <Canvas camera={{ position: currentView.position, fov: 60 }}>
+    <div className="game-container w-full h-full min-h-[60vh] md:min-h-[65vh] lg:min-h-[70vh] rounded-lg overflow-hidden">
+      <Canvas 
+        camera={{ position: currentView.position, fov: 45 }}
+        style={{ width: '100%', height: '100%' }}
+      >
         <color attach="background" args={['#000000']} />
-        <ambientLight intensity={0.7} />
-        <pointLight position={[10, 10, 10]} intensity={1.0} />
+        <ambientLight intensity={0.8} />
+        <pointLight position={[10, 10, 10]} intensity={1.2} />
         <Grid3D 
           grid={grid} 
           currentBlock={currentBlock} 
@@ -51,9 +54,11 @@ const GameContainer: React.FC<GameContainerProps> = ({
         <OrbitControls 
           ref={orbitControlsRef} 
           enabled={true}
-          minDistance={10}
-          maxDistance={30}
-          target={currentView.target || [4.5, 4.5, 4.5]}
+          minDistance={8}
+          maxDistance={25}
+          target={[4.5, 4.5, 4.5]}
+          enableDamping={true}
+          dampingFactor={0.05}
         />
       </Canvas>
       

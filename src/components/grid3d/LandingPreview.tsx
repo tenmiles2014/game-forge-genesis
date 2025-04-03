@@ -19,9 +19,10 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
       return [];
     }
 
-    // Only show preview if the block is above the landing position
-    const heightDiff = position.y - landingY;
-    if (heightDiff <= 0) {
+    console.log(`Generating landing preview: current Y=${position.y}, landing Y=${landingY}`);
+    
+    // Don't show preview if landing position is the same as current position
+    if (position.y <= landingY) {
       return [];
     }
 
@@ -41,32 +42,35 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
               <meshStandardMaterial 
                 color={currentBlock.color}
                 transparent={true}
-                opacity={0.3}
-                wireframe={true}
+                opacity={0.4}
+                wireframe={false}
               />
             </mesh>
           );
 
           // Add drop line between current position and landing position
-          elements.push(
-            <mesh
-              key={`line-${x}-${z}`}
-              position={[
-                position.x + x,
-                position.y - (heightDiff / 2),
-                position.z + z
-              ]}
-            >
-              <cylinderGeometry 
-                args={[0.03, 0.03, heightDiff, 6]} 
-              />
-              <meshBasicMaterial
-                color={currentBlock.color}
-                transparent={true}
-                opacity={0.4}
-              />
-            </mesh>
-          );
+          const heightDiff = position.y - landingY;
+          if (heightDiff > 1) {
+            elements.push(
+              <mesh
+                key={`line-${x}-${z}`}
+                position={[
+                  position.x + x,
+                  position.y - (heightDiff / 2),
+                  position.z + z
+                ]}
+              >
+                <cylinderGeometry 
+                  args={[0.05, 0.05, heightDiff, 6]} 
+                />
+                <meshBasicMaterial
+                  color={currentBlock.color}
+                  transparent={true}
+                  opacity={0.3}
+                />
+              </mesh>
+            );
+          }
         }
       }
     }

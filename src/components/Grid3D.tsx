@@ -26,6 +26,10 @@ const Grid3D: React.FC<Grid3DProps> = ({
 }) => {
   const gridSize = grid?.length || 10;
   
+  useEffect(() => {
+    console.log("Grid3D rendering with position:", position);
+  }, [position]);
+  
   // Calculate the landing position for the current block
   const landingPosition = useMemo(() => {
     // Safety check for required data
@@ -37,7 +41,7 @@ const Grid3D: React.FC<Grid3DProps> = ({
   }, [grid, currentBlock, position]);
   
   return (
-    <group>
+    <group position={[0, 0, 0]} scale={[1, 1, 1]}>
       <GridBoundaries gridSize={gridSize} />
       
       {grid && grid.length > 0 && (

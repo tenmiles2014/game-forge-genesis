@@ -18,9 +18,11 @@ export function useGameInitialization({
     const initialBlock = getRandomBlockPattern();
     const nextBlock = getRandomBlockPattern();
 
+    console.log("Initializing game with position:", INITIAL_POSITION);
+
     // Initialize grid, blocks, and game state
     setGrid((prevGrid) => {
-      const size = prevGrid.length || 10;
+      const size = prevGrid?.length || 10;
       return Array.from({ length: size }, () => 
         Array.from({ length: size }, () => 
           Array.from({ length: size }, () => 0)
@@ -30,12 +32,15 @@ export function useGameInitialization({
 
     setCurrentBlock(initialBlock);
     setNextBlock(nextBlock);
-    setPosition(INITIAL_POSITION);
+    setPosition({...INITIAL_POSITION}); // Use spread to ensure we create a new object
     setGameOver(false);
     setGamePaused(true);
     setScore(0);
     setLinesCleared(0);
     setControlsEnabled(false);
+
+    // Make sure the block is positioned at the top of the grid
+    console.log("Game initialized with block at position:", INITIAL_POSITION);
 
   }, [
     setGrid, 

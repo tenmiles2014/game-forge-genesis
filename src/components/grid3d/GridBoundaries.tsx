@@ -45,11 +45,33 @@ const GridBoundaries: React.FC<GridBoundariesProps> = ({ gridSize }) => {
         <meshBasicMaterial color="#4A9BF7" />
       </mesh>
 
-      {/* Edge guidelines */}
+      {/* Visible bounding box for the play area */}
       <lineSegments>
         <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(gridSize, gridSize, gridSize)]} />
-        <lineBasicMaterial attach="material" color="#4A9BF7" opacity={0.3} transparent />
+        <lineBasicMaterial attach="material" color="#4A9BF7" opacity={0.5} transparent />
       </lineSegments>
+      
+      {/* Height indicator lines at cardinal directions */}
+      {[0, 2, 4, 6, 8].map((height) => (
+        <React.Fragment key={`height-${height}`}>
+          <mesh position={[0, height, 0]}>
+            <boxGeometry args={[0.1, 0.1, 0.1]} />
+            <meshBasicMaterial color="#ffffff" opacity={0.7} transparent />
+          </mesh>
+          <mesh position={[gridSize-1, height, 0]}>
+            <boxGeometry args={[0.1, 0.1, 0.1]} />
+            <meshBasicMaterial color="#ffffff" opacity={0.7} transparent />
+          </mesh>
+          <mesh position={[0, height, gridSize-1]}>
+            <boxGeometry args={[0.1, 0.1, 0.1]} />
+            <meshBasicMaterial color="#ffffff" opacity={0.7} transparent />
+          </mesh>
+          <mesh position={[gridSize-1, height, gridSize-1]}>
+            <boxGeometry args={[0.1, 0.1, 0.1]} />
+            <meshBasicMaterial color="#ffffff" opacity={0.7} transparent />
+          </mesh>
+        </React.Fragment>
+      ))}
     </>
   );
 };

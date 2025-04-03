@@ -17,18 +17,19 @@ export const calculateLandingPosition = (
   const landingPosition = { ...position };
   
   // Start from current position and move down until we hit something
+  let tempY = position.y;
   let hitObstacle = false;
   
-  while (landingPosition.y > 0 && !hitObstacle) {
-    landingPosition.y -= 1; // Try one position lower
+  while (tempY > 0 && !hitObstacle) {
+    tempY -= 1; // Try one position lower
     
     // Check if this new position would collide with anything
-    for (let z = 0; z < currentBlock.shape.length; z++) {
-      for (let x = 0; x < currentBlock.shape[z].length; x++) {
+    for (let z = 0; z < currentBlock.shape.length && !hitObstacle; z++) {
+      for (let x = 0; x < currentBlock.shape[z].length && !hitObstacle; x++) {
         if (currentBlock.shape[z][x]) {
           const gridX = position.x + x;
           const gridZ = position.z + z;
-          const gridY = landingPosition.y;
+          const gridY = tempY;
           
           // Check boundaries
           if (gridX < 0 || gridX >= gridSize || 
@@ -39,21 +40,24 @@ export const calculateLandingPosition = (
           }
           
           // Check collision with placed blocks
-          if (grid[gridY][gridX][gridZ] !== 0) {
+          if (grid[gridY] && grid[gridY][gridX] && grid[gridY][gridX][gridZ] !== 0) {
             hitObstacle = true;
             break;
           }
         }
       }
-      if (hitObstacle) break;
     }
   }
   
-  // If we hit something, move back up one position
+  // If we hit something, set the landing position to one level above
   if (hitObstacle) {
-    landingPosition.y += 1;
+    landingPosition.y = tempY + 1;
+  } else {
+    // We reached the bottom without hitting anything
+    landingPosition.y = 0;
   }
 
+  console.log(`Landing calculator - From Y=${position.y} to landing Y=${landingPosition.y}`);
   return landingPosition;
 };
 
