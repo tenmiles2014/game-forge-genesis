@@ -1,6 +1,8 @@
 import { useCallback } from 'react';
-import { toast } from "@/components/ui/use-toast";
 import { BlockPattern } from '../../components/BlockPatterns';
+import { placeBlockInGrid } from './utils/placeBlockInGrid';
+import { handleGameOver } from './utils/handleGameOver';
+import { handleLevelUp } from './utils/handleLevelUp';
 
 interface DropBlockActionProps {
   grid: number[][][];
@@ -74,87 +76,38 @@ export function useDropBlockAction({
     console.log(`Found landing at y=${y} (original y=${position.y})`);
     
     // Place the block in the grid
-    const newGrid = JSON.parse(JSON.stringify(grid)); // Deep clone to avoid mutation
     const colorIndex = getColorIndex(currentBlock.color);
-    
-    console.log(`Placing block at position [x:${position.x}, y:${y}, z:${position.z}]`, {
-      blockShape: JSON.stringify(currentBlock.shape),
-      color: currentBlock.color,
-      colorIndex
-    });
-    
-    for (let yy = 0; yy < currentBlock.shape.length; yy++) {
-      for (let xx = 0; xx < currentBlock.shape[yy].length; xx++) {
-        if (currentBlock.shape[yy][xx]) {
-          const gridX = position.x + xx;
-          const gridY = y;
-          const gridZ = position.z + yy;
-          
-          if (
-            gridX >= 0 && gridX < grid.length &&
-            gridY >= 0 && gridY < grid.length &&
-            gridZ >= 0 && gridZ < grid.length
-          ) {
-            newGrid[gridY][gridX][gridZ] = colorIndex;
-          }
-        }
-      }
-    }
-    
+    const newGrid = placeBlockInGrid(grid, { ...position, y }, currentBlock, colorIndex);
     setGrid(newGrid);
 
     // Clear any completed layers
     const layersCleared = clearCompleteLayers(newGrid);
     
-    // Check for game over conditions - NEW LOGIC HERE
+    // Check for game over conditions
     // Check if there are any stacked blocks - this is now our only game over condition
     const hasStacked = checkIfStackedBlocks(newGrid);
     
     if (hasStacked) {
-      console.log("🎮 Game over: blocks are stacked");
-      
-      if (gravityTimerRef.current) {
-        clearInterval(gravityTimerRef.current);
-        gravityTimerRef.current = null;
-      }
-      
-      setGameOver(true);
-      setTimerActive(false);
-      setControlsEnabled(false);
-      
-      toast({
-        title: "Game Over",
-        description: "Blocks have stacked!",
-        variant: "destructive"
-      });
-      
+      handleGameOver(
+        "Blocks have stacked!", 
+        setGameOver, 
+        setTimerActive, 
+        setControlsEnabled, 
+        gravityTimerRef
+      );
       return;
     }
     
-    // Check if we need to level up
-    if (layersCleared > 0) {
-      if (level < MAX_LEVEL) {
-        const newLevel = Math.min(MAX_LEVEL, Math.floor(1 + (level + (layersCleared / 10))));
-        
-        if (newLevel > level) {
-          console.log(`🎮 Level up! Now at level ${newLevel}`);
-          setLevel(newLevel);
-          
-          toast({
-            title: "Level Up!",
-            description: `Now at Level ${newLevel}`,
-          });
-        }
-      }
-    }
+    // Handle level up if layers were cleared
+    handleLevelUp(layersCleared, level, MAX_LEVEL, setLevel);
     
-    // Prepare the next block - IMPORTANT: Set next block before position
-    // This ensures the new block is ready when we check position validity
+    // Prepare the next block
     const newNextBlock = getRandomBlockPattern();
     console.log("Setting next blocks:", {
       currentWillBe: nextBlock.name,
       nextWillBe: newNextBlock.name
     });
+    
     setCurrentBlock(nextBlock);
     setNextBlock(newNextBlock);
     
@@ -170,22 +123,13 @@ export function useDropBlockAction({
     
     // Check if the new position is valid, if not it's game over
     if (!isValidPosition({ x: newPosition.x, y: newPosition.y, z: newPosition.z })) {
-      console.log("🎮 Game over: no space for new blocks");
-      
-      if (gravityTimerRef.current) {
-        clearInterval(gravityTimerRef.current);
-        gravityTimerRef.current = null;
-      }
-      
-      setGameOver(true);
-      setTimerActive(false);
-      setControlsEnabled(false);
-      
-      toast({
-        title: "Game Over",
-        description: "No space for new blocks!",
-        variant: "destructive"
-      });
+      handleGameOver(
+        "No space for new blocks!", 
+        setGameOver, 
+        setTimerActive, 
+        setControlsEnabled, 
+        gravityTimerRef
+      );
     } else {
       console.log("✅ New block placed successfully at starting position");
     }
