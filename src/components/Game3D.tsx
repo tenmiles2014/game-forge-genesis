@@ -53,11 +53,11 @@ const Game3D: React.FC = () => {
     grid, currentBlock, position, setPosition, gamePaused, gameOver, controlsEnabled
   );
 
-  const { clearCompleteLayers, checkIfStackedBlocks } = useGridOperations(
+  const { clearCompleteLayers, checkIfStackedBlocks, checkVerticalStackLimit } = useGridOperations(
     grid, 
     setGrid, 
-    setScore, // Pass the function directly
-    setLinesCleared, // Pass the function directly
+    setScore,
+    setLinesCleared,
     level, 
     GRID_SIZE, 
     VERTICAL_STACK_LIMIT
@@ -131,7 +131,7 @@ const Game3D: React.FC = () => {
     
     toast({
       title: "Game Rules",
-      description: "Blocks can only be placed in a single layer. Game ends if blocks stack on top of each other!",
+      description: "Blocks build up from the bottom. Game ends if blocks stack too high!",
     });
   };
 
@@ -165,14 +165,14 @@ const Game3D: React.FC = () => {
     
     const newPosition = {...INITIAL_POSITION};
     
-    if (checkIfStackedBlocks(newGrid) || !isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
+    if (checkIfStackedBlocks(newGrid) || checkVerticalStackLimit(newGrid) || !isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
       setGameOver(true);
       setControlsEnabled(false);
       setTimerActive(false);
       setGamePaused(true);
       toast({
         title: "Game Over!",
-        description: `Blocks stacked on top of each other. Final score: ${score} | Level: ${level}`,
+        description: `Blocks stacked too high. Final score: ${score} | Level: ${level}`,
       });
       return;
     }

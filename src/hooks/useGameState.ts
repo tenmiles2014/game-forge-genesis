@@ -4,11 +4,11 @@ import { toast } from "@/components/ui/use-toast";
 import { BlockPattern, getRandomBlockPattern } from '../components/BlockPatterns';
 
 const GRID_SIZE = 10;
-const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top of the grid
+const INITIAL_POSITION = { x: 4, y: 0, z: 4 }; // Start at the bottom of the grid
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
-const VERTICAL_STACK_LIMIT = GRID_SIZE - 3; // Game over if blocks stack higher than this
+const VERTICAL_STACK_LIMIT = 3; // Game over if blocks stack higher than this from the bottom
 
 export function useGameState() {
   const [grid, setGrid] = useState<number[][][]>([]);

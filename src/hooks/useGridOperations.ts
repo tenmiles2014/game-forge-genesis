@@ -111,7 +111,7 @@ export function useGridOperations(
     return layersCleared;
   };
 
-  // New function to apply gravity after clearing layers
+  // Function to apply gravity after clearing layers
   const applyGravity = (gridState: number[][][]) => {
     const gridSize = gridState.length;
     
@@ -157,18 +157,20 @@ export function useGridOperations(
     return false;
   };
   
+  // Updated to check for blocks stacked too high from the bottom
   const checkVerticalStackLimit = (gridState: number[][][]) => {
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
-        let highestBlock = 0;
-        for (let y = 0; y < GRID_SIZE; y++) {
+        let lowestBlock = GRID_SIZE - 1;
+        for (let y = GRID_SIZE - 1; y >= 0; y--) {
           if (gridState[y][x][z] !== 0) {
-            highestBlock = y;
+            lowestBlock = y;
             break;
           }
         }
         
-        if (highestBlock >= VERTICAL_STACK_LIMIT) {
+        // Check if the stack is too high (from bottom)
+        if (lowestBlock < GRID_SIZE - VERTICAL_STACK_LIMIT) {
           return true;
         }
       }
