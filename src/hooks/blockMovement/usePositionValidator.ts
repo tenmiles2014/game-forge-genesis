@@ -34,20 +34,23 @@ export function usePositionValidator(
             const gridY = newPosition.y;
             const gridZ = newPosition.z + y;
   
+            // Log validation attempt
+            console.log(`📍 Checking position [${gridX}, ${gridY}, ${gridZ}]`);
+            
             // Check grid boundaries
             if (
               gridX < 0 || gridX >= gridSize ||
               gridY < 0 || gridY >= gridSize ||
               gridZ < 0 || gridZ >= gridSize
             ) {
-              console.log(`Out of bounds at [${gridX}, ${gridY}, ${gridZ}]`);
+              console.log(`📍 Out of bounds at [${gridX}, ${gridY}, ${gridZ}]`);
               return false;
             }
   
             // Check for existing blocks in the grid
             try {
               if (grid[gridY][gridX][gridZ] !== 0) {
-                console.log(`Collision at [${gridX}, ${gridY}, ${gridZ}]`);
+                console.log(`📍 Collision at [${gridX}, ${gridY}, ${gridZ}]`);
                 return false;
               }
             } catch (error) {

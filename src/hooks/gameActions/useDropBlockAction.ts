@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { BlockPattern } from '../../components/BlockPatterns';
@@ -52,7 +53,10 @@ export function useDropBlockAction({
   MAX_LEVEL
 }: DropBlockActionProps) {
   const dropBlock = useCallback(() => {
-    console.log("🎮 Executing drop block action");
+    console.log("🎮 Executing drop block action", { 
+      currentPosition: JSON.stringify(position),
+      currentBlock: currentBlock?.name
+    });
     
     // Safety check for grid initialization
     if (!grid || grid.length === 0) {
@@ -68,11 +72,17 @@ export function useDropBlockAction({
       y--;
     }
     
+    console.log(`Found landing at y=${y} (original y=${position.y})`);
+    
     // Place the block in the grid
     const newGrid = JSON.parse(JSON.stringify(grid)); // Deep clone to avoid mutation
     const colorIndex = getColorIndex(currentBlock.color);
     
-    console.log(`Placing block at position [x:${position.x}, y:${y}, z:${position.z}]`);
+    console.log(`Placing block at position [x:${position.x}, y:${y}, z:${position.z}]`, {
+      blockShape: JSON.stringify(currentBlock.shape),
+      color: currentBlock.color,
+      colorIndex
+    });
     
     for (let yy = 0; yy < currentBlock.shape.length; yy++) {
       for (let xx = 0; xx < currentBlock.shape[yy].length; xx++) {
@@ -139,9 +149,15 @@ export function useDropBlockAction({
       }
     }
     
-    // Generate a new block and update position
+    // Prepare the next block - IMPORTANT: Set next block before position
+    // This ensures the new block is ready when we check position validity
+    const newNextBlock = getRandomBlockPattern();
+    console.log("Setting next blocks:", {
+      currentWillBe: nextBlock.name,
+      nextWillBe: newNextBlock.name
+    });
     setCurrentBlock(nextBlock);
-    setNextBlock(getRandomBlockPattern());
+    setNextBlock(newNextBlock);
     
     // Important: Create a new position object to ensure reference change
     // Start the new block at the top of the grid
@@ -150,9 +166,9 @@ export function useDropBlockAction({
       y: INITIAL_POSITION.y,
       z: INITIAL_POSITION.z
     };
-    setPosition(newPosition);
     
     console.log(`New block set, position reset to ${JSON.stringify(newPosition)}`);
+    setPosition(newPosition);
     
     // Check if the new position is valid, if not it's game over
     if (!isValidPosition({ x: newPosition.x, y: newPosition.y, z: newPosition.z })) {
@@ -172,6 +188,8 @@ export function useDropBlockAction({
         description: "No space for new blocks!",
         variant: "destructive"
       });
+    } else {
+      console.log("✅ New block placed successfully at starting position");
     }
   }, [
     grid,
@@ -194,7 +212,8 @@ export function useDropBlockAction({
     gravityTimerRef,
     setGameOver,
     setTimerActive,
-    setControlsEnabled
+    setControlsEnabled,
+    getRandomBlockPattern
   ]);
 
   return { dropBlock };

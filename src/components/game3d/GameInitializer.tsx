@@ -50,6 +50,12 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     VERTICAL_STACK_LIMIT
   );
 
+  // Define a reset position function to ensure block position is properly reset
+  const resetPosition = () => {
+    console.log("🔄 Resetting block position to initial:", INITIAL_POSITION);
+    setPosition({...INITIAL_POSITION});
+  };
+
   const { resetGame, handleTimeUp, toggleGamePause, startGame } = useGameActions({
     grid,
     setGrid,
@@ -77,7 +83,9 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     getColorIndex,
     INITIAL_POSITION,
     MAX_LEVEL,
-    gamePaused
+    gamePaused,
+    resetPosition,
+    initializeGrid
   });
 
   useKeyboardControls({
@@ -153,11 +161,13 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     
     gravityTimerRef.current = window.setInterval(() => {
       console.log("Gravity timer triggered - moving block down");
-      const moved = moveBlock('down');
-      if (!moved) {
-        // If block can't move down further, drop it
-        console.log("Block can't move down further, dropping it");
-        dropBlock();
+      if (!gamePaused && !gameOver) {
+        const moved = moveBlock('down');
+        if (!moved) {
+          // If block can't move down further, drop it
+          console.log("Block can't move down further, dropping it");
+          dropBlock();
+        }
       }
     }, dropSpeed);
 
