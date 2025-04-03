@@ -11,21 +11,21 @@ export const calculateLandingPosition = (
   // Clone the current grid to check collisions
   const gridCopy = JSON.parse(JSON.stringify(grid));
   
-  // Check each possible position above the current one
-  while (landingY < grid.length - 1) {
-    let canMoveUp = true;
+  // Check each possible position below the current one
+  while (landingY > 0) {
+    let canMoveDown = true;
     
-    // Check if the block would collide at the next position up
+    // Check if the block would collide at the next position down
     for (let y = 0; y < currentBlock.shape.length; y++) {
       for (let x = 0; x < currentBlock.shape[y].length; x++) {
         if (currentBlock.shape[y][x]) {
-          const nextY = landingY + 1;
+          const nextY = landingY - 1;
           const gridX = position.x + x;
           const gridZ = position.z + y;
           
           // Check grid boundaries
-          if (nextY >= grid.length) {
-            canMoveUp = false;
+          if (nextY < 0) {
+            canMoveDown = false;
             break;
           }
           
@@ -39,17 +39,17 @@ export const calculateLandingPosition = (
             gridZ < grid.length
           ) {
             if (gridCopy[nextY][gridX][gridZ] !== 0) {
-              canMoveUp = false;
+              canMoveDown = false;
               break;
             }
           }
         }
       }
-      if (!canMoveUp) break;
+      if (!canMoveDown) break;
     }
     
-    if (!canMoveUp) break;
-    landingY++;
+    if (!canMoveDown) break;
+    landingY--;
   }
   
   return landingY;

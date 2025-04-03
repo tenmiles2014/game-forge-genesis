@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { getRandomBlockPattern } from './BlockPatterns';
@@ -131,7 +132,7 @@ const Game3D: React.FC = () => {
     
     toast({
       title: "Game Rules",
-      description: "Blocks build up from the bottom. Game ends if blocks stack too high!",
+      description: "Blocks drop from top to bottom. Game ends if blocks stack too high!",
     });
   };
 

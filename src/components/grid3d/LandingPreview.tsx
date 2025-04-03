@@ -36,15 +36,16 @@ const LandingPreview: React.FC<LandingPreviewProps> = ({ currentBlock, position,
           </mesh>
         );
         
-        // Add rise line visualization using cylindrical meshes
+        // Add drop line visualization using cylindrical meshes
         if (Math.abs(position.y - landingY) > 1) {
           const height = Math.abs(position.y - landingY);
           const midY = (position.y + landingY) / 2;
           
           blocks.push(
             <mesh 
-              key={`rise-line-${x}-${y}`} 
+              key={`drop-line-${x}-${y}`} 
               position={[position.x + x, midY, position.z + y]}
+              rotation={[0, 0, 0]}
             >
               <cylinderGeometry args={[0.03, 0.03, height, 4]} />
               <meshBasicMaterial 

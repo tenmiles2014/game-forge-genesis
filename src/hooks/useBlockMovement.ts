@@ -51,7 +51,7 @@ export function useBlockMovement(
     if (direction === 'right') newX += 1;
     if (direction === 'forward') newZ -= 1;
     if (direction === 'backward') newZ += 1;
-    if (direction === 'down') newY += 1; // Move up on Y-axis (since we start from bottom)
+    if (direction === 'down') newY -= 1; // Move down on Y-axis (since we start from top)
     
     if (isValidPosition(currentBlock.shape, newX, newY, newZ)) {
       setPosition({ x: newX, y: newY, z: newZ });

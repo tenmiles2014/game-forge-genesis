@@ -1,10 +1,9 @@
-
 import { useState, useRef } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { BlockPattern, getRandomBlockPattern } from '../components/BlockPatterns';
 
 const GRID_SIZE = 10;
-const INITIAL_POSITION = { x: 4, y: 0, z: 4 }; // Start at the bottom of the grid
+const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top of the grid
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)

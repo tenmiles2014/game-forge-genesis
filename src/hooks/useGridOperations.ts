@@ -141,6 +141,7 @@ export function useGridOperations(
   };
 
   const checkIfStackedBlocks = (gridState: number[][][]) => {
+    // This function shouldn't change as it checks for stacked blocks in general
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         let blockCount = 0;
@@ -157,20 +158,20 @@ export function useGridOperations(
     return false;
   };
   
-  // Updated to check for blocks stacked too high from the bottom
+  // Updated to check for blocks stacked too high from the top
   const checkVerticalStackLimit = (gridState: number[][][]) => {
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
-        let lowestBlock = GRID_SIZE - 1;
-        for (let y = GRID_SIZE - 1; y >= 0; y--) {
+        let lowestBlock = -1;
+        for (let y = 0; y < GRID_SIZE; y++) {
           if (gridState[y][x][z] !== 0) {
             lowestBlock = y;
             break;
           }
         }
         
-        // Check if the stack is too high (from bottom)
-        if (lowestBlock < GRID_SIZE - VERTICAL_STACK_LIMIT) {
+        // Check if the stack is too high (from top)
+        if (lowestBlock >= 0 && lowestBlock < VERTICAL_STACK_LIMIT) {
           return true;
         }
       }
