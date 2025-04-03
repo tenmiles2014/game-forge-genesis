@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
@@ -232,24 +233,25 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
               continue;
             }
             
-            // Create points for the line
-            const points = [];
-            points.push(new THREE.Vector3(currentPosX, currentPosY, currentPosZ));
-            points.push(new THREE.Vector3(ghostPosX, ghostPosY, ghostPosZ));
+            // Create line using React Three Fiber's primitive
+            const lineStart = new THREE.Vector3(currentPosX, currentPosY, currentPosZ);
+            const lineEnd = new THREE.Vector3(ghostPosX, ghostPosY, ghostPosZ);
             
-            // Create geometry and material
+            const points = [lineStart, lineEnd];
             const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-            const lineMaterial = new THREE.LineBasicMaterial({ 
-              color: blockColor,
-              opacity: 0.5,
-              transparent: true,
-              linewidth: 1,
-              dashed: true
-            });
             
-            // Add line to the scene
             lines.push(
-              <line key={`line-${y}-${x}`} geometry={lineGeometry} material={lineMaterial} />
+              <primitive
+                key={`line-${y}-${x}`}
+                object={new THREE.Line(
+                  lineGeometry,
+                  new THREE.LineBasicMaterial({
+                    color: blockColor,
+                    opacity: 0.5,
+                    transparent: true,
+                  })
+                )}
+              />
             );
           }
         }
