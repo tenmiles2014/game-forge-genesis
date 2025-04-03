@@ -7,13 +7,15 @@ interface GamePauseActionProps {
   setGamePaused: (paused: boolean) => void;
   setTimerActive: (active: boolean) => void;
   setControlsEnabled: (enabled: boolean) => void;
+  gamePaused: boolean; // Add the current pause state as a prop
 }
 
 export function useGamePauseAction({
   gravityTimerRef,
   setGamePaused,
   setTimerActive,
-  setControlsEnabled
+  setControlsEnabled,
+  gamePaused
 }: GamePauseActionProps) {
   const toggleGamePause = useCallback(() => {
     if (gravityTimerRef.current) {
@@ -21,32 +23,27 @@ export function useGamePauseAction({
       gravityTimerRef.current = null;
     }
     
-    // Save current state to use in the toast message
-    let newPausedState = false;
+    // Toggle the game pause state directly
+    const newPausedState = !gamePaused;
+    setGamePaused(newPausedState);
     
-    setGamePaused(prevPaused => {
-      newPausedState = !prevPaused;
-      
-      if (newPausedState) {
-        toast({
-          title: "Game Paused",
-          description: "Take a breather!",
-        });
-      } else {
-        toast({
-          title: "Game Resumed",
-          description: "Let's go!",
-        });
-      }
-      
-      return newPausedState;
-    });
+    if (newPausedState) {
+      toast({
+        title: "Game Paused",
+        description: "Take a breather!",
+      });
+    } else {
+      toast({
+        title: "Game Resumed",
+        description: "Let's go!",
+      });
+    }
     
-    // Use direct boolean values instead of functional updates
+    // Use direct boolean values
     setTimerActive(false); // Will be updated by the effect that watches gamePaused
     setControlsEnabled(false); // Will be updated by the effect that watches gamePaused
     
-  }, [gravityTimerRef, setGamePaused, setTimerActive, setControlsEnabled]);
+  }, [gravityTimerRef, setGamePaused, setTimerActive, setControlsEnabled, gamePaused]);
 
   return { toggleGamePause };
 }

@@ -75,7 +75,8 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     getRandomBlockPattern,
     getColorIndex,
     INITIAL_POSITION,
-    MAX_LEVEL
+    MAX_LEVEL,
+    gamePaused  // Pass the gamePaused prop
   });
 
   useKeyboardControls({

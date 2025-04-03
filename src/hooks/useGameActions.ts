@@ -36,6 +36,7 @@ interface GameActionProps {
   getColorIndex: (color: string) => number;
   INITIAL_POSITION: { x: number; y: number; z: number };
   MAX_LEVEL: number;
+  gamePaused?: boolean; // Make this optional to maintain backward compatibility
 }
 
 export function useGameActions({
@@ -64,7 +65,8 @@ export function useGameActions({
   getRandomBlockPattern,
   getColorIndex,
   INITIAL_POSITION,
-  MAX_LEVEL
+  MAX_LEVEL,
+  gamePaused = false // Default value if not provided
 }: GameActionProps) {
   // Import our modularized functions
   const { resetGame } = useResetGameAction({
@@ -97,7 +99,8 @@ export function useGameActions({
     gravityTimerRef,
     setGamePaused,
     setTimerActive,
-    setControlsEnabled
+    setControlsEnabled,
+    gamePaused
   });
 
   const { startGame } = useStartGameAction({
