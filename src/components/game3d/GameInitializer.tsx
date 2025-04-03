@@ -91,6 +91,8 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
   
   useEffect(() => {
     resetGame();
+    // Log the initial state
+    console.log("Game initialized - controlsEnabled:", controlsEnabled, "gamePaused:", gamePaused);
   }, [resetGame]);
 
   // This effect handles the gravity timer and updates the game state
@@ -107,9 +109,9 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
       return;
     }
 
-    // Ensure controls are enabled when game is active
-    if (!gamePaused && !gameOver) {
-      console.log("Game active - ensuring controls are enabled");
+    // Update controls state for active game
+    if (!controlsEnabled && !gamePaused && !gameOver) {
+      console.log("Game active but controls disabled - enabling controls");
       setControlsEnabled(true);
     }
 

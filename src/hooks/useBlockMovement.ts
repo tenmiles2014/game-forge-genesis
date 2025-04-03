@@ -1,4 +1,3 @@
-
 import { BlockPattern } from "../components/BlockPatterns";
 import { toast } from "@/components/ui/use-toast";
 
@@ -41,15 +40,9 @@ export function useBlockMovement(
   };
 
   const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
-    // Check if we can process movement (game is active and controls enabled)
-    if (gameOver || gamePaused) {
-      console.log(`Block movement prevented - gameOver: ${gameOver}, gamePaused: ${gamePaused}`);
-      return false;
-    }
-    
-    // Explicitly check if controls are enabled
-    if (!controlsEnabled) {
-      console.log(`Block movement prevented - controlsEnabled: ${controlsEnabled}`);
+    // Simplify the check: if game is paused OR game is over OR controls are disabled, block movement
+    if (gamePaused || gameOver || !controlsEnabled) {
+      console.log(`Block movement prevented - gameOver: ${gameOver}, gamePaused: ${gamePaused}, controlsEnabled: ${controlsEnabled}`);
       return false;
     }
     
@@ -76,15 +69,9 @@ export function useBlockMovement(
   };
 
   const rotateBlock = (axis: 'x' | 'y' | 'z') => {
-    // Check if we can process rotation (game is active and controls enabled)
-    if (gameOver || gamePaused) {
-      console.log(`Block rotation prevented - gameOver: ${gameOver}, gamePaused: ${gamePaused}`);
-      return null;
-    }
-    
-    // Explicitly check if controls are enabled
-    if (!controlsEnabled) {
-      console.log(`Block rotation prevented - controlsEnabled: ${controlsEnabled}`);
+    // Simplify the check: if game is paused OR game is over OR controls are disabled, block rotation
+    if (gamePaused || gameOver || !controlsEnabled) {
+      console.log(`Block rotation prevented - gameOver: ${gameOver}, gamePaused: ${gamePaused}, controlsEnabled: ${controlsEnabled}`);
       return null;
     }
     
