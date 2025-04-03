@@ -4,6 +4,7 @@ import { useGameState } from '../useGameState';
 import { useBlockMovement } from '../useBlockMovement';
 import { useGridOperations } from '../useGridOperations';
 import { useGameActions } from '../useGameActions';
+import { getRandomBlockPattern } from '../../components/BlockPatterns';
 
 export function useGameController() {
   // Reference for orbit controls to update camera position
@@ -78,7 +79,7 @@ export function useGameController() {
     checkIfStackedBlocks,
     checkVerticalStackLimit,
     isValidPosition,
-    getRandomBlockPattern: require('../../components/BlockPatterns').getRandomBlockPattern,
+    getRandomBlockPattern,
     getColorIndex,
     INITIAL_POSITION,
     MAX_LEVEL,
@@ -114,6 +115,7 @@ export function useGameController() {
     handleTimeUp,
     resetGame,
     startGame,
-    toggleGamePause
+    toggleGamePause,
+    setCurrentBlock
   };
 }

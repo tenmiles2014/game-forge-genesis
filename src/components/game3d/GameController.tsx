@@ -26,7 +26,8 @@ const GameController: React.FC = () => {
     handleTimeUp,
     resetGame,
     startGame,
-    toggleGamePause
+    toggleGamePause,
+    setCurrentBlock
   } = useGameController();
 
   // Connect keyboard controls
