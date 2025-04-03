@@ -28,46 +28,43 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
         </mesh>
         
         {/* X-axis line */}
-        <line>
-          <bufferGeometry
-            attach="geometry"
-            attributes={{
-              position: new THREE.BufferAttribute(
-                new Float32Array([0, 0, 0, gridSize, 0, 0]),
-                3
-              ),
-            }}
-          />
-          <lineBasicMaterial attach="material" color="red" linewidth={2} />
-        </line>
+        <mesh>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              count={2}
+              array={new Float32Array([0, 0, 0, grid.length, 0, 0])}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial attach="material" color="red" />
+        </mesh>
         
         {/* Y-axis line */}
-        <line>
-          <bufferGeometry
-            attach="geometry"
-            attributes={{
-              position: new THREE.BufferAttribute(
-                new Float32Array([0, 0, 0, 0, gridSize, 0]),
-                3
-              ),
-            }}
-          />
-          <lineBasicMaterial attach="material" color="blue" linewidth={2} />
-        </line>
+        <mesh>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              count={2}
+              array={new Float32Array([0, 0, 0, 0, grid.length, 0])}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial attach="material" color="blue" />
+        </mesh>
         
         {/* Z-axis line */}
-        <line>
-          <bufferGeometry
-            attach="geometry"
-            attributes={{
-              position: new THREE.BufferAttribute(
-                new Float32Array([0, 0, 0, 0, 0, gridSize]),
-                3
-              ),
-            }}
-          />
-          <lineBasicMaterial attach="material" color="green" linewidth={2} />
-        </line>
+        <mesh>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              count={2}
+              array={new Float32Array([0, 0, 0, 0, 0, grid.length])}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial attach="material" color="green" />
+        </mesh>
       </>
     );
   }, [grid]);
