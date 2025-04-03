@@ -201,11 +201,70 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     );
   }, [grid]);
 
+  // Render prediction lines between current block and ghost block
+  const renderPredictionLines = useMemo(() => {
+    const lines = [];
+    const pattern = currentBlock.shape;
+    const gridSize = grid.length || 10;
+    
+    // Only render if the ghost is lower than the current position
+    if (ghostPosition.y < position.y) {
+      for (let y = 0; y < pattern.length; y++) {
+        for (let x = 0; x < pattern[y].length; x++) {
+          if (pattern[y][x]) {
+            const currentPosX = position.x + x;
+            const currentPosY = position.y;
+            const currentPosZ = position.z + y;
+            
+            const ghostPosX = ghostPosition.x + x;
+            const ghostPosY = ghostPosition.y;
+            const ghostPosZ = ghostPosition.z + y;
+            
+            // Skip rendering lines for blocks that would be outside the grid
+            if (
+              currentPosX < 0 || currentPosX >= gridSize || 
+              currentPosY < 0 || currentPosY >= gridSize || 
+              currentPosZ < 0 || currentPosZ >= gridSize ||
+              ghostPosX < 0 || ghostPosX >= gridSize || 
+              ghostPosY < 0 || ghostPosY >= gridSize || 
+              ghostPosZ < 0 || ghostPosZ >= gridSize
+            ) {
+              continue;
+            }
+            
+            // Create points for the line
+            const points = [];
+            points.push(new THREE.Vector3(currentPosX, currentPosY, currentPosZ));
+            points.push(new THREE.Vector3(ghostPosX, ghostPosY, ghostPosZ));
+            
+            // Create geometry and material
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            const lineMaterial = new THREE.LineBasicMaterial({ 
+              color: blockColor,
+              opacity: 0.5,
+              transparent: true,
+              linewidth: 1,
+              dashed: true
+            });
+            
+            // Add line to the scene
+            lines.push(
+              <line key={`line-${y}-${x}`} geometry={lineGeometry} material={lineMaterial} />
+            );
+          }
+        }
+      }
+    }
+    
+    return lines;
+  }, [currentBlock.shape, position, ghostPosition, blockColor, grid.length]);
+
   return (
     <group>
       {renderPlacedBlocks}
       {renderCurrentBlock}
       {renderGhostBlock}
+      {renderPredictionLines}
       {renderGridBoundaries}
       <gridHelper args={[10, 10]} position={[4.5, -0.5, 4.5]} />
     </group>
