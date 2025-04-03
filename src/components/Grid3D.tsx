@@ -201,29 +201,12 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     );
   }, [grid]);
 
-  // Render height limit indicator
-  const renderHeightLimit = useMemo(() => {
-    const gridSize = grid.length || 10;
-    
-    return (
-      <mesh position={[gridSize/2 - 0.5, 0, gridSize/2 - 0.5]}>
-        <boxGeometry args={[gridSize, 0.1, gridSize]} />
-        <meshStandardMaterial 
-          color="#ff3333"
-          transparent={true}
-          opacity={0.1}
-        />
-      </mesh>
-    );
-  }, [grid]);
-
   return (
     <group>
       {renderPlacedBlocks}
       {renderCurrentBlock}
       {renderGhostBlock}
       {renderGridBoundaries}
-      {renderHeightLimit}
       <gridHelper args={[10, 10]} position={[4.5, -0.5, 4.5]} />
     </group>
   );
