@@ -111,7 +111,7 @@ export function useDropBlockAction({
     setCurrentBlock(nextBlock);
     setNextBlock(newNextBlock);
     
-    // Reset position for the new block to start at spawn point
+    // Reset position for the new block to start at spawn point - ensure we're using the correct INITIAL_POSITION
     const newPosition = {
       x: INITIAL_POSITION.x,
       y: INITIAL_POSITION.y,
@@ -140,7 +140,6 @@ export function useDropBlockAction({
     setGrid,
     clearCompleteLayers,
     checkIfStackedBlocks,
-    checkVerticalStackLimit,
     isValidPosition,
     setCurrentBlock,
     nextBlock,

@@ -22,7 +22,7 @@ export function useBlockDrop(
     
     if (gameOver || gamePaused || !controlsEnabled) {
       console.log("❌ Cannot drop block - game state prevents it");
-      return;
+      return false;
     }
     
     let newY = currentPosition.y;
@@ -34,6 +34,9 @@ export function useBlockDrop(
     
     console.log(`✅ Block dropped to position: ${JSON.stringify({ ...currentPosition, y: newY })}`);
     setPosition({ ...currentPosition, y: newY });
+    
+    // Return true to indicate drop was successful
+    return true;
   }, [
     currentPosition, 
     isValidPosition, 

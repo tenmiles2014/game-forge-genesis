@@ -51,6 +51,12 @@ export function useBlockMove(
       return true;
     } else {
       console.log(`❌ Invalid move: ${direction} - Position would be invalid`);
+      
+      // Special case: if we can't move down, we've hit bottom or another block
+      if (direction === 'down') {
+        console.log('Block has landed - ready for placement');
+      }
+      
       return false;
     }
   }, [
@@ -59,9 +65,7 @@ export function useBlockMove(
     setPosition, 
     gameOver, 
     gamePaused, 
-    controlsEnabled,
-    grid,
-    currentBlock
+    controlsEnabled
   ]);
 
   return { moveBlock };
