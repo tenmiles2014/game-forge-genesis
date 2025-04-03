@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { getRandomBlockPattern } from '../BlockPatterns';
 import GuidelineOverlay from '../GuidelineOverlay';
@@ -14,8 +14,8 @@ import GameFooter from './GameFooter';
 import GameInitializer from './GameInitializer';
 import { ViewPoint } from '../ViewControls';
 import { useGameActions } from '../../hooks/useGameActions';
+import { useKeyboardControls } from '../../hooks/useKeyboardControls';
 
-// Constants
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
   { name: "Top View", position: [4.5, 25, 4.5], target: [4.5, 0, 4.5] },
@@ -49,7 +49,7 @@ const Game3DContainer: React.FC = () => {
   const orbitControlsRef = useRef(null);
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
 
-  const { isValidPosition } = useBlockMovement(
+  const { isValidPosition, moveBlock, rotateBlock, dropBlock } = useBlockMovement(
     grid, currentBlock, position, setPosition, gamePaused, gameOver, controlsEnabled
   );
 
@@ -97,6 +97,29 @@ const Game3DContainer: React.FC = () => {
     MAX_LEVEL,
     gamePaused
   });
+
+  // Keyboard Controls Hook
+  useKeyboardControls({
+    moveBlock,
+    rotateBlock, 
+    dropBlock,
+    controlsEnabled,
+    gamePaused,
+    setCurrentBlock,
+    currentBlock
+  });
+
+  // Debug Effect for Game State
+  useEffect(() => {
+    console.log('🎮 Game State Debug:', {
+      controlsEnabled,
+      gamePaused,
+      gameOver,
+      timerActive,
+      currentBlock: currentBlock?.name,
+      position: JSON.stringify(position)
+    });
+  }, [controlsEnabled, gamePaused, gameOver, timerActive, currentBlock, position]);
 
   const handleViewChange = (viewPoint: ViewPoint) => {
     setCurrentView(viewPoint);

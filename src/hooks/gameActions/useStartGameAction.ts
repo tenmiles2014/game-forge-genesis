@@ -14,28 +14,53 @@ export function useStartGameAction({
   setControlsEnabled
 }: StartGameActionProps) {
   const startGame = useCallback(() => {
-    console.log("Starting game - setting states for gameplay");
+    console.log("🚀 Start Game Action Initiated");
     
-    // Enable controls first
-    setControlsEnabled(true);
-    
-    // Small delay before continuing with other state changes
-    setTimeout(() => {
-      // Activate timer
-      setTimerActive(true);
+    // Sequence of state changes with explicit logging and delays
+    const gameStartSequence = () => {
+      console.log("🔓 Enabling controls");
+      setControlsEnabled(true);
       
-      // Unpause the game - MUST be last for proper state synchronization
-      setGamePaused(false);
+      // Small delay to ensure state propagation
+      setTimeout(() => {
+        console.log("⏱️ Activating timer");
+        setTimerActive(true);
+        
+        // Another small delay before unpausing
+        setTimeout(() => {
+          console.log("▶️ Unpausing game");
+          setGamePaused(false);
+          
+          // Final confirmation toast
+          toast({
+            title: "Game Started 🎮",
+            description: "Use arrow keys to move and Z/X to rotate blocks",
+            duration: 3000
+          });
+        }, 100);
+      }, 50);
+    };
+
+    // Immediate execution with potential retry mechanism
+    try {
+      gameStartSequence();
+    } catch (error) {
+      console.error("❌ Game start failed:", error);
       
-      console.log("Game fully started - controlsEnabled: true, timerActive: true, gamePaused: false");
-      
-      // Show a toast notification
-      toast({
-        title: "Game Started",
-        description: "Use arrow keys to move and Z/X to rotate blocks",
-      });
-    }, 50);
-    
+      // Optional retry after a short delay
+      setTimeout(() => {
+        try {
+          gameStartSequence();
+        } catch (retryError) {
+          console.error("❌ Game start retry failed:", retryError);
+          toast({
+            title: "Game Start Error",
+            description: "Unable to start the game. Please refresh.",
+            variant: "destructive"
+          });
+        }
+      }, 500);
+    }
   }, [setGamePaused, setTimerActive, setControlsEnabled]);
 
   return { startGame };

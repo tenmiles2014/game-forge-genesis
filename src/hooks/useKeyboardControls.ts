@@ -1,5 +1,6 @@
 
 import { useEffect } from 'react';
+import { toast } from "@/components/ui/use-toast";
 
 interface KeyboardControlsProps {
   moveBlock: (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => boolean;
@@ -21,72 +22,93 @@ export function useKeyboardControls({
   currentBlock
 }: KeyboardControlsProps) {
   useEffect(() => {
-    console.log(`Keyboard controls mounted - controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
+    console.log(`🎮 Keyboard Controls Status:
+      - Controls Enabled: ${controlsEnabled}
+      - Game Paused: ${gamePaused}`);
     
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Check if game is active by checking BOTH not paused AND controls enabled
-      if (gamePaused || !controlsEnabled) {
-        console.log(`Cannot process key events - gamePaused: ${gamePaused}, controlsEnabled: ${controlsEnabled}`);
+      console.log(`🕹️ Key Pressed: ${event.key}`);
+      
+      // More verbose check
+      if (gamePaused) {
+        console.warn('⛔ Game is paused, blocking key events');
+        toast({
+          title: "Game Paused",
+          description: "Unpause the game to move blocks"
+        });
         return;
       }
       
-      console.log(`Processing key press: ${event.key}`);
-      
-      switch (event.key) {
-        case 'ArrowLeft':
-          console.log("Moving block left");
-          moveBlock('left');
-          break;
-        case 'ArrowRight':
-          console.log("Moving block right");
-          moveBlock('right');
-          break;
-        case 'ArrowUp':
-          console.log("Moving block forward");
-          moveBlock('forward');
-          break;
-        case 'ArrowDown':
-          console.log("Moving block backward");
-          moveBlock('backward');
-          break;
-        case ' ':  // Space key
-          console.log("Dropping block");
-          dropBlock();
-          break;
-        case 'z':  // Rotate around z-axis
-          console.log("Rotating block around z-axis");
-          const rotatedZ = rotateBlock('z');
-          if (rotatedZ) {
-            setCurrentBlock({
-              ...currentBlock,
-              shape: rotatedZ
-            });
-          }
-          break;
-        case 'x':  // Rotate around x-axis
-          console.log("Rotating block around x-axis");
-          const rotatedX = rotateBlock('x');
-          if (rotatedX) {
-            setCurrentBlock({
-              ...currentBlock,
-              shape: rotatedX
-            });
-          }
-          break;
-        case 's':  // Move block down
-          console.log("Moving block down");
-          moveBlock('down'); 
-          break;
-        default:
-          break;
+      if (!controlsEnabled) {
+        console.warn('⛔ Controls are not enabled');
+        toast({
+          title: "Controls Disabled",
+          description: "Wait for game to initialize"
+        });
+        return;
+      }
+
+      try {
+        switch (event.key) {
+          case 'ArrowLeft':
+            moveBlock('left');
+            break;
+          case 'ArrowRight':
+            moveBlock('right');
+            break;
+          case 'ArrowUp':
+            moveBlock('forward');
+            break;
+          case 'ArrowDown':
+            moveBlock('backward');
+            break;
+          case ' ':
+            dropBlock();
+            break;
+          case 'z':
+            const rotatedZ = rotateBlock('z');
+            if (rotatedZ) {
+              setCurrentBlock({
+                ...currentBlock,
+                shape: rotatedZ
+              });
+            }
+            break;
+          case 'x':
+            const rotatedX = rotateBlock('x');
+            if (rotatedX) {
+              setCurrentBlock({
+                ...currentBlock,
+                shape: rotatedX
+              });
+            }
+            break;
+          case 's':
+            moveBlock('down');
+            break;
+        }
+      } catch (error) {
+        console.error('❌ Block movement error:', error);
+        toast({
+          title: "Movement Error",
+          description: "Unable to move block"
+        });
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     
     return () => {
-      console.log("Keyboard controls unmounted");
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [moveBlock, rotateBlock, dropBlock, controlsEnabled, gamePaused, currentBlock, setCurrentBlock]);
+  }, [
+    moveBlock, 
+    rotateBlock, 
+    dropBlock, 
+    controlsEnabled, 
+    gamePaused, 
+    currentBlock, 
+    setCurrentBlock
+  ]);
 }
+

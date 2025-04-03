@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Grid } from '@react-three/drei';
 import * as THREE from 'three';
@@ -91,9 +90,9 @@ const GridBoundaries: React.FC<GridBoundariesProps> = ({ gridSize, verticalStack
         </mesh>
       ))}
       
-      {/* Floor grid plane - positioned at 0 for floor-level alignment (bottom of blocks) */}
+      {/* Floor grid plane - positioned exactly at y=-0.5 */}
       <Grid
-        position={[gridSize/2 - 0.5, 0, gridSize/2 - 0.5]}
+        position={[gridSize/2 - 0.5, -0.5, gridSize/2 - 0.5]}
         args={[gridSize, gridSize]}
         cellSize={1}
         cellThickness={0.6}
