@@ -13,80 +13,73 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
   position, 
   landingY 
 }) => {
-  // Comprehensive preview validation
-  const previewBlocks = useMemo(() => {
-    // Extensive logging for debugging
-    console.group("🎯 Landing Preview Calculation");
-    console.log("Input Conditions:", {
+  // Generate preview elements
+  const previewElements = useMemo(() => {
+    console.log("🎯 Rendering landing preview:", {
       blockExists: !!currentBlock,
-      blockShapeValid: currentBlock?.shape?.length > 0,
-      positionValid: position && Object.keys(position).length === 3,
-      landingYValid: landingY !== undefined && landingY >= 0,
-      positionY: position?.y,
-      landingY: landingY
+      positionValid: !!position,
+      landingY,
+      yDiff: position?.y - landingY
     });
 
-    // Immediate return if any condition is invalid
+    // Validation checks
     if (!currentBlock?.shape || 
         !position || 
         landingY === undefined || 
         landingY < 0 ||
-        landingY === position.y) { // Don't show preview if landing at the same spot
-      console.warn("❌ Landing preview conditions not met");
-      console.groupEnd();
+        landingY >= position.y) {
+      console.warn("❌ Cannot render landing preview - invalid inputs");
       return [];
     }
 
-    const blocks: React.ReactNode[] = [];
-    const heightDiff = Math.abs(position.y - landingY);
+    const elements = [];
+    const heightDiff = position.y - landingY;
+    
+    // Only show preview if there's a meaningful distance
+    if (heightDiff <= 0) {
+      return [];
+    }
 
     try {
-      // Iterate through block shape
-      for (let y = 0; y < currentBlock.shape.length; y++) {
-        for (let x = 0; x < currentBlock.shape[y].length; x++) {
-          if (currentBlock.shape[y][x]) {
-            // Only show landing preview if it's significantly different from current position
-            if (heightDiff > 0) {
-              // Landing preview block with enhanced visibility
-              blocks.push(
-                <mesh 
-                  key={`landing-${x}-${y}`} 
-                  position={[
-                    position.x + x, 
-                    landingY, 
-                    position.z + y
-                  ]}
-                >
-                  <boxGeometry args={[1, 1, 1]} />
-                  <meshStandardMaterial 
-                    color={currentBlock.color} 
-                    transparent={true} 
-                    opacity={0.4}
-                    wireframe={true}
-                  />
-                </mesh>
-              );
-            }
+      // Create ghost blocks at landing position
+      for (let z = 0; z < currentBlock.shape.length; z++) {
+        for (let x = 0; x < currentBlock.shape[z].length; x++) {
+          if (currentBlock.shape[z][x]) {
+            // Ghost block at landing position
+            elements.push(
+              <mesh 
+                key={`landing-${x}-${z}`}
+                position={[position.x + x, landingY, position.z + z]}
+              >
+                <boxGeometry args={[1, 1, 1]} />
+                <meshStandardMaterial 
+                  color={currentBlock.color}
+                  transparent={true}
+                  opacity={0.4}
+                  wireframe={true}
+                />
+              </mesh>
+            );
 
-            // Drop line visualization - only if block is significantly above landing
+            // Add drop line between current position and landing
             if (heightDiff > 1) {
-              const midY = (position.y + landingY) / 2;
-
-              blocks.push(
-                <mesh 
-                  key={`drop-line-${x}-${y}`} 
+              elements.push(
+                <mesh
+                  key={`line-${x}-${z}`}
                   position={[
-                    position.x + x, 
-                    midY, 
-                    position.z + y
+                    position.x + x,
+                    (position.y + landingY) / 2,
+                    position.z + z
                   ]}
                   rotation={[Math.PI / 2, 0, 0]}
                 >
-                  <cylinderGeometry args={[0.05, 0.05, heightDiff, 8]} />
-                  <meshBasicMaterial 
-                    color={currentBlock.color} 
-                    transparent={true} 
-                    opacity={0.3} 
+                  <cylinderGeometry 
+                    args={[0.05, 0.05, heightDiff, 8]} 
+                  />
+                  <meshBasicMaterial
+                    color={currentBlock.color}
+                    transparent={true}
+                    opacity={0.3}
                   />
                 </mesh>
               );
@@ -94,19 +87,16 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
           }
         }
       }
-
-      console.log(`✅ Generated ${blocks.length} preview elements`, { heightDiff });
     } catch (error) {
-      console.error("❌ Landing preview generation error:", error);
-    } finally {
-      console.groupEnd();
+      console.error("❌ Error rendering landing preview:", error);
     }
 
-    return blocks;
+    console.log(`✅ Generated ${elements.length} preview elements`);
+    return elements;
   }, [currentBlock, position, landingY]);
 
-  // Render preview blocks
-  return <>{previewBlocks}</>;
+  // Return preview elements
+  return <>{previewElements}</>;
 });
 
 LandingPreview.displayName = 'LandingPreview';

@@ -9,18 +9,14 @@ export const calculateLandingPosition = (
   console.log("🔍 Landing calculation - Input:", { 
     gridExists: !!grid, 
     gridSize: grid?.length ?? 0,
-    blockShape: currentBlock?.shape,
+    blockShape: currentBlock?.shape?.length,
     position
   });
   
-  // Strict validation with fallback
+  // Strict validation
   if (!grid || grid.length === 0 || !currentBlock?.shape) {
     console.warn("Invalid grid or block for landing calculation");
-    return { 
-      x: position?.x ?? 4, 
-      y: Math.floor(grid?.length ? grid.length - 1 : 9), 
-      z: position?.z ?? 4 
-    };
+    return { ...position };
   }
 
   const gridSize = grid.length;
@@ -30,34 +26,50 @@ export const calculateLandingPosition = (
   const safeX = Math.max(0, Math.min(position.x, gridSize - 1));
   const safeZ = Math.max(0, Math.min(position.z, gridSize - 1));
   
-  // Landing position calculation with enhanced safety
+  // Start from current position and move down until we hit something
   while (landingY > 0) {
     let canMoveDown = true;
     
-    for (let blockY = 0; blockY < currentBlock.shape.length; blockY++) {
-      for (let blockX = 0; blockX < currentBlock.shape[blockY].length; blockX++) {
-        if (currentBlock.shape[blockY][blockX]) {
-          const checkY = landingY - 1;
+    for (let blockZ = 0; blockZ < currentBlock.shape.length && canMoveDown; blockZ++) {
+      for (let blockX = 0; blockX < currentBlock.shape[blockZ].length && canMoveDown; blockX++) {
+        // Only check cells where the block has a cube
+        if (currentBlock.shape[blockZ][blockX]) {
+          const checkY = landingY - 1; // Position below current Y
           const checkX = safeX + blockX;
-          const checkZ = safeZ + blockY;
+          const checkZ = safeZ + blockZ;
           
-          // Comprehensive boundary and collision checks
-          if (checkY < 0 || 
-              checkX < 0 || 
-              checkZ < 0 || 
-              checkX >= gridSize || 
-              checkY >= gridSize || 
-              checkZ >= gridSize ||
-              (grid[checkY] && grid[checkY][checkX] && grid[checkY][checkX][checkZ] !== 0)) {
+          // Check if position is out of bounds or occupied by another block
+          if (checkY < 0) {
+            // Hit bottom of grid
+            canMoveDown = false;
+            break;
+          }
+          
+          if (checkX < 0 || checkZ < 0 || checkX >= gridSize || checkZ >= gridSize) {
+            // Out of horizontal bounds
+            canMoveDown = false;
+            break;
+          }
+          
+          // Check if position is already occupied by another block
+          try {
+            if (grid[checkY][checkX][checkZ] !== 0) {
+              canMoveDown = false;
+              break;
+            }
+          } catch (error) {
+            console.error("Grid access error:", error, { checkY, checkX, checkZ, gridSize });
             canMoveDown = false;
             break;
           }
         }
       }
-      if (!canMoveDown) break;
     }
     
-    if (!canMoveDown) break;
+    if (!canMoveDown) {
+      break;
+    }
+    
     landingY--;
   }
 
@@ -67,7 +79,7 @@ export const calculateLandingPosition = (
     z: safeZ
   };
   
-  console.log("🎯 Landing calculation - Result:", finalPosition);
+  console.log("🎯 Landing calculation - Result:", finalPosition, "Original:", position);
   return finalPosition;
 };
 
@@ -83,13 +95,17 @@ export const isValidLandingPosition = (
     }
     
     const landingPosition = calculateLandingPosition(grid, currentBlock, position);
+    
+    // Valid landing position is one that's different from the current position
+    // and within the grid bounds
     const isValid = landingPosition.y !== position.y && 
                    landingPosition.y >= 0 && 
                    landingPosition.y < (grid?.length || 10);
                    
-    console.log("✅ Landing position valid:", isValid, { 
-      originalY: position.y, 
-      landingY: landingPosition.y 
+    console.log("✅ Landing position validation:", {
+      original: position,
+      landing: landingPosition,
+      valid: isValid
     });
     
     return isValid;

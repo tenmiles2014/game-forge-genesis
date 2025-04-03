@@ -30,10 +30,10 @@ const Grid3D: React.FC<Grid3DProps> = ({
   const gridSize = grid?.length || 10;
   
   // Memoized landing position calculation
-  const { landingPosition, isValid } = useMemo(() => {
+  const landingData = useMemo(() => {
     console.log("📊 Grid3D calculating landing position for:", {
       blockColor: currentBlock?.color,
-      blockShape: currentBlock?.shape?.length,
+      blockShapeSize: currentBlock?.shape?.length,
       position: position,
       gridInitialized: !!grid && grid.length > 0
     });
@@ -46,28 +46,31 @@ const Grid3D: React.FC<Grid3DProps> = ({
       };
     }
     
-    const calculatedLandingPosition = calculateLandingPosition(grid, currentBlock, position);
-    const validLanding = isValidLandingPosition(grid, currentBlock, position);
+    const calculatedLanding = calculateLandingPosition(grid, currentBlock, position);
+    const validLanding = calculatedLanding.y !== position.y;
     
-    // Log differences for debugging
-    if (calculatedLandingPosition.y !== position.y) {
-      console.log("🔍 Landing diff:", calculatedLandingPosition.y - position.y);
-    }
+    console.log("🎯 Landing preview:", {
+      currentY: position.y,
+      landingY: calculatedLanding.y,
+      diff: position.y - calculatedLanding.y,
+      valid: validLanding
+    });
     
     return {
-      landingPosition: calculatedLandingPosition,
-      isValid: validLanding && (calculatedLandingPosition.y !== position.y)
+      landingPosition: calculatedLanding,
+      isValid: validLanding
     };
   }, [grid, currentBlock, position]);
   
+  // Debug effect for monitoring landing calculations
   useEffect(() => {
     console.log("🎮 Grid3D rendering with:", { 
-      isValid, 
-      landingY: landingPosition?.y,
+      landingY: landingData.landingPosition?.y,
       currentY: position?.y,
-      diff: landingPosition ? landingPosition.y - position?.y : "unknown"
+      diff: position ? position.y - landingData.landingPosition?.y : "unknown",
+      isValid: landingData.isValid
     });
-  }, [landingPosition, position, isValid]);
+  }, [landingData, position]);
 
   return (
     <group>
@@ -84,11 +87,11 @@ const Grid3D: React.FC<Grid3DProps> = ({
         />
       )}
       
-      {currentBlock?.shape && isValid && landingPosition && (
+      {currentBlock?.shape && landingData.isValid && (
         <LandingPreview 
           currentBlock={currentBlock}
           position={position}
-          landingY={landingPosition.y}
+          landingY={landingData.landingPosition.y}
         />
       )}
       
