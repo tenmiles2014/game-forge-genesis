@@ -51,7 +51,7 @@ const Grid3D: React.FC<Grid3DProps> = ({
         />
       )}
       
-      {currentBlock?.shape && position && isGameActive && (
+      {currentBlock?.shape && position && (
         <LandingPreview 
           currentBlock={currentBlock}
           position={position}

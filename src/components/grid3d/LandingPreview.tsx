@@ -19,7 +19,9 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
       return [];
     }
 
-    // Only show preview if current position is different from landing position
+    // Only show preview if the block is above the landing position
+    // We don't need to check if it's at the spawn point specifically
+    // Just make sure there's a height difference to show the preview
     const heightDiff = position.y - landingY;
     if (heightDiff <= 0) {
       return [];
