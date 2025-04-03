@@ -7,6 +7,7 @@ import { useGameActions } from '../../hooks/useGameActions';
 import { useKeyboardControls } from '../../hooks/useKeyboardControls';
 import { VIEW_POINTS } from './GameViewManager';
 import GameLayout from './GameLayout';
+import { getRandomBlockPattern } from '../BlockPatterns';
 
 const GameController: React.FC = () => {
   const {
