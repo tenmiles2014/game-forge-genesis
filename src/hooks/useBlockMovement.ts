@@ -41,6 +41,10 @@ export function useBlockMovement(
   };
 
   const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
+    // Log complete state to help with debugging
+    console.log(`moveBlock called with direction: ${direction}`);
+    console.log(`Game state - gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
+    
     if (gameOver || !controlsEnabled || gamePaused) {
       console.log(`Block movement prevented - gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
       return false;

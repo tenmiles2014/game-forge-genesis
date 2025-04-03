@@ -31,21 +31,27 @@ export function useKeyboardControls({
       
       switch (event.key) {
         case 'ArrowLeft':
+          console.log("Moving block left");
           moveBlock('left');
           break;
         case 'ArrowRight':
+          console.log("Moving block right");
           moveBlock('right');
           break;
         case 'ArrowUp':
+          console.log("Moving block forward");
           moveBlock('forward');
           break;
         case 'ArrowDown':
+          console.log("Moving block backward");
           moveBlock('backward');
           break;
         case ' ':  // Space key
+          console.log("Dropping block");
           dropBlock();
           break;
         case 'z':  // Rotate around z-axis
+          console.log("Rotating block around z-axis");
           const rotatedZ = rotateBlock('z');
           if (rotatedZ) {
             setCurrentBlock({
@@ -55,6 +61,7 @@ export function useKeyboardControls({
           }
           break;
         case 'x':  // Rotate around x-axis
+          console.log("Rotating block around x-axis");
           const rotatedX = rotateBlock('x');
           if (rotatedX) {
             setCurrentBlock({
@@ -64,6 +71,7 @@ export function useKeyboardControls({
           }
           break;
         case 's':  // Drop block immediately
+          console.log("Moving block down");
           moveBlock('down'); 
           break;
         default:
@@ -72,9 +80,11 @@ export function useKeyboardControls({
     };
     
     window.addEventListener('keydown', handleKeyDown);
+    console.log(`Keyboard controls mounted - controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
     
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      console.log("Keyboard controls unmounted");
     };
   }, [moveBlock, rotateBlock, dropBlock, controlsEnabled, gamePaused, currentBlock, setCurrentBlock]);
 }

@@ -16,12 +16,16 @@ export function useStartGameAction({
   const startGame = useCallback(() => {
     console.log("Starting game - setting gamePaused to false");
     
+    // Set controlsEnabled first to ensure controls work immediately
+    setControlsEnabled(true);
+    
     // Set gamePaused to false to start the game
     setGamePaused(false);
     
-    // Activate the timer and enable controls
+    // Activate the timer
     setTimerActive(true);
-    setControlsEnabled(true);
+    
+    console.log("Game started - controlsEnabled: true, gamePaused: false");
     
     // Show a toast notification
     toast({
