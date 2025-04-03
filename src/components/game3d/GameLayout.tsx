@@ -52,7 +52,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
   onStartPause
 }) => {
   return (
-    <div className="w-full h-full max-w-[1400px] mx-auto">
+    <div className="w-full h-screen max-w-[1400px] mx-auto">
       <div className="flex flex-col md:flex-row gap-4 h-full">
         <div className="flex-1 space-y-4 h-full">
           <div className="flex justify-center mb-4">

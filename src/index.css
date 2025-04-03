@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -45,11 +46,16 @@
     height: 100vh;
     overflow-x: hidden;
   }
+
+  html, body, #root {
+    height: 100vh;
+    width: 100%;
+  }
 }
 
 .game-container {
   width: 100%;
-  height: 100%;
+  height: 100vh;
   max-width: 100%;
   position: relative;
   background-color: black;
@@ -94,12 +100,12 @@
 
 @media (max-width: 640px) {
   .game-container {
-    min-height: 400px !important;
+    min-height: 100vh !important;
   }
 }
 
 .game-container {
   max-width: 100%;
   width: 100%;
-  height: 100%;
+  height: 100vh;
 }
