@@ -15,7 +15,7 @@ import Grid3DLabels from './Grid3DLabels';
 import Gyroscope from './Gyroscope';
 
 const GRID_SIZE = 10;
-const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
+const INITIAL_POSITION = { x: 4, y: 0, z: 4 }; // Start at the bottom layer (y=0)
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
@@ -115,6 +115,11 @@ const Game3D: React.FC = () => {
       clearInterval(gravityTimerRef.current);
       gravityTimerRef.current = null;
     }
+    
+    toast({
+      title: "Game Rules",
+      description: "Blocks can only be placed in a single layer. Game ends if blocks stack on top of each other!",
+    });
   };
 
   const wouldExceedBoundary = (pattern: number[][], newX: number, newY: number, newZ: number) => {
@@ -198,14 +203,14 @@ const Game3D: React.FC = () => {
     
     const newPosition = {...INITIAL_POSITION};
     
-    if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
+    if (checkIfStackedBlocks(newGrid) || !isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
       setGameOver(true);
       setControlsEnabled(false);
       setTimerActive(false);
       setGamePaused(true);
       toast({
         title: "Game Over!",
-        description: `No space for new block. Final score: ${score} | Level: ${level}`,
+        description: `Blocks stacked on top of each other. Final score: ${score} | Level: ${level}`,
       });
       return;
     }
@@ -225,6 +230,23 @@ const Game3D: React.FC = () => {
     }
   };
 
+  const checkIfStackedBlocks = (grid: number[][][]) => {
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let z = 0; z < GRID_SIZE; z++) {
+        let blockCount = 0;
+        for (let y = 0; y < GRID_SIZE; y++) {
+          if (grid[y][x][z] !== 0) {
+            blockCount++;
+          }
+          if (blockCount > 1) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
   const getColorIndex = (color: string): number => {
     const colorMap: Record<string, number> = {
       'blue': 1,
@@ -241,7 +263,6 @@ const Game3D: React.FC = () => {
     const gridCopy = JSON.parse(JSON.stringify(grid));
     const gridSize = GRID_SIZE;
     
-    // Check for rows with 10 blocks (X-axis rows in each Y layer)
     for (let y = 0; y < gridSize; y++) {
       for (let z = 0; z < gridSize; z++) {
         let blockCount = 0;
@@ -251,7 +272,6 @@ const Game3D: React.FC = () => {
           }
         }
         
-        // If 10 blocks are in this row, clear it
         if (blockCount === 10) {
           for (let x = 0; x < gridSize; x++) {
             gridCopy[y][x][z] = 0;
@@ -261,7 +281,6 @@ const Game3D: React.FC = () => {
       }
     }
     
-    // Check for rows along Z-axis in each Y layer
     for (let y = 0; y < gridSize; y++) {
       for (let x = 0; x < gridSize; x++) {
         let blockCount = 0;
@@ -271,7 +290,6 @@ const Game3D: React.FC = () => {
           }
         }
         
-        // If 10 blocks are in this row, clear it
         if (blockCount === 10) {
           for (let z = 0; z < gridSize; z++) {
             gridCopy[y][x][z] = 0;
@@ -281,7 +299,6 @@ const Game3D: React.FC = () => {
       }
     }
     
-    // Check for columns (vertical Y-axis)
     for (let x = 0; x < gridSize; x++) {
       for (let z = 0; z < gridSize; z++) {
         let blockCount = 0;
@@ -291,7 +308,6 @@ const Game3D: React.FC = () => {
           }
         }
         
-        // If 10 blocks are in this column, clear it
         if (blockCount === 10) {
           for (let y = 0; y < gridSize; y++) {
             gridCopy[y][x][z] = 0;
@@ -301,7 +317,6 @@ const Game3D: React.FC = () => {
       }
     }
     
-    // Check entire Y layers
     for (let y = 0; y < gridSize; y++) {
       let blockCount = 0;
       for (let x = 0; x < gridSize; x++) {
@@ -312,7 +327,6 @@ const Game3D: React.FC = () => {
         }
       }
       
-      // If the entire layer is filled (10x10 = 100 blocks), clear it
       if (blockCount === 100) {
         for (let x = 0; x < gridSize; x++) {
           for (let z = 0; z < gridSize; z++) {
@@ -322,8 +336,6 @@ const Game3D: React.FC = () => {
         layersCleared++;
       }
     }
-    
-    applyGravityToBlocks(gridCopy);
     
     if (layersCleared > 0) {
       const levelMultiplier = 1 + (level * 0.1);
@@ -341,24 +353,7 @@ const Game3D: React.FC = () => {
   };
 
   const applyGravityToBlocks = (grid: number[][][]) => {
-    for (let x = 0; x < GRID_SIZE; x++) {
-      for (let z = 0; z < GRID_SIZE; z++) {
-        for (let y = 1; y < GRID_SIZE; y++) {
-          if (grid[y][x][z] !== 0) {
-            let newY = y;
-            
-            while (newY > 0 && grid[newY - 1][x][z] === 0) {
-              newY--;
-            }
-            
-            if (newY < y) {
-              grid[newY][x][z] = grid[y][x][z];
-              grid[y][x][z] = 0;
-            }
-          }
-        }
-      }
-    }
+    return;
   };
 
   const handleTimeUp = () => {
@@ -462,17 +457,7 @@ const Game3D: React.FC = () => {
   const dropBlock = () => {
     if (gameOver || !controlsEnabled || gamePaused) return;
     
-    let newY = position.y;
-    
-    while (isValidPosition(currentBlock.shape, position.x, newY - 1, position.z)) {
-      newY--;
-    }
-    
-    setPosition({ ...position, y: newY });
-    
-    setTimeout(() => {
-      placeBlock();
-    }, 0);
+    placeBlock();
   };
 
   const toggleGamePause = () => {
@@ -505,7 +490,7 @@ const Game3D: React.FC = () => {
     
     toast({
       title: "Game Started",
-      description: "Good luck!",
+      description: "Good luck! Remember: No stacking allowed!",
     });
   };
 
@@ -554,8 +539,8 @@ const Game3D: React.FC = () => {
         case 'x':  // Rotate around x-axis
           rotateBlock('x');
           break;
-        case 's':  // Move down
-          moveBlock('down');
+        case 's':  // Move down - this doesn't make sense anymore since blocks can't move down
+          placeBlock(); // Just place the block immediately
           break;
         default:
           break;
