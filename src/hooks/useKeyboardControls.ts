@@ -29,23 +29,21 @@ export function useKeyboardControls({
     const handleKeyDown = (event: KeyboardEvent) => {
       console.log(`🕹️ Key Pressed: ${event.key}`);
       
+      // Make sure gameplay keys don't affect game pause state
+      if (["Enter", "Escape", "p", "P"].includes(event.key)) {
+        console.log("Game control key pressed, but ignored to prevent affecting game state");
+        return;
+      }
+      
       // More verbose check
       if (gamePaused) {
         console.warn('⛔ Game is paused, blocking key events');
-        toast({
-          title: "Game Paused",
-          description: "Unpause the game to move blocks"
-        });
-        return;
+        return; // Don't show toast on every key press when paused
       }
       
       if (!controlsEnabled) {
         console.warn('⛔ Controls are not enabled');
-        toast({
-          title: "Controls Disabled",
-          description: "Wait for game to initialize"
-        });
-        return;
+        return; // Don't show toast when controls disabled
       }
 
       try {
@@ -89,10 +87,6 @@ export function useKeyboardControls({
         }
       } catch (error) {
         console.error('❌ Block movement error:', error);
-        toast({
-          title: "Movement Error",
-          description: "Unable to move block"
-        });
       }
     };
     
@@ -111,4 +105,3 @@ export function useKeyboardControls({
     setCurrentBlock
   ]);
 }
-

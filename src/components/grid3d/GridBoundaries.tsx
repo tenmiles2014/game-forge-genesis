@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Grid } from '@react-three/drei';
 import * as THREE from 'three';
@@ -104,23 +105,23 @@ const GridBoundaries: React.FC<GridBoundariesProps> = ({ gridSize, verticalStack
         infiniteGrid={false}
       />
       
-      {/* Corner markers for the grid */}
-      <mesh position={[0, 0, 0]}>
+      {/* Corner markers for the grid - now at y=-0.5 to match grid height */}
+      <mesh position={[0, -0.5, 0]}>
         <boxGeometry args={[0.5, 0.2, 0.5]} />
         <meshBasicMaterial color="#4A9BF7" />
       </mesh>
       
-      <mesh position={[gridSize - 1, 0, 0]}>
+      <mesh position={[gridSize - 1, -0.5, 0]}>
         <boxGeometry args={[0.5, 0.2, 0.5]} />
         <meshBasicMaterial color="#4A9BF7" />
       </mesh>
       
-      <mesh position={[0, 0, gridSize - 1]}>
+      <mesh position={[0, -0.5, gridSize - 1]}>
         <boxGeometry args={[0.5, 0.2, 0.5]} />
         <meshBasicMaterial color="#4A9BF7" />
       </mesh>
       
-      <mesh position={[gridSize - 1, 0, gridSize - 1]}>
+      <mesh position={[gridSize - 1, -0.5, gridSize - 1]}>
         <boxGeometry args={[0.5, 0.2, 0.5]} />
         <meshBasicMaterial color="#4A9BF7" />
       </mesh>

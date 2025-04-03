@@ -41,26 +41,9 @@ export function useStartGameAction({
       }, 50);
     };
 
-    // Immediate execution with potential retry mechanism
-    try {
-      gameStartSequence();
-    } catch (error) {
-      console.error("❌ Game start failed:", error);
-      
-      // Optional retry after a short delay
-      setTimeout(() => {
-        try {
-          gameStartSequence();
-        } catch (retryError) {
-          console.error("❌ Game start retry failed:", retryError);
-          toast({
-            title: "Game Start Error",
-            description: "Unable to start the game. Please refresh.",
-            variant: "destructive"
-          });
-        }
-      }, 500);
-    }
+    // Execute the start sequence
+    gameStartSequence();
+    
   }, [setGamePaused, setTimerActive, setControlsEnabled]);
 
   return { startGame };

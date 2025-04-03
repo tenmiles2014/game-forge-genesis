@@ -18,6 +18,8 @@ export function useGamePauseAction({
   gamePaused
 }: GamePauseActionProps) {
   const toggleGamePause = useCallback(() => {
+    console.log("🔄 Toggle Game Pause Action Triggered");
+    
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
       gravityTimerRef.current = null;
@@ -25,23 +27,30 @@ export function useGamePauseAction({
     
     // Toggle the game pause state directly
     const newPausedState = !gamePaused;
+    console.log(`Setting game pause state to: ${newPausedState}`);
     setGamePaused(newPausedState);
     
     if (newPausedState) {
+      // Game is being paused
+      console.log("Game paused - disabling controls and timer");
+      setTimerActive(false);
+      setControlsEnabled(false);
+      
       toast({
         title: "Game Paused",
         description: "Take a breather!",
       });
     } else {
+      // Game is being unpaused
+      console.log("Game unpaused - enabling controls and timer");
+      setTimerActive(true);
+      setControlsEnabled(true);
+      
       toast({
         title: "Game Resumed",
         description: "Let's go!",
       });
     }
-    
-    // Use direct boolean values
-    setTimerActive(false); // Will be updated by the effect that watches gamePaused
-    setControlsEnabled(false); // Will be updated by the effect that watches gamePaused
     
   }, [gravityTimerRef, setGamePaused, setTimerActive, setControlsEnabled, gamePaused]);
 

@@ -7,12 +7,9 @@ interface SpawnPointIndicatorProps {
 }
 
 const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({ gridSize }) => {
-  // Center position of the spawn area
-  const centerX = Math.floor(gridSize / 2);
-  const centerZ = Math.floor(gridSize / 2);
-  const topY = gridSize - 1; // Position at ceiling
-  
-  return null; // Completely remove the spawn point indicator
+  // We're returning null to completely remove the spawn point indicator
+  // including any ceiling elements
+  return null;
 };
 
 export default SpawnPointIndicator;

@@ -14,37 +14,50 @@ export function useBlockMovement(
 ) {
   const gridSize = grid.length || 10;
 
+  // Check if position is valid based on grid and block shape
   const isValidPosition = useCallback((newPosition: { x: number; y: number; z: number }): boolean => {
-    // Validate position based on block shape and grid boundaries
-    for (let y = 0; y < currentBlock.shape.length; y++) {
-      for (let x = 0; x < currentBlock.shape[y].length; x++) {
-        if (currentBlock.shape[y][x]) {
-          const gridX = newPosition.x + x;
-          const gridY = newPosition.y - y;
-          const gridZ = newPosition.z + y;
-
-          // Check grid boundaries
-          if (
-            gridX < 0 || gridX >= gridSize ||
-            gridY < 0 || gridY >= gridSize ||
-            gridZ < 0 || gridZ >= gridSize
-          ) {
-            console.warn(`❌ Invalid Position: Out of Grid Bounds 
-              Position: (${gridX}, ${gridY}, ${gridZ})
-              Grid Size: ${gridSize}`);
-            return false;
-          }
-
-          // Check for existing blocks in the grid
-          if (grid[gridY][gridX][gridZ] !== 0) {
-            console.warn(`❌ Invalid Position: Block Collision 
-              Position: (${gridX}, ${gridY}, ${gridZ})`);
-            return false;
+    // Check if grid is initialized
+    if (!grid || grid.length === 0) {
+      console.warn('❌ Grid not initialized');
+      return false;
+    }
+    
+    // Check if block is available
+    if (!currentBlock || !currentBlock.shape) {
+      console.warn('❌ Current block not initialized');
+      return false;
+    }
+    
+    try {
+      // Validate position based on block shape and grid boundaries
+      for (let y = 0; y < currentBlock.shape.length; y++) {
+        for (let x = 0; x < currentBlock.shape[y].length; x++) {
+          if (currentBlock.shape[y][x]) {
+            const gridX = newPosition.x + x;
+            const gridY = newPosition.y;
+            const gridZ = newPosition.z + y;
+  
+            // Check grid boundaries
+            if (
+              gridX < 0 || gridX >= gridSize ||
+              gridY < 0 || gridY >= gridSize ||
+              gridZ < 0 || gridZ >= gridSize
+            ) {
+              return false;
+            }
+  
+            // Check for existing blocks in the grid
+            if (grid[gridY][gridX][gridZ] !== 0) {
+              return false;
+            }
           }
         }
       }
+      return true;
+    } catch (error) {
+      console.error('❌ Error in position validation:', error);
+      return false;
     }
-    return true;
   }, [grid, currentBlock, gridSize]);
 
   const moveBlock = useCallback((direction: 'left' | 'right' | 'forward' | 'backward' | 'down'): boolean => {
@@ -58,50 +71,52 @@ export function useBlockMovement(
     
     if (gamePaused) {
       console.warn('❌ Cannot move: Game is paused');
-      toast({
-        title: "Game Paused",
-        description: "Unpause to move blocks"
-      });
       return false;
     }
     
     if (!controlsEnabled) {
       console.warn('❌ Cannot move: Controls are disabled');
-      toast({
-        title: "Controls Disabled",
-        description: "Wait for game initialization"
-      });
+      return false;
+    }
+    
+    if (!grid || grid.length === 0) {
+      console.warn('❌ Cannot move: Grid not initialized');
       return false;
     }
 
-    let newPosition = { ...currentPosition };
-    
-    switch (direction) {
-      case 'left':
-        newPosition.x -= 1;
-        break;
-      case 'right':
-        newPosition.x += 1;
-        break;
-      case 'forward':
-        newPosition.z -= 1;
-        break;
-      case 'backward':
-        newPosition.z += 1;
-        break;
-      case 'down':
-        newPosition.y -= 1;
-        break;
-    }
-
-    console.log(`📍 New Position: ${JSON.stringify(newPosition)}`);
-
-    if (isValidPosition(newPosition)) {
-      setPosition(newPosition);
-      console.log(`✅ Block moved successfully: ${direction}`);
-      return true;
-    } else {
-      console.warn(`❌ Invalid move: ${direction}`);
+    try {
+      let newPosition = { ...currentPosition };
+      
+      switch (direction) {
+        case 'left':
+          newPosition.x -= 1;
+          break;
+        case 'right':
+          newPosition.x += 1;
+          break;
+        case 'forward':
+          newPosition.z -= 1;
+          break;
+        case 'backward':
+          newPosition.z += 1;
+          break;
+        case 'down':
+          newPosition.y -= 1;
+          break;
+      }
+  
+      console.log(`📍 New Position: ${JSON.stringify(newPosition)}`);
+  
+      if (isValidPosition(newPosition)) {
+        setPosition(newPosition);
+        console.log(`✅ Block moved successfully: ${direction}`);
+        return true;
+      } else {
+        console.warn(`❌ Invalid move: ${direction}`);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error in moveBlock:', error);
       return false;
     }
   }, [
@@ -110,7 +125,8 @@ export function useBlockMovement(
     setPosition, 
     gameOver, 
     gamePaused, 
-    controlsEnabled
+    controlsEnabled,
+    grid
   ]);
 
   const rotateBlock = useCallback((axis: 'x' | 'y' | 'z'): number[][] | null => {
@@ -122,28 +138,30 @@ export function useBlockMovement(
       return null;
     }
 
-    const rotateMatrix = (matrix: number[][]): number[][] => {
-      return matrix[0].map((val, index) => 
-        matrix.map(row => row[index]).reverse()
-      );
-    };
-
-    const rotatedShape = rotateMatrix(currentBlock.shape);
-    
-    // Test rotated position validity
-    const testPosition = { ...currentPosition };
-    const isValid = isValidPosition({ 
-      ...testPosition, 
-      x: testPosition.x, 
-      y: testPosition.y, 
-      z: testPosition.z 
-    });
-
-    if (isValid) {
-      console.log('✅ Block rotation successful');
-      return rotatedShape;
-    } else {
-      console.warn('❌ Invalid block rotation');
+    try {
+      const rotateMatrix = (matrix: number[][]): number[][] => {
+        return matrix[0].map((val, index) => 
+          matrix.map(row => row[index]).reverse()
+        );
+      };
+  
+      const rotatedShape = rotateMatrix(currentBlock.shape);
+      
+      // Test rotated position validity
+      const testPosition = { ...currentPosition };
+      const isValid = isValidPosition({ 
+        ...testPosition
+      });
+  
+      if (isValid) {
+        console.log('✅ Block rotation successful');
+        return rotatedShape;
+      } else {
+        console.warn('❌ Invalid block rotation');
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Error in rotateBlock:', error);
       return null;
     }
   }, [
@@ -163,13 +181,17 @@ export function useBlockMovement(
       return;
     }
 
-    let newPosition = { ...currentPosition };
-    while (isValidPosition({ ...newPosition, y: newPosition.y - 1 })) {
-      newPosition.y -= 1;
+    try {
+      let newPosition = { ...currentPosition };
+      while (isValidPosition({ ...newPosition, y: newPosition.y - 1 })) {
+        newPosition.y -= 1;
+      }
+  
+      setPosition(newPosition);
+      console.log(`✅ Block dropped to position: ${JSON.stringify(newPosition)}`);
+    } catch (error) {
+      console.error('❌ Error in dropBlock:', error);
     }
-
-    setPosition(newPosition);
-    console.log(`✅ Block dropped to position: ${JSON.stringify(newPosition)}`);
   }, [
     currentPosition, 
     isValidPosition, 
