@@ -20,8 +20,7 @@ const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
-const STACK_HEIGHT_THRESHOLD = 2; // Minimum height to detect a stack
-const WARNING_Y_LEVEL = 1; // Y level to check for warning (2nd level from bottom)
+const GAME_OVER_Y_LEVEL = 2; // Game over if blocks reach level 2 or above
 
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
@@ -169,6 +168,20 @@ const Game3D: React.FC = () => {
     return true;
   };
 
+  const detectBlocksAtYLevel = (grid: number[][][], yLevel: number): number => {
+    let blocksCount = 0;
+    
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let z = 0; z < GRID_SIZE; z++) {
+        if (grid[yLevel][x][z] !== 0) {
+          blocksCount++;
+        }
+      }
+    }
+    
+    return blocksCount;
+  };
+
   const placeBlock = () => {
     const newGrid = JSON.parse(JSON.stringify(grid));
     for (let y = 0; y < currentBlock.shape.length; y++) {
@@ -192,6 +205,22 @@ const Game3D: React.FC = () => {
     setGrid(newGrid);
     
     const layersCleared = clearCompleteLayers(newGrid);
+    
+    // Check for blocks at game over level
+    for (let y = GAME_OVER_Y_LEVEL; y < GRID_SIZE; y++) {
+      const blocksAtY = detectBlocksAtYLevel(newGrid, y);
+      if (blocksAtY > 0) {
+        setGameOver(true);
+        setControlsEnabled(false);
+        setTimerActive(false);
+        setGamePaused(true);
+        toast({
+          title: "Game Over!",
+          description: `Blocks reached level ${y}. Final score: ${score} | Level: ${level}`,
+        });
+        return;
+      }
+    }
     
     const nextBlockPattern = nextBlock;
     setCurrentBlock(nextBlockPattern);
@@ -369,7 +398,7 @@ const Game3D: React.FC = () => {
             } else {
               stackHeight++;
               
-              if (stackHeight >= STACK_HEIGHT_THRESHOLD) {
+              if (stackHeight >= 2) {
                 stacks++;
               }
             }
