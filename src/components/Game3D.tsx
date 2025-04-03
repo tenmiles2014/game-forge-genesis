@@ -523,9 +523,6 @@ const Game3D: React.FC = () => {
         case 'x':  // Rotate around x-axis
           rotateBlock('x');
           break;
-        case 's':  // Move down
-          moveBlock('down');
-          break;
         default:
           break;
       }

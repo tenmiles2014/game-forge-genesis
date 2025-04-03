@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
@@ -11,7 +10,6 @@ const GuidelineOverlay: React.FC<GuidelineOverlayProps> = ({ className }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isMinimized, setIsMinimized] = useState(false);
   
-  // Auto-hide after 10 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsMinimized(true);
@@ -63,8 +61,6 @@ const GuidelineOverlay: React.FC<GuidelineOverlayProps> = ({ className }) => {
           
           <div className="text-sm text-gray-200 space-y-2">
             <p><span className="font-medium">Arrow Keys:</span> Move X/Z</p>
-            <p><span className="font-medium">S:</span> Move Down</p>
-            <p><span className="font-medium">W:</span> Move Up</p>
             <p><span className="font-medium">Z/X:</span> Rotate</p>
             <p><span className="font-medium">Space:</span> Drop</p>
           </div>
