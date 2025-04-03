@@ -87,9 +87,14 @@ export function useDropBlockAction({
       return;
     }
     
+    // First, disable controls to prevent any input during block placement and spawning
+    setControlsEnabled(false);
+    
     // Place the block in the grid
     const colorIndex = getColorIndex(currentBlock.color);
     const newGrid = placeBlockInGrid(grid, position, currentBlock, colorIndex);
+    
+    console.log("📥 Placed block in grid at:", JSON.stringify(position));
     setGrid(newGrid);
 
     // Clear any completed layers
@@ -99,6 +104,7 @@ export function useDropBlockAction({
     const hasStacked = checkIfStackedBlocks(newGrid);
     
     if (hasStacked) {
+      console.log("🔴 Game over condition detected: blocks have stacked");
       handleGameOver(
         "Blocks have stacked!", 
         setGameOver, 
@@ -118,14 +124,16 @@ export function useDropBlockAction({
       gravityTimerRef.current = null;
     }
     
-    // Introduce a small delay before spawning next block
+    // Introduce a delay before spawning next block
     // This helps ensure the current block is fully placed before spawning the next one
     setTimeout(() => {
       // Spawn next block and check if it's a valid position
+      console.log("⏱️ Spawning next block after delay");
       const validSpawn = spawnNextBlock();
       
       // Check if the new position is valid, if not it's game over
       if (!validSpawn) {
+        console.log("🔴 Game over: no space for new blocks");
         handleGameOver(
           "No space for new blocks!", 
           setGameOver, 
@@ -134,9 +142,11 @@ export function useDropBlockAction({
           gravityTimerRef
         );
       } else {
-        console.log("✅ New block placed successfully at starting position");
+        // Re-enable controls only if spawn was successful
+        console.log("✅ New block spawned successfully, re-enabling controls");
+        setControlsEnabled(true);
       }
-    }, 50);
+    }, 100); // Slightly longer delay for more consistent behavior
   }, [
     grid,
     currentBlock,

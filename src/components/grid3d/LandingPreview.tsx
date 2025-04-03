@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BlockPattern } from '../BlockPatterns';
 
 interface LandingPreviewProps {
@@ -9,16 +9,31 @@ interface LandingPreviewProps {
 }
 
 const LandingPreview: React.FC<LandingPreviewProps> = ({ currentBlock, position, landingY }) => {
+  // Log when the component renders for debugging
+  useEffect(() => {
+    console.log("LandingPreview rendering with:", { 
+      blockColor: currentBlock?.color,
+      position: position ? `x:${position.x}, y:${position.y}, z:${position.z}` : 'undefined',
+      landingY 
+    });
+  }, [currentBlock, position, landingY]);
+
   // Enhanced safety checks
-  if (!currentBlock || !currentBlock.shape || !position || 
-      landingY === undefined || position.y === undefined || 
-      landingY === position.y || landingY < 0) {
+  if (!currentBlock?.shape || 
+      !position?.x !== undefined || 
+      position?.y === undefined || 
+      position?.z === undefined || 
+      landingY === undefined || 
+      landingY === position.y || 
+      landingY < 0) {
     console.log("Skipping landing preview due to invalid props", {
       hasCurrentBlock: !!currentBlock,
       hasShape: !!currentBlock?.shape,
       hasPosition: !!position,
-      landingY,
+      positionX: position?.x,
       positionY: position?.y,
+      positionZ: position?.z,
+      landingY,
       isSamePosition: position && landingY === position.y
     });
     return null;

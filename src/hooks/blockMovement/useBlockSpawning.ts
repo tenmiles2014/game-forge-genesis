@@ -50,22 +50,21 @@ export function useBlockSpawning({
   const spawnNextBlock = useCallback(() => {
     console.log("🔄 Spawning next block");
     
-    // Get the next block that was previously prepared
-    let currentNextBlock;
+    let nextBlockToUse: BlockPattern | null = null;
     
+    // Get the next block that was previously prepared
     setCurrentBlock((prevNextBlock) => {
-      currentNextBlock = prevNextBlock;
-      console.log("📦 Current block updated:", {
-        to: prevNextBlock?.color
-      });
+      nextBlockToUse = prevNextBlock;
+      console.log("📦 Current block updated to:", prevNextBlock?.color);
       return prevNextBlock;
     });
     
-    // Prepare a new next block
+    // Create a new next block
     const newNextBlock = getRandomBlockPattern();
+    console.log("🔮 New next block prepared:", newNextBlock?.color);
     setNextBlock(newNextBlock);
     
-    // IMPORTANT: Create a fresh object for the spawn position
+    // CRITICAL: Create a fresh object for the spawn position
     // This ensures we're not using a reference that might be modified elsewhere
     const spawnPosition = {
       x: INITIAL_POSITION.x,
@@ -73,14 +72,14 @@ export function useBlockSpawning({
       z: INITIAL_POSITION.z
     };
     
-    console.log(`📍 Resetting position to spawn point: ${JSON.stringify(spawnPosition)}`);
+    console.log(`📍 Setting position to spawn point: ${JSON.stringify(spawnPosition)}`);
     
     // Force position to be at spawn point, regardless of previous position
     setPosition(spawnPosition);
     
-    // Return whether the spawn position is valid (for game over detection)
+    // Check if the spawn position is valid
     const isValid = isValidPosition(spawnPosition);
-    console.log(`${isValid ? '✅ Valid' : '❌ Invalid'} spawn position`);
+    console.log(`${isValid ? '✅ Valid' : '❌ Invalid'} spawn position for new block`);
     return isValid;
   }, [getRandomBlockPattern, setCurrentBlock, setNextBlock, setPosition, INITIAL_POSITION, isValidPosition]);
 

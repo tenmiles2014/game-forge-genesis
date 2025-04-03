@@ -6,6 +6,9 @@ export const calculateLandingPosition = (
   currentBlock: BlockPattern,
   position: { x: number; y: number; z: number }
 ): { x: number; y: number; z: number } => {
+  // Create a default safe position as fallback
+  const defaultPosition = { ...position };
+  
   // Perform thorough validation of input data
   if (!grid || grid.length === 0 || !currentBlock || !currentBlock.shape || 
       !position || position.y === undefined) {
@@ -17,7 +20,7 @@ export const calculateLandingPosition = (
       positionExists: !!position,
       positionYDefined: position?.y !== undefined
     });
-    return position ? { ...position } : { x: 0, y: 0, z: 0 };
+    return defaultPosition;
   }
   
   // Start at current position and move down
@@ -66,9 +69,15 @@ export const calculateLandingPosition = (
     }
     
     console.log(`Landing position calculated: x=${position.x}, y=${landingY}, z=${position.z}`);
-    return { x: position.x, y: landingY, z: position.z };
+    
+    // Always return a new object to avoid reference issues
+    return { 
+      x: position.x, 
+      y: landingY, 
+      z: position.z 
+    };
   } catch (error) {
     console.error("Error in landing position calculation:", error);
-    return { ...position };
+    return { ...defaultPosition };
   }
 };
