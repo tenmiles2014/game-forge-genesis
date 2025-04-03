@@ -1,7 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { BlockPattern } from './BlockPatterns';
-import * as THREE from 'three';
-import { Grid } from '@react-three/drei';
+import GridBoundaries from './grid3d/GridBoundaries';
+import GridBlocks from './grid3d/GridBlocks';
+import ActiveBlock from './grid3d/ActiveBlock';
+import LandingPreview from './grid3d/LandingPreview';
+import FlashEffect from './grid3d/FlashEffect';
+import { calculateLandingPosition } from './utils/landingCalculator';
 
 interface Grid3DProps {
   grid: number[][][];
@@ -12,302 +16,18 @@ interface Grid3DProps {
 
 const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesCleared }) => {
   const VERTICAL_STACK_LIMIT = grid.length - 3; // Match the limit in Game3D
-
-  // Function to find the landing position of the current block
-  const getLandingPosition = useMemo(() => {
-    let landingY = position.y;
-    
-    // Clone the current grid to check collisions
-    const gridCopy = JSON.parse(JSON.stringify(grid));
-    
-    // Check each possible position below the current one
-    while (landingY > 0) {
-      let canMoveDown = true;
-      
-      // Check if the block would collide at the next position down
-      for (let y = 0; y < currentBlock.shape.length; y++) {
-        for (let x = 0; x < currentBlock.shape[y].length; x++) {
-          if (currentBlock.shape[y][x]) {
-            const nextY = landingY - 1;
-            const gridX = position.x + x;
-            const gridZ = position.z + y;
-            
-            // Check grid boundaries
-            if (nextY < 0) {
-              canMoveDown = false;
-              break;
-            }
-            
-            // Check collision with existing blocks
-            if (
-              gridX >= 0 && 
-              gridX < grid.length && 
-              nextY >= 0 && 
-              nextY < grid.length && 
-              gridZ >= 0 && 
-              gridZ < grid.length
-            ) {
-              if (gridCopy[nextY][gridX][gridZ] !== 0) {
-                canMoveDown = false;
-                break;
-              }
-            }
-          }
-        }
-        if (!canMoveDown) break;
-      }
-      
-      if (!canMoveDown) break;
-      landingY--;
-    }
-    
-    return landingY;
-  }, [position, currentBlock, grid]);
+  const gridSize = grid.length || 10;
   
-  const renderGridBoundaries = useMemo(() => {
-    const gridSize = grid.length || 10;
-    
-    return (
-      <>
-        {/* Main grid boundary box */}
-        <mesh position={[gridSize/2 - 0.5, gridSize/2 - 0.5, gridSize/2 - 0.5]}>
-          <boxGeometry args={[gridSize, gridSize, gridSize]} />
-          <meshStandardMaterial 
-            color="white" 
-            transparent={true} 
-            opacity={0.02}
-            wireframe={true} 
-          />
-        </mesh>
-        
-        {/* X-axis line */}
-        <mesh>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={2}
-              array={new Float32Array([0, 0, 0, grid.length, 0, 0])}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial attach="material" color="red" />
-        </mesh>
-        
-        {/* Y-axis line */}
-        <mesh>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={2}
-              array={new Float32Array([0, 0, 0, 0, grid.length, 0])}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial attach="material" color="blue" />
-        </mesh>
-        
-        {/* Z-axis line */}
-        <mesh>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={2}
-              array={new Float32Array([0, 0, 0, 0, 0, grid.length])}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial attach="material" color="green" />
-        </mesh>
-        
-        {/* Vertical stack limit warning line */}
-        <mesh>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={5}
-              array={new Float32Array([
-                0, VERTICAL_STACK_LIMIT, 0,
-                gridSize, VERTICAL_STACK_LIMIT, 0,
-                gridSize, VERTICAL_STACK_LIMIT, gridSize,
-                0, VERTICAL_STACK_LIMIT, gridSize,
-                0, VERTICAL_STACK_LIMIT, 0
-              ])}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial attach="material" color="#ff0000" transparent={true} opacity={0.7} />
-        </mesh>
-        
-        {/* Floor grid plane matching the screenshot */}
-        <Grid
-          position={[gridSize/2 - 0.5, -0.01, gridSize/2 - 0.5]}
-          args={[gridSize + 2, gridSize + 2]}
-          cellSize={1}
-          cellThickness={0.6}
-          cellColor="#4A9BF7"
-          sectionSize={gridSize/2}
-          sectionThickness={1.0}
-          sectionColor="#4A9BF7"
-          fadeStrength={1.5}
-          infiniteGrid={false}
-        />
-        
-        {/* Corner markers for the grid */}
-        <mesh position={[0, 0, 0]}>
-          <boxGeometry args={[0.5, 0.2, 0.5]} />
-          <meshBasicMaterial color="#4A9BF7" />
-        </mesh>
-        
-        <mesh position={[gridSize - 1, 0, 0]}>
-          <boxGeometry args={[0.5, 0.2, 0.5]} />
-          <meshBasicMaterial color="#4A9BF7" />
-        </mesh>
-        
-        <mesh position={[0, 0, gridSize - 1]}>
-          <boxGeometry args={[0.5, 0.2, 0.5]} />
-          <meshBasicMaterial color="#4A9BF7" />
-        </mesh>
-        
-        <mesh position={[gridSize - 1, 0, gridSize - 1]}>
-          <boxGeometry args={[0.5, 0.2, 0.5]} />
-          <meshBasicMaterial color="#4A9BF7" />
-        </mesh>
-        
-        {/* Grid lines along the X-axis */}
-        {Array.from({ length: gridSize + 1 }).map((_, i) => (
-          <mesh key={`grid-x-${i}`}>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                count={2}
-                array={new Float32Array([i, 0, 0, i, 0, gridSize])}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial attach="material" color="#4A9BF7" opacity={0.7} transparent={true} />
-          </mesh>
-        ))}
-        
-        {/* Grid lines along the Z-axis */}
-        {Array.from({ length: gridSize + 1 }).map((_, i) => (
-          <mesh key={`grid-z-${i}`}>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                count={2}
-                array={new Float32Array([0, 0, i, gridSize, 0, i])}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial attach="material" color="#4A9BF7" opacity={0.7} transparent={true} />
-          </mesh>
-        ))}
-      </>
-    );
-  }, [grid, VERTICAL_STACK_LIMIT]);
-  
-  // Render the blocks in the grid
-  const renderGridBlocks = useMemo(() => {
-    return grid.flatMap((layer, y) =>
-      layer.flatMap((row, x) =>
-        row.map((cell, z) => {
-          if (cell !== 0) {
-            const color = getColorFromIndex(cell);
-            return (
-              <mesh key={`grid-${x}-${y}-${z}`} position={[x, y, z]}>
-                <boxGeometry args={[1, 1, 1]} />
-                <meshStandardMaterial color={color} />
-              </mesh>
-            );
-          }
-          return null;
-        })
-      )
-    ).filter(Boolean);
-  }, [grid]);
-  
-  // Render the current active block
-  const renderCurrentBlock = useMemo(() => {
-    const blocks = [];
-    
-    for (let y = 0; y < currentBlock.shape.length; y++) {
-      for (let x = 0; x < currentBlock.shape[y].length; x++) {
-        if (currentBlock.shape[y][x]) {
-          blocks.push(
-            <mesh 
-              key={`current-${x}-${y}`} 
-              position={[position.x + x, position.y, position.z + y]}
-            >
-              <boxGeometry args={[1, 1, 1]} />
-              <meshStandardMaterial color={currentBlock.color} />
-            </mesh>
-          );
-        }
-      }
-    }
-    
-    return blocks;
-  }, [currentBlock, position]);
-  
-  // Render the landing position prediction - Fixed implementation
-  const renderLandingPreview = useMemo(() => {
-    const blocks = [];
-    const landingY = getLandingPosition;
-    
-    // Only render if the landing position is different from current position
-    if (landingY !== position.y) {
-      // Draw blocks at landing position
-      for (let y = 0; y < currentBlock.shape.length; y++) {
-        for (let x = 0; x < currentBlock.shape[y].length; x++) {
-          if (currentBlock.shape[y][x]) {
-            // Landing preview block
-            blocks.push(
-              <mesh 
-                key={`landing-${x}-${y}`} 
-                position={[position.x + x, landingY, position.z + y]}
-              >
-                <boxGeometry args={[1, 1, 1]} />
-                <meshStandardMaterial 
-                  color={currentBlock.color} 
-                  transparent={true} 
-                  opacity={0.5}
-                  wireframe={false}
-                />
-              </mesh>
-            );
-            
-            // Add drop line visualization using cylindrical meshes instead of line
-            if (position.y - landingY > 1) {
-              const height = position.y - landingY;
-              const midY = (position.y + landingY) / 2;
-              
-              blocks.push(
-                <mesh 
-                  key={`drop-line-${x}-${y}`} 
-                  position={[position.x + x, midY, position.z + y]}
-                >
-                  <cylinderGeometry args={[0.03, 0.03, height, 4]} />
-                  <meshBasicMaterial 
-                    color={currentBlock.color} 
-                    transparent={true} 
-                    opacity={0.3} 
-                  />
-                </mesh>
-              );
-            }
-          }
-        }
-      }
-    }
-    
-    return blocks;
-  }, [currentBlock, position, getLandingPosition]);
+  // Calculate landing position
+  const landingY = useMemo(() => 
+    calculateLandingPosition(position, currentBlock, grid), 
+  [position, currentBlock, grid]);
   
   // Flash effect when lines are cleared
-  const [flashEffect, setFlashEffect] = React.useState(false);
-  const [lastLinesCleared, setLastLinesCleared] = React.useState(0);
+  const [flashEffect, setFlashEffect] = useState(false);
+  const [lastLinesCleared, setLastLinesCleared] = useState(0);
   
-  React.useEffect(() => {
+  useEffect(() => {
     if (linesCleared > lastLinesCleared) {
       setFlashEffect(true);
       setLastLinesCleared(linesCleared);
@@ -323,35 +43,29 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
   
   return (
     <>
-      {renderGridBoundaries}
-      {renderGridBlocks}
-      {renderCurrentBlock}
-      {renderLandingPreview}
+      {/* Grid boundaries, floor and coordinate system */}
+      <GridBoundaries 
+        gridSize={gridSize} 
+        verticalStackLimit={VERTICAL_STACK_LIMIT} 
+      />
       
-      {/* Flash light effect when lines are cleared */}
-      {flashEffect && (
-        <pointLight 
-          position={[5, 5, 5]} 
-          intensity={5} 
-          color="#ffffff" 
-          distance={20}
-        />
-      )}
+      {/* Existing blocks in the grid */}
+      <GridBlocks grid={grid} />
+      
+      {/* Currently active block */}
+      <ActiveBlock currentBlock={currentBlock} position={position} />
+      
+      {/* Landing position preview */}
+      <LandingPreview 
+        currentBlock={currentBlock} 
+        position={position} 
+        landingY={landingY} 
+      />
+      
+      {/* Flash effect when lines are cleared */}
+      <FlashEffect active={flashEffect} />
     </>
   );
-};
-
-// Helper function to get color from index
-const getColorFromIndex = (index: number): string => {
-  const colors: Record<number, string> = {
-    1: 'blue',
-    2: 'red',
-    3: 'green',
-    4: 'purple',
-    5: 'yellow',
-    0: 'gray'
-  };
-  return colors[index] || 'gray';
 };
 
 export default Grid3D;
