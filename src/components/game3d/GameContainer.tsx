@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import Grid3D from '../Grid3D';
 import Grid3DLabels from '../Grid3DLabels';
 import { BlockPattern } from '../BlockPatterns';
@@ -32,18 +32,19 @@ const GameContainer: React.FC<GameContainerProps> = ({
   gameOver,
   score = 0
 }) => {
-  // Game is active when it's not paused and not over
   const isGameActive = !gamePaused && !gameOver;
 
   return (
-    <div className="game-container w-full h-full min-h-[60vh] md:min-h-[65vh] lg:min-h-[70vh] rounded-lg overflow-hidden">
+    <div className="game-container w-full h-full min-h-[500px] md:min-h-[600px] lg:min-h-[700px] rounded-lg overflow-hidden relative">
       <Canvas 
-        camera={{ position: currentView.position, fov: 45 }}
+        className="w-full h-full"
+        camera={{ position: [10, 10, 10], fov: 60 }}
         style={{ width: '100%', height: '100%' }}
       >
         <color attach="background" args={['#000000']} />
         <ambientLight intensity={0.8} />
         <pointLight position={[10, 10, 10]} intensity={1.2} />
+        
         <Grid3D 
           grid={grid} 
           currentBlock={currentBlock} 
@@ -51,6 +52,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
           linesCleared={linesCleared}
           isGameActive={isGameActive}
         />
+        
         <OrbitControls 
           ref={orbitControlsRef} 
           enabled={true}
@@ -62,7 +64,6 @@ const GameContainer: React.FC<GameContainerProps> = ({
         />
       </Canvas>
       
-      {/* Game status overlay during pause or game over */}
       {(gamePaused || gameOver) && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-10">
           <div className="text-center p-6 bg-black/80 rounded-lg border border-gray-700">
@@ -81,10 +82,10 @@ const GameContainer: React.FC<GameContainerProps> = ({
         </div>
       )}
       
-      {/* Grid labels positioned outside the Three.js Canvas */}
       <Grid3DLabels />
     </div>
   );
 };
 
 export default GameContainer;
+
