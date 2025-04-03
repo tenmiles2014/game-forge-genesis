@@ -22,7 +22,7 @@ export function useKeyboardControls({
   currentBlock
 }: KeyboardControlsProps) {
   useEffect(() => {
-    console.log(`🎮 Keyboard Controls Status:
+    console.log(`🎮 Setting up keyboard controls:
       - Controls Enabled: ${controlsEnabled}
       - Game Paused: ${gamePaused}`);
     
@@ -33,7 +33,7 @@ export function useKeyboardControls({
         return;
       }
       
-      // Check game state before responding to movement keys
+      // Skip processing if game is paused or controls disabled
       if (gamePaused) {
         console.log("🔒 Game is paused - movement keys disabled");
         return;
@@ -51,26 +51,32 @@ export function useKeyboardControls({
         switch (event.key) {
           case 'ArrowLeft':
             console.log("Moving left");
+            event.preventDefault();
             moveBlock('left');
             break;
           case 'ArrowRight':
             console.log("Moving right");
+            event.preventDefault();
             moveBlock('right');
             break;
           case 'ArrowUp':
             console.log("Moving forward");
+            event.preventDefault();
             moveBlock('forward');
             break;
           case 'ArrowDown':
             console.log("Moving backward");
+            event.preventDefault();
             moveBlock('backward');
             break;
           case ' ':
             console.log("Dropping block");
+            event.preventDefault();
             dropBlock();
             break;
           case 'z':
             console.log("Rotating around z-axis");
+            event.preventDefault();
             const rotatedZ = rotateBlock('z');
             if (rotatedZ) {
               setCurrentBlock({
@@ -81,6 +87,7 @@ export function useKeyboardControls({
             break;
           case 'x':
             console.log("Rotating around x-axis");
+            event.preventDefault();
             const rotatedX = rotateBlock('x');
             if (rotatedX) {
               setCurrentBlock({
@@ -91,6 +98,7 @@ export function useKeyboardControls({
             break;
           case 's':
             console.log("Moving down");
+            event.preventDefault();
             moveBlock('down');
             break;
           default:
@@ -102,8 +110,10 @@ export function useKeyboardControls({
       }
     };
     
+    // Add keyboard event listener
     window.addEventListener('keydown', handleKeyDown);
     
+    // Cleanup function
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };

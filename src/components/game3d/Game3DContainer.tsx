@@ -43,8 +43,18 @@ const Game3DContainer: React.FC = () => {
     INITIAL_POSITION,
     MAX_LEVEL,
     GRID_SIZE,
-    VERTICAL_STACK_LIMIT
+    VERTICAL_STACK_LIMIT,
+    initializeGrid
   } = useGameState();
+
+  // Initialize grid on mount
+  useEffect(() => {
+    console.log("🔄 Initializing grid on component mount");
+    const newGrid = initializeGrid();
+    setGrid(newGrid);
+    setCurrentBlock(getRandomBlockPattern());
+    setNextBlock(getRandomBlockPattern());
+  }, []);
 
   const orbitControlsRef = useRef(null);
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
@@ -117,9 +127,10 @@ const Game3DContainer: React.FC = () => {
       gameOver,
       timerActive,
       currentBlock: currentBlock?.name,
-      position: JSON.stringify(position)
+      position: JSON.stringify(position),
+      gridInitialized: grid && grid.length > 0
     });
-  }, [controlsEnabled, gamePaused, gameOver, timerActive, currentBlock, position]);
+  }, [controlsEnabled, gamePaused, gameOver, timerActive, currentBlock, position, grid]);
 
   const handleViewChange = (viewPoint: ViewPoint) => {
     setCurrentView(viewPoint);

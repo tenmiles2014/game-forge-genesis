@@ -6,6 +6,7 @@ import { useGridOperations } from '../../hooks/useGridOperations';
 import { useKeyboardControls } from '../../hooks/useKeyboardControls';
 import { useGameActions } from '../../hooks/useGameActions';
 import { getRandomBlockPattern } from '../BlockPatterns';
+import { toast } from "@/components/ui/use-toast";
 
 interface GameInitializerProps {
   children: React.ReactNode;
@@ -35,7 +36,7 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     VERTICAL_STACK_LIMIT
   } = useGameState();
 
-  const { isValidPosition, moveBlock, rotateBlock } = useBlockMovement(
+  const { isValidPosition, moveBlock, rotateBlock, dropBlock } = useBlockMovement(
     grid, currentBlock, position, setPosition, gamePaused, gameOver, controlsEnabled
   );
 
@@ -49,7 +50,7 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     VERTICAL_STACK_LIMIT
   );
 
-  const { resetGame, handleTimeUp, toggleGamePause, startGame, dropBlock } = useGameActions({
+  const { resetGame, handleTimeUp, toggleGamePause, startGame } = useGameActions({
     grid,
     setGrid,
     score,
@@ -89,12 +90,32 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     currentBlock
   });
   
+  // Initialize game on mount
   useEffect(() => {
-    resetGame();
-    // Log the initial state
-    console.log("Game initialized - controlsEnabled:", controlsEnabled, "gamePaused:", gamePaused);
-  }, [resetGame]);
-
+    console.log("🚀 Game initializing...");
+    
+    // Create a fresh grid
+    const newGrid = initializeGrid();
+    console.log("📊 Grid initialized:", newGrid.length);
+    
+    // Set initial game state
+    setGrid(newGrid);
+    setScore(0);
+    setLinesCleared(0);
+    setCurrentBlock(getRandomBlockPattern());
+    setNextBlock(getRandomBlockPattern());
+    setPosition({...INITIAL_POSITION});
+    setGameOver(false);
+    
+    // Log successful initialization
+    console.log("✅ Game initialization complete");
+    
+    toast({
+      title: "Game Ready",
+      description: "Press Start to begin playing!",
+    });
+  }, []);
+  
   // This effect handles the gravity timer and updates the game state
   useEffect(() => {
     console.log(`Game state changed - gamePaused: ${gamePaused}, gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}, timerActive: ${timerActive}`);
@@ -120,6 +141,11 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
       clearInterval(gravityTimerRef.current);
       gravityTimerRef.current = null;
     }
+    
+    if (!grid || grid.length === 0) {
+      console.log("Grid not initialized yet, delaying gravity timer setup");
+      return;
+    }
 
     // Calculate drop speed based on level and set up gravity timer
     const dropSpeed = getDropSpeed();
@@ -142,21 +168,12 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
         gravityTimerRef.current = null;
       }
     };
-  }, [gamePaused, gameOver, level, position, moveBlock, getDropSpeed, gravityTimerRef, controlsEnabled, setControlsEnabled, dropBlock, timerActive]);
+  }, [gamePaused, gameOver, level, position, moveBlock, getDropSpeed, gravityTimerRef, controlsEnabled, setControlsEnabled, dropBlock, timerActive, grid]);
 
   useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(180 - (level * 2)));
     setTimeLimit(newTimeLimit);
   }, [level, setTimeLimit]);
-  
-  useEffect(() => {
-    setGrid(initializeGrid());
-    setScore(0);
-    setLinesCleared(0);
-    setCurrentBlock(getRandomBlockPattern());
-    setNextBlock(getRandomBlockPattern());
-    setPosition({...INITIAL_POSITION});
-  }, []);
 
   return <>{children}</>;
 };

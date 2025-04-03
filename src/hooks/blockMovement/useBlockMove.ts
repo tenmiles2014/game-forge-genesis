@@ -21,13 +21,13 @@ export function useBlockMove(
     console.log(`🕹️ Attempting to move block: ${direction}`);
     
     // Safety checks
-    if (!grid || grid.length === 0) {
-      console.log('⚠️ Grid not initialized - cannot move block');
+    if (!Array.isArray(grid) || grid.length === 0) {
+      console.log('⚠️ Grid not initialized - cannot move block', grid);
       return false;
     }
     
     if (!currentBlock || !currentBlock.shape) {
-      console.log('⚠️ Current block not initialized - cannot move block');
+      console.log('⚠️ Current block not initialized - cannot move block', currentBlock);
       return false;
     }
     
@@ -67,14 +67,15 @@ export function useBlockMove(
           break;
       }
   
-      console.log(`📍 Testing position: ${JSON.stringify(newPosition)}`);
+      console.log(`📍 Current position: ${JSON.stringify(currentPosition)}`);
+      console.log(`📍 Testing new position: ${JSON.stringify(newPosition)}`);
   
       if (isValidPosition(newPosition)) {
         setPosition(newPosition);
         console.log(`✅ Block moved successfully: ${direction}`);
         return true;
       } else {
-        console.log(`❌ Invalid move: ${direction}`);
+        console.log(`❌ Invalid move: ${direction} - Position would be invalid`);
         return false;
       }
     } catch (error) {
