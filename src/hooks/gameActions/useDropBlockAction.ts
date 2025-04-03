@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { BlockPattern } from '../../components/BlockPatterns';
@@ -159,8 +158,7 @@ export function useDropBlockAction({
     setCurrentBlock(nextBlock);
     setNextBlock(newNextBlock);
     
-    // Important: Create a new position object to ensure reference change
-    // Start the new block at the top of the grid
+    // Reset position for the new block to start at spawn point
     const newPosition = {
       x: INITIAL_POSITION.x,
       y: INITIAL_POSITION.y,

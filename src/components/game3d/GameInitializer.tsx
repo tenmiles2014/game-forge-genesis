@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useGameState } from '../../hooks/useGameState';
 import { useBlockMovement } from '../../hooks/useBlockMovement';
@@ -136,16 +137,19 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
       setControlsEnabled(true);
     }
 
+    // Always clear the existing timer before setting a new one
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
       gravityTimerRef.current = null;
     }
     
+    // Don't set up the timer if the grid isn't initialized
     if (!grid || grid.length === 0) {
       console.log("Grid not initialized yet, delaying gravity timer setup");
       return;
     }
 
+    // Setup the gravity timer to automatically move blocks down
     const dropSpeed = getDropSpeed();
     console.log(`Setting up gravity timer with dropSpeed: ${dropSpeed}ms, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
     
@@ -167,7 +171,7 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
         gravityTimerRef.current = null;
       }
     };
-  }, [gamePaused, gameOver, level, position, moveBlock, getDropSpeed, gravityTimerRef, controlsEnabled, setControlsEnabled, dropBlock, timerActive, grid]);
+  }, [gamePaused, gameOver, level, position, moveBlock, getDropSpeed, gravityTimerRef, controlsEnabled, setControlsEnabled, dropBlock, timerActive, grid, currentBlock]);
 
   useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(180 - (level * 2)));
