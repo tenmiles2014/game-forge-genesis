@@ -6,19 +6,25 @@ interface GamePauseActionProps {
   gravityTimerRef: React.MutableRefObject<number | null>;
   setGamePaused: (paused: boolean) => void;
   setTimerActive: (active: boolean) => void;
-  setControlsEnabled: (enabled: boolean) => void;
   gamePaused: boolean; // Add the current pause state as a prop
+  gameOver: boolean; // Add gameOver property
 }
 
 export function useGamePauseAction({
   gravityTimerRef,
   setGamePaused,
   setTimerActive,
-  setControlsEnabled,
-  gamePaused
+  gamePaused,
+  gameOver
 }: GamePauseActionProps) {
   const toggleGamePause = useCallback(() => {
     console.log("🔄 Toggle Game Pause Action Triggered");
+    
+    // Don't allow pausing if game is over
+    if (gameOver) {
+      console.log("Game is over, cannot toggle pause");
+      return;
+    }
     
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
@@ -34,7 +40,6 @@ export function useGamePauseAction({
       // Game is being paused
       console.log("Game paused - disabling controls and timer");
       setTimerActive(false);
-      setControlsEnabled(false);
       
       toast({
         title: "Game Paused",
@@ -44,7 +49,6 @@ export function useGamePauseAction({
       // Game is being unpaused
       console.log("Game unpaused - enabling controls and timer");
       setTimerActive(true);
-      setControlsEnabled(true);
       
       toast({
         title: "Game Resumed",
@@ -52,7 +56,7 @@ export function useGamePauseAction({
       });
     }
     
-  }, [gravityTimerRef, setGamePaused, setTimerActive, setControlsEnabled, gamePaused]);
+  }, [gravityTimerRef, setGamePaused, setTimerActive, gamePaused, gameOver]);
 
   return { toggleGamePause };
 }
