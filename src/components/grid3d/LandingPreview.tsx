@@ -48,6 +48,8 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
           );
 
           // Add drop line between current position and landing position
+          // Changed rotation from [Math.PI / 2, 0, 0] to [0, 0, Math.PI / 2]
+          // to rotate 90 degrees in z-axis instead of x-axis
           elements.push(
             <mesh
               key={`line-${x}-${z}`}
@@ -56,7 +58,7 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
                 position.y - (heightDiff / 2),
                 position.z + z
               ]}
-              rotation={[Math.PI / 2, 0, 0]}
+              rotation={[0, 0, Math.PI / 2]}
             >
               <cylinderGeometry 
                 args={[0.05, 0.05, heightDiff, 8]} 
