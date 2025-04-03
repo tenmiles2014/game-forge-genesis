@@ -89,7 +89,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
               itemSize={3}
             />
           </bufferGeometry>
-          <lineBasicMaterial attach="material" color="red" />
+          <lineBasicMaterial attach="material" color="red" linewidth={3} />
         </mesh>
         
         {/* Y-axis line */}
@@ -102,7 +102,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
               itemSize={3}
             />
           </bufferGeometry>
-          <lineBasicMaterial attach="material" color="blue" />
+          <lineBasicMaterial attach="material" color="blue" linewidth={3} />
         </mesh>
         
         {/* Z-axis line */}
@@ -115,7 +115,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
               itemSize={3}
             />
           </bufferGeometry>
-          <lineBasicMaterial attach="material" color="green" />
+          <lineBasicMaterial attach="material" color="green" linewidth={3} />
         </mesh>
         
         {/* Floor grid plane matching the screenshot */}
@@ -123,10 +123,10 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
           position={[gridSize/2 - 0.5, -0.01, gridSize/2 - 0.5]}
           args={[gridSize + 2, gridSize + 2]}
           cellSize={1}
-          cellThickness={0.3}
-          cellColor="#2a3040"
+          cellThickness={0.6} // Increased thickness
+          cellColor="#4A9BF7" // Brighter color for better visibility
           sectionSize={gridSize/2}
-          sectionThickness={0.5}
+          sectionThickness={1.0} // Increased thickness
           sectionColor="#4A9BF7"
           fadeStrength={1.5}
           infiniteGrid={false}
@@ -134,26 +134,26 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
         
         {/* Corner markers for the grid */}
         <mesh position={[0, 0, 0]}>
-          <boxGeometry args={[0.5, 0.1, 0.5]} />
+          <boxGeometry args={[0.5, 0.2, 0.5]} />
           <meshBasicMaterial color="#4A9BF7" />
         </mesh>
         
         <mesh position={[gridSize - 1, 0, 0]}>
-          <boxGeometry args={[0.5, 0.1, 0.5]} />
+          <boxGeometry args={[0.5, 0.2, 0.5]} />
           <meshBasicMaterial color="#4A9BF7" />
         </mesh>
         
         <mesh position={[0, 0, gridSize - 1]}>
-          <boxGeometry args={[0.5, 0.1, 0.5]} />
+          <boxGeometry args={[0.5, 0.2, 0.5]} />
           <meshBasicMaterial color="#4A9BF7" />
         </mesh>
         
         <mesh position={[gridSize - 1, 0, gridSize - 1]}>
-          <boxGeometry args={[0.5, 0.1, 0.5]} />
+          <boxGeometry args={[0.5, 0.2, 0.5]} />
           <meshBasicMaterial color="#4A9BF7" />
         </mesh>
         
-        {/* Grid lines along the X-axis */}
+        {/* Grid lines along the X-axis - made more obvious */}
         {Array.from({ length: gridSize + 1 }).map((_, i) => (
           <mesh key={`grid-x-${i}`}>
             <bufferGeometry>
@@ -164,11 +164,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
                 itemSize={3}
               />
             </bufferGeometry>
-            <lineBasicMaterial attach="material" color="#2a3040" opacity={0.5} transparent={true} />
+            <lineBasicMaterial attach="material" color="#4A9BF7" opacity={0.7} transparent={true} />
           </mesh>
         ))}
         
-        {/* Grid lines along the Z-axis */}
+        {/* Grid lines along the Z-axis - made more obvious */}
         {Array.from({ length: gridSize + 1 }).map((_, i) => (
           <mesh key={`grid-z-${i}`}>
             <bufferGeometry>
@@ -179,7 +179,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
                 itemSize={3}
               />
             </bufferGeometry>
-            <lineBasicMaterial attach="material" color="#2a3040" opacity={0.5} transparent={true} />
+            <lineBasicMaterial attach="material" color="#4A9BF7" opacity={0.7} transparent={true} />
           </mesh>
         ))}
       </>

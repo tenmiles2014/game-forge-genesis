@@ -30,18 +30,25 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, linesCleared }) => {
   
   return (
     <div className="game-score px-8 py-4 rounded-lg animate-fade-in">
-      <div className="text-center">
-        <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-1">SCORE</h3>
-        <p className={`text-4xl font-bold text-white ${animate ? 'animate-scale-in' : ''}`}>{score}</p>
+      <div className="flex justify-between mb-2">
+        <div className="text-center flex-1">
+          <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-1">SCORE</h3>
+          <p className={`text-4xl font-bold text-white ${animate ? 'animate-scale-in' : ''}`}>{score}</p>
+        </div>
         
-        {animate && recentlyCleared > 0 && (
-          <div className="mt-2 animate-fade-in">
-            <p className={`text-sm font-medium ${getLinesClearedColor(recentlyCleared)}`}>
-              +{recentlyCleared} LINES CLEARED!
-            </p>
-          </div>
-        )}
+        <div className="text-center flex-1">
+          <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-1">LINES</h3>
+          <p className={`text-4xl font-bold text-white ${animate ? 'animate-scale-in' : ''}`}>{linesCleared}</p>
+        </div>
       </div>
+      
+      {animate && recentlyCleared > 0 && (
+        <div className="mt-2 animate-fade-in">
+          <p className={`text-sm font-medium ${getLinesClearedColor(recentlyCleared)}`}>
+            +{recentlyCleared} LINES CLEARED!
+          </p>
+        </div>
+      )}
     </div>
   );
 };
