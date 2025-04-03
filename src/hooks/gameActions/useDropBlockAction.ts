@@ -1,8 +1,10 @@
+
 import { useCallback } from 'react';
 import { BlockPattern } from '../../components/BlockPatterns';
 import { placeBlockInGrid } from './utils/placeBlockInGrid';
 import { handleGameOver } from './utils/handleGameOver';
 import { handleLevelUp } from './utils/handleLevelUp';
+import { useBlockSpawning } from '../blockMovement/useBlockSpawning';
 
 interface DropBlockActionProps {
   grid: number[][][];
@@ -46,17 +48,27 @@ export function useDropBlockAction({
   gravityTimerRef,
   clearCompleteLayers,
   checkIfStackedBlocks,
-  checkVerticalStackLimit,
   isValidPosition,
   getRandomBlockPattern,
   getColorIndex,
   INITIAL_POSITION,
   MAX_LEVEL
 }: DropBlockActionProps) {
+  
+  // Use our new block spawning hook
+  const { spawnNextBlock } = useBlockSpawning({
+    getRandomBlockPattern,
+    setCurrentBlock,
+    setNextBlock,
+    setPosition,
+    INITIAL_POSITION,
+    isValidPosition
+  });
+
   const dropBlock = useCallback(() => {
     console.log("🎮 Executing drop block action", { 
       currentPosition: JSON.stringify(position),
-      currentBlock: currentBlock?.name
+      currentBlock: currentBlock?.color
     });
     
     // Safety check for grid initialization
@@ -65,26 +77,15 @@ export function useDropBlockAction({
       return;
     }
     
-    // Find the lowest valid position
-    let y = position.y;
-    
-    // Keep moving down until we hit the bottom or another block
-    while (isValidPosition({ x: position.x, y: y - 1, z: position.z })) {
-      y--;
-    }
-    
-    console.log(`Found landing at y=${y} (original y=${position.y})`);
-    
     // Place the block in the grid
     const colorIndex = getColorIndex(currentBlock.color);
-    const newGrid = placeBlockInGrid(grid, { ...position, y }, currentBlock, colorIndex);
+    const newGrid = placeBlockInGrid(grid, position, currentBlock, colorIndex);
     setGrid(newGrid);
 
     // Clear any completed layers
     const layersCleared = clearCompleteLayers(newGrid);
     
-    // Check for game over conditions
-    // Check if there are any stacked blocks - this is now our only game over condition
+    // Check if there are any stacked blocks - this is our game over condition
     const hasStacked = checkIfStackedBlocks(newGrid);
     
     if (hasStacked) {
@@ -101,28 +102,11 @@ export function useDropBlockAction({
     // Handle level up if layers were cleared
     handleLevelUp(layersCleared, level, MAX_LEVEL, setLevel);
     
-    // Prepare the next block
-    const newNextBlock = getRandomBlockPattern();
-    console.log("Setting next blocks:", {
-      currentWillBe: nextBlock.name,
-      nextWillBe: newNextBlock.name
-    });
-    
-    setCurrentBlock(nextBlock);
-    setNextBlock(newNextBlock);
-    
-    // Reset position for the new block to start at spawn point - ensure we're using the correct INITIAL_POSITION
-    const newPosition = {
-      x: INITIAL_POSITION.x,
-      y: INITIAL_POSITION.y,
-      z: INITIAL_POSITION.z
-    };
-    
-    console.log(`New block set, position reset to ${JSON.stringify(newPosition)}`);
-    setPosition(newPosition);
+    // Spawn next block and check if it's a valid position
+    const validSpawn = spawnNextBlock();
     
     // Check if the new position is valid, if not it's game over
-    if (!isValidPosition({ x: newPosition.x, y: newPosition.y, z: newPosition.z })) {
+    if (!validSpawn) {
       handleGameOver(
         "No space for new blocks!", 
         setGameOver, 
@@ -140,12 +124,7 @@ export function useDropBlockAction({
     setGrid,
     clearCompleteLayers,
     checkIfStackedBlocks,
-    isValidPosition,
-    setCurrentBlock,
-    nextBlock,
-    setNextBlock,
-    setPosition,
-    INITIAL_POSITION,
+    spawnNextBlock,
     getColorIndex,
     level,
     MAX_LEVEL,
@@ -153,8 +132,7 @@ export function useDropBlockAction({
     gravityTimerRef,
     setGameOver,
     setTimerActive,
-    setControlsEnabled,
-    getRandomBlockPattern
+    setControlsEnabled
   ]);
 
   return { dropBlock };

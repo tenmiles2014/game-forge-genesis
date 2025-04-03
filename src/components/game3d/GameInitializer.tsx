@@ -6,6 +6,8 @@ import { useGridOperations } from '../../hooks/useGridOperations';
 import { useKeyboardControls } from '../../hooks/useKeyboardControls';
 import { useGameActions } from '../../hooks/useGameActions';
 import { getRandomBlockPattern } from '../BlockPatterns';
+import { useGameInitialization } from '../../hooks/useGameInitialization';
+import { useBlockSpawning } from '../../hooks/blockMovement/useBlockSpawning';
 import { toast } from "@/components/ui/use-toast";
 
 interface GameInitializerProps {
@@ -49,6 +51,28 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     GRID_SIZE, 
     VERTICAL_STACK_LIMIT
   );
+
+  // Block spawning logic
+  const { initializeBlocks } = useBlockSpawning({
+    getRandomBlockPattern,
+    setCurrentBlock,
+    setNextBlock,
+    setPosition,
+    INITIAL_POSITION,
+    isValidPosition
+  });
+
+  // Game initialization
+  const { initializeGame } = useGameInitialization({
+    initializeGrid,
+    setGrid,
+    setGameOver,
+    setGamePaused,
+    setScore,
+    setLinesCleared,
+    setControlsEnabled,
+    initializeBlocks
+  });
 
   const resetPosition = () => {
     console.log("🔄 Resetting block position to initial:", INITIAL_POSITION);
@@ -97,28 +121,6 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     setCurrentBlock,
     currentBlock
   });
-  
-  useEffect(() => {
-    console.log("🚀 Game initializing...");
-    
-    const newGrid = initializeGrid();
-    console.log("📊 Grid initialized:", newGrid.length);
-    
-    setGrid(newGrid);
-    setScore(0);
-    setLinesCleared(0);
-    setCurrentBlock(getRandomBlockPattern());
-    setNextBlock(getRandomBlockPattern());
-    setPosition({...INITIAL_POSITION});
-    setGameOver(false);
-    
-    console.log("✅ Game initialization complete");
-    
-    toast({
-      title: "Game Ready",
-      description: "Press Start to begin playing!",
-    });
-  }, []);
   
   useEffect(() => {
     console.log(`Game state changed - gamePaused: ${gamePaused}, gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}, timerActive: ${timerActive}`);
