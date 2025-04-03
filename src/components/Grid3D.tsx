@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { BlockPattern } from './BlockPatterns';
 import * as THREE from 'three';
@@ -12,6 +11,8 @@ interface Grid3DProps {
 }
 
 const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesCleared }) => {
+  const VERTICAL_STACK_LIMIT = grid.length - 3; // Match the limit in Game3D
+
   // Function to find the landing position of the current block
   const getLandingPosition = useMemo(() => {
     let landingY = position.y;
@@ -118,6 +119,25 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
           <lineBasicMaterial attach="material" color="green" linewidth={3} />
         </mesh>
         
+        {/* Vertical stack limit warning line - added new */}
+        <mesh>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              count={5}
+              array={new Float32Array([
+                0, VERTICAL_STACK_LIMIT, 0,
+                gridSize, VERTICAL_STACK_LIMIT, 0,
+                gridSize, VERTICAL_STACK_LIMIT, gridSize,
+                0, VERTICAL_STACK_LIMIT, gridSize,
+                0, VERTICAL_STACK_LIMIT, 0
+              ])}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial attach="material" color="#ff0000" transparent={true} opacity={0.7} linewidth={3} />
+        </mesh>
+        
         {/* Floor grid plane matching the screenshot */}
         <Grid
           position={[gridSize/2 - 0.5, -0.01, gridSize/2 - 0.5]}
@@ -184,7 +204,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
         ))}
       </>
     );
-  }, [grid]);
+  }, [grid, VERTICAL_STACK_LIMIT]);
   
   // Render the blocks in the grid
   const renderGridBlocks = useMemo(() => {

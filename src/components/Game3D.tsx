@@ -19,6 +19,7 @@ const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
+const VERTICAL_STACK_LIMIT = GRID_SIZE - 3; // Game over if blocks stack higher than this
 
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
@@ -506,6 +507,25 @@ const Game3D: React.FC = () => {
       title: "Game Started",
       description: "Good luck!",
     });
+  };
+
+  const checkVerticalStackLimit = (grid: number[][][]) => {
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let z = 0; z < GRID_SIZE; z++) {
+        let highestBlock = 0;
+        for (let y = 0; y < GRID_SIZE; y++) {
+          if (grid[y][x][z] !== 0) {
+            highestBlock = y;
+            break;
+          }
+        }
+        
+        if (highestBlock >= VERTICAL_STACK_LIMIT) {
+          return true;
+        }
+      }
+    }
+    return false;
   };
 
   useEffect(() => {
