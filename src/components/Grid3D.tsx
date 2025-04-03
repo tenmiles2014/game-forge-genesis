@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { BlockPattern } from './BlockPatterns';
 import * as THREE from 'three';
@@ -64,7 +63,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
     
     return landingY;
   }, [position, currentBlock, grid]);
-
+  
   const renderGridBoundaries = useMemo(() => {
     const gridSize = grid.length || 10;
     
@@ -91,7 +90,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
               itemSize={3}
             />
           </bufferGeometry>
-          <lineBasicMaterial attach="material" color="red" linewidth={3} />
+          <lineBasicMaterial attach="material" color="red" />
         </mesh>
         
         {/* Y-axis line */}
@@ -104,7 +103,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
               itemSize={3}
             />
           </bufferGeometry>
-          <lineBasicMaterial attach="material" color="blue" linewidth={3} />
+          <lineBasicMaterial attach="material" color="blue" />
         </mesh>
         
         {/* Z-axis line */}
@@ -117,10 +116,10 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
               itemSize={3}
             />
           </bufferGeometry>
-          <lineBasicMaterial attach="material" color="green" linewidth={3} />
+          <lineBasicMaterial attach="material" color="green" />
         </mesh>
         
-        {/* Vertical stack limit warning line - added new */}
+        {/* Vertical stack limit warning line */}
         <mesh>
           <bufferGeometry>
             <bufferAttribute
@@ -136,7 +135,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
               itemSize={3}
             />
           </bufferGeometry>
-          <lineBasicMaterial attach="material" color="#ff0000" transparent={true} opacity={0.7} linewidth={3} />
+          <lineBasicMaterial attach="material" color="#ff0000" transparent={true} opacity={0.7} />
         </mesh>
         
         {/* Floor grid plane matching the screenshot */}
@@ -174,7 +173,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
           <meshBasicMaterial color="#4A9BF7" />
         </mesh>
         
-        {/* Grid lines along the X-axis - made more obvious */}
+        {/* Grid lines along the X-axis */}
         {Array.from({ length: gridSize + 1 }).map((_, i) => (
           <mesh key={`grid-x-${i}`}>
             <bufferGeometry>
@@ -189,7 +188,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
           </mesh>
         ))}
         
-        {/* Grid lines along the Z-axis - made more obvious */}
+        {/* Grid lines along the Z-axis */}
         {Array.from({ length: gridSize + 1 }).map((_, i) => (
           <mesh key={`grid-z-${i}`}>
             <bufferGeometry>
@@ -250,14 +249,14 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
     return blocks;
   }, [currentBlock, position]);
   
-  // Render the landing position prediction
+  // Render the landing position prediction - Fixed implementation
   const renderLandingPreview = useMemo(() => {
     const blocks = [];
     const landingY = getLandingPosition;
     
     // Only render if the landing position is different from current position
     if (landingY !== position.y) {
-      // Draw a line from current position to landing position for better visualization
+      // Draw blocks at landing position
       for (let y = 0; y < currentBlock.shape.length; y++) {
         for (let x = 0; x < currentBlock.shape[y].length; x++) {
           if (currentBlock.shape[y][x]) {
@@ -277,28 +276,23 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
               </mesh>
             );
             
-            // Add line connecting current position to landing position for each block
-            if (position.y - landingY > 1) { // Only add lines if there's a significant drop
-              const startPos = [position.x + x, position.y, position.z + y];
-              const endPos = [position.x + x, landingY, position.z + y];
+            // Add drop line visualization using cylindrical meshes instead of line
+            if (position.y - landingY > 1) {
+              const height = position.y - landingY;
+              const midY = (position.y + landingY) / 2;
               
               blocks.push(
-                <line key={`drop-line-${x}-${y}`}>
-                  <bufferGeometry>
-                    <bufferAttribute
-                      attach="attributes-position"
-                      count={2}
-                      array={new Float32Array([...startPos, ...endPos])}
-                      itemSize={3}
-                    />
-                  </bufferGeometry>
-                  <lineBasicMaterial 
+                <mesh 
+                  key={`drop-line-${x}-${y}`} 
+                  position={[position.x + x, midY, position.z + y]}
+                >
+                  <cylinderGeometry args={[0.03, 0.03, height, 4]} />
+                  <meshBasicMaterial 
                     color={currentBlock.color} 
                     transparent={true} 
                     opacity={0.3} 
-                    linewidth={1}
                   />
-                </line>
+                </mesh>
               );
             }
           }
