@@ -20,66 +20,37 @@ export function useBlockMove(
   const moveBlock = useCallback((direction: 'left' | 'right' | 'forward' | 'backward' | 'down'): boolean => {
     console.log(`🕹️ Attempting to move block: ${direction}`);
     
-    // Safety checks
-    if (!Array.isArray(grid) || grid.length === 0) {
-      console.log('⚠️ Grid not initialized - cannot move block', grid);
-      return false;
-    }
-    
-    if (!currentBlock || !currentBlock.shape) {
-      console.log('⚠️ Current block not initialized - cannot move block', currentBlock);
-      return false;
-    }
-    
-    if (gameOver) {
-      console.log('🛑 Game is over - cannot move block');
-      return false;
-    }
-    
-    if (gamePaused) {
-      console.log('⏸️ Game is paused - cannot move block');
-      return false;
-    }
-    
-    if (!controlsEnabled) {
-      console.log('🔒 Controls disabled - cannot move block');
+    if (gameOver || gamePaused || !controlsEnabled) {
+      console.log('❌ Cannot move block - game state prevents it');
       return false;
     }
 
-    try {
-      let newPosition = { ...currentPosition };
-      
-      switch (direction) {
-        case 'left':
-          newPosition.x -= 1;
-          break;
-        case 'right':
-          newPosition.x += 1;
-          break;
-        case 'forward':
-          newPosition.z -= 1;
-          break;
-        case 'backward':
-          newPosition.z += 1;
-          break;
-        case 'down':
-          newPosition.y -= 1;
-          break;
-      }
-  
-      console.log(`📍 Current position: ${JSON.stringify(currentPosition)}`);
-      console.log(`📍 Testing new position: ${JSON.stringify(newPosition)}`);
-  
-      if (isValidPosition(newPosition)) {
-        setPosition(newPosition);
-        console.log(`✅ Block moved successfully: ${direction}`);
-        return true;
-      } else {
-        console.log(`❌ Invalid move: ${direction} - Position would be invalid`);
-        return false;
-      }
-    } catch (error) {
-      console.error('❌ Error in moveBlock:', error);
+    let newPosition = { ...currentPosition };
+    
+    switch (direction) {
+      case 'left':
+        newPosition.x -= 1;
+        break;
+      case 'right':
+        newPosition.x += 1;
+        break;
+      case 'forward':
+        newPosition.z -= 1;
+        break;
+      case 'backward':
+        newPosition.z += 1;
+        break;
+      case 'down':
+        newPosition.y -= 1;
+        break;
+    }
+
+    if (isValidPosition(newPosition)) {
+      setPosition(newPosition);
+      console.log(`✅ Block moved successfully: ${direction}`);
+      return true;
+    } else {
+      console.log(`❌ Invalid move: ${direction} - Position would be invalid`);
       return false;
     }
   }, [

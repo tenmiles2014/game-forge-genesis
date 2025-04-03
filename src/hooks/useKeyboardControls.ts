@@ -27,27 +27,19 @@ export function useKeyboardControls({
       - Game Paused: ${gamePaused}`);
     
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Skip all gamepad-related keys entirely to avoid affecting game state
       if (["Enter", "Escape", "p", "P"].includes(event.key)) {
         console.log("Game control key pressed, ignoring to prevent affecting game state");
         return;
       }
       
-      // Skip processing if game is paused or controls disabled
-      if (gamePaused) {
-        console.log("🔒 Game is paused - movement keys disabled");
-        return;
-      }
-      
-      if (!controlsEnabled) {
-        console.log("🔒 Controls are disabled - movement keys disabled");
+      if (gamePaused || !controlsEnabled) {
+        console.log("🔒 Game is paused or controls disabled");
         return;
       }
 
       console.log(`🕹️ Processing key: ${event.key}`);
       
       try {
-        // Only handle defined movement keys
         switch (event.key) {
           case 'ArrowLeft':
             console.log("Moving left");
@@ -97,7 +89,6 @@ export function useKeyboardControls({
             }
             break;
           default:
-            // Ignore other keys
             break;
         }
       } catch (error) {
@@ -105,10 +96,8 @@ export function useKeyboardControls({
       }
     };
     
-    // Add keyboard event listener
     window.addEventListener('keydown', handleKeyDown);
     
-    // Cleanup function
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };

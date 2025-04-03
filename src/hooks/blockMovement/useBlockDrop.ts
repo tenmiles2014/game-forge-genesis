@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
-import { usePositionValidator } from './usePositionValidator';
 import { BlockPattern } from '../../components/BlockPatterns';
+import { usePositionValidator } from './usePositionValidator';
 
 export function useBlockDrop(
   grid: number[][][], 
@@ -18,46 +18,29 @@ export function useBlockDrop(
   const { gamePaused, gameOver, controlsEnabled } = gameState;
 
   const dropBlock = useCallback(() => {
-    console.log('⬇️ Attempting to drop block');
-    
-    // Safety checks
-    if (!grid || grid.length === 0) {
-      console.log('⚠️ Grid not initialized - cannot drop block');
-      return;
-    }
+    console.log("⬇️ Attempting to drop block");
     
     if (gameOver || gamePaused || !controlsEnabled) {
-      console.log('⛔ Game state prevents dropping');
+      console.log("❌ Cannot drop block - game state prevents it");
       return;
     }
-
-    try {
-      let newPosition = { ...currentPosition };
-      let foundBottom = false;
-      
-      // Find the lowest valid position
-      while (!foundBottom) {
-        let testPosition = { ...newPosition, y: newPosition.y - 1 };
-        if (isValidPosition(testPosition)) {
-          newPosition = testPosition;
-        } else {
-          foundBottom = true;
-        }
-      }
-  
-      setPosition(newPosition);
-      console.log(`✅ Block dropped to position: ${JSON.stringify(newPosition)}`);
-    } catch (error) {
-      console.error('❌ Error in dropBlock:', error);
+    
+    let newY = currentPosition.y;
+    
+    // Find the lowest valid position
+    while (isValidPosition({ x: currentPosition.x, y: newY - 1, z: currentPosition.z })) {
+      newY--;
     }
+    
+    console.log(`✅ Block dropped to position: ${JSON.stringify({ ...currentPosition, y: newY })}`);
+    setPosition({ ...currentPosition, y: newY });
   }, [
     currentPosition, 
     isValidPosition, 
     setPosition, 
     gameOver, 
     gamePaused, 
-    controlsEnabled,
-    grid
+    controlsEnabled
   ]);
 
   return { dropBlock };
