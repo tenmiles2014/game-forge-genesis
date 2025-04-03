@@ -13,12 +13,14 @@ import ViewControls, { ViewPoint } from './ViewControls';
 import GuidelineOverlay from './GuidelineOverlay';
 import Grid3DLabels from './Grid3DLabels';
 import Gyroscope from './Gyroscope';
+import StackingDialog from './StackingDialog';
 
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
+const STACK_HEIGHT_THRESHOLD = 2; // Minimum height to detect a stack
 
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
@@ -43,6 +45,8 @@ const Game3D: React.FC = () => {
   const orbitControlsRef = useRef(null);
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
+  const [stackDialogOpen, setStackDialogOpen] = useState(false);
+  const [stackedBlocks, setStackedBlocks] = useState(0);
 
   useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(BASE_TIME_LIMIT - (level * 2)));
@@ -107,6 +111,8 @@ const Game3D: React.FC = () => {
     setLevel(1);
     setTimerActive(false);
     setGamePaused(true);
+    setStackDialogOpen(false);
+    setStackedBlocks(0);
     
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
@@ -188,6 +194,20 @@ const Game3D: React.FC = () => {
     setGrid(newGrid);
     
     const layersCleared = clearCompleteLayers(newGrid);
+    
+    const stacks = detectStackedBlocks(newGrid);
+    if (stacks > 0) {
+      setStackedBlocks(stacks);
+      setStackDialogOpen(true);
+      
+      const stackBonus = stacks * 5 * level;
+      setScore(prevScore => prevScore + stackBonus);
+      
+      toast({
+        title: "Stacking bonus!",
+        description: `+${stackBonus} points for creating ${stacks} stacks`,
+      });
+    }
     
     const nextBlockPattern = nextBlock;
     setCurrentBlock(nextBlockPattern);
@@ -347,6 +367,37 @@ const Game3D: React.FC = () => {
         }
       }
     }
+  };
+
+  const detectStackedBlocks = (grid: number[][][]) => {
+    let stacks = 0;
+    
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let z = 0; z < GRID_SIZE; z++) {
+        let stackHeight = 0;
+        let currentBlock = 0;
+        
+        for (let y = 0; y < GRID_SIZE; y++) {
+          if (grid[y][x][z] !== 0) {
+            if (currentBlock === 0) {
+              currentBlock = grid[y][x][z];
+              stackHeight = 1;
+            } else {
+              stackHeight++;
+              
+              if (stackHeight >= STACK_HEIGHT_THRESHOLD) {
+                stacks++;
+              }
+            }
+          } else {
+            currentBlock = 0;
+            stackHeight = 0;
+          }
+        }
+      }
+    }
+    
+    return stacks;
   };
 
   const handleTimeUp = () => {
@@ -636,6 +687,12 @@ const Game3D: React.FC = () => {
       )}
       
       <GuidelineOverlay />
+      
+      <StackingDialog 
+        open={stackDialogOpen}
+        onOpenChange={setStackDialogOpen}
+        stackedBlocks={stackedBlocks}
+      />
     </div>
   );
 };
