@@ -1,6 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { BlockPattern } from './BlockPatterns';
+import * as THREE from 'three';
 
 interface Grid3DProps {
   grid: number[][][];
@@ -14,15 +15,60 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
     const gridSize = grid.length || 10;
     
     return (
-      <mesh position={[gridSize/2 - 0.5, gridSize/2 - 0.5, gridSize/2 - 0.5]}>
-        <boxGeometry args={[gridSize, gridSize, gridSize]} />
-        <meshStandardMaterial 
-          color="white" 
-          transparent={true} 
-          opacity={0.02}  // Even more transparent 
-          wireframe={true} 
-        />
-      </mesh>
+      <>
+        {/* Main grid boundary box */}
+        <mesh position={[gridSize/2 - 0.5, gridSize/2 - 0.5, gridSize/2 - 0.5]}>
+          <boxGeometry args={[gridSize, gridSize, gridSize]} />
+          <meshStandardMaterial 
+            color="white" 
+            transparent={true} 
+            opacity={0.02}
+            wireframe={true} 
+          />
+        </mesh>
+        
+        {/* X-axis line */}
+        <line>
+          <bufferGeometry
+            attach="geometry"
+            attributes={{
+              position: new THREE.BufferAttribute(
+                new Float32Array([0, 0, 0, gridSize, 0, 0]),
+                3
+              ),
+            }}
+          />
+          <lineBasicMaterial attach="material" color="red" linewidth={2} />
+        </line>
+        
+        {/* Y-axis line */}
+        <line>
+          <bufferGeometry
+            attach="geometry"
+            attributes={{
+              position: new THREE.BufferAttribute(
+                new Float32Array([0, 0, 0, 0, gridSize, 0]),
+                3
+              ),
+            }}
+          />
+          <lineBasicMaterial attach="material" color="blue" linewidth={2} />
+        </line>
+        
+        {/* Z-axis line */}
+        <line>
+          <bufferGeometry
+            attach="geometry"
+            attributes={{
+              position: new THREE.BufferAttribute(
+                new Float32Array([0, 0, 0, 0, 0, gridSize]),
+                3
+              ),
+            }}
+          />
+          <lineBasicMaterial attach="material" color="green" linewidth={2} />
+        </line>
+      </>
     );
   }, [grid]);
   

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -9,7 +9,7 @@ interface GyroscopeProps {
 }
 
 // Arrow component for the gyroscope
-const Arrow = ({ direction, color }: { direction: [number, number, number], color: string }) => {
+const Arrow = ({ direction, color, label }: { direction: [number, number, number], color: string, label: string }) => {
   // Normalize direction vector
   const normalizedDir = new THREE.Vector3(...direction).normalize();
   
@@ -34,13 +34,12 @@ const Arrow = ({ direction, color }: { direction: [number, number, number], colo
     ctx.font = '24px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const label = direction[0] === 1 ? 'X' : direction[1] === 1 ? 'Y' : 'Z';
     ctx.fillText(label, 32, 16);
     
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
     return texture;
-  }, [direction, color]);
+  }, [direction, color, label]);
   
   return (
     <group rotation={rotation}>
@@ -68,7 +67,7 @@ const Arrow = ({ direction, color }: { direction: [number, number, number], colo
 
 // Rotating gyroscope that syncs with the main scene's camera
 const RotatingGyroscope = () => {
-  const groupRef = React.useRef<THREE.Group>(null);
+  const groupRef = useRef<THREE.Group>(null);
   
   // Sync rotation with the main scene camera
   useFrame(({ camera }) => {
@@ -82,9 +81,9 @@ const RotatingGyroscope = () => {
   
   return (
     <group ref={groupRef}>
-      <Arrow direction={[1, 0, 0]} color="#ff3333" />
-      <Arrow direction={[0, 1, 0]} color="#33ff33" />
-      <Arrow direction={[0, 0, 1]} color="#3333ff" />
+      <Arrow direction={[1, 0, 0]} color="#ff3333" label="X" />
+      <Arrow direction={[0, 1, 0]} color="#33ff33" label="Y" />
+      <Arrow direction={[0, 0, 1]} color="#3333ff" label="Z" />
     </group>
   );
 };
@@ -101,8 +100,9 @@ const Gyroscope: React.FC<GyroscopeProps> = ({ size = 80, className = "" }) => {
         right: '20px',
         borderRadius: '50%',
         overflow: 'hidden',
-        backgroundColor: 'rgba(0, 0, 0, 0.2)',
-        border: '1px solid rgba(255, 255, 255, 0.3)'
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        border: '2px solid rgba(255, 255, 255, 0.3)',
+        boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)'
       }}
     >
       <Canvas camera={{ position: [0, 0, 2], fov: 50 }}>
