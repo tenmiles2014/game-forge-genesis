@@ -29,7 +29,7 @@ const VIEW_POINTS: ViewPoint[] = [
   { name: "Corner View", position: [20, 10, 20] },
 ];
 
-const STACK_HEIGHT_THRESHOLD = 3; // Increased from 2 to 3
+const STACK_HEIGHT_THRESHOLD = 2; // Changed back to 2
 
 const Game3D: React.FC = () => {
   const [grid, setGrid] = useState<number[][][]>([]);
