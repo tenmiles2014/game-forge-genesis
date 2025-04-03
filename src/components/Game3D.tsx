@@ -13,7 +13,6 @@ import ViewControls, { ViewPoint } from './ViewControls';
 import GuidelineOverlay from './GuidelineOverlay';
 import Grid3DLabels from './Grid3DLabels';
 import Gyroscope from './Gyroscope';
-// Removed StackingDialog import
 
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
@@ -29,6 +28,8 @@ const VIEW_POINTS: ViewPoint[] = [
   { name: "Front View", position: [4.5, 5, 25], target: [4.5, 5, 0] },
   { name: "Corner View", position: [20, 10, 20] },
 ];
+
+const STACK_HEIGHT_THRESHOLD = 3; // Increased from 2 to 3
 
 const Game3D: React.FC = () => {
   const [grid, setGrid] = useState<number[][][]>([]);
@@ -398,7 +399,7 @@ const Game3D: React.FC = () => {
             } else {
               stackHeight++;
               
-              if (stackHeight >= 2) {
+              if (stackHeight >= STACK_HEIGHT_THRESHOLD) {
                 stacks++;
               }
             }
