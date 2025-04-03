@@ -28,7 +28,7 @@ const getColorIndex = (color: string): number => {
   return colorMap[color] || 0;
 };
 
-const Game3D = () => {
+const Game3D: React.FC = () => {
   const [grid, setGrid] = useState(createEmptyGrid());
   const [currentBlock, setCurrentBlock] = useState<BlockPattern>(getRandomBlockPattern());
   const [nextBlock, setNextBlock] = useState<BlockPattern>(getRandomBlockPattern());
@@ -292,16 +292,14 @@ const Game3D = () => {
         <div className="w-full sm:w-1/4 flex flex-col gap-4">
           <div className="bg-gray-800 p-4 rounded-lg shadow-md">
             <ScoreDisplay score={score} />
-            <LevelDisplay level={level} />
-            <GameTimer active={timerActive} />
+            <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
+            <GameTimer isActive={timerActive} onTimeUp={() => {}} timeLimit={180} level={level} />
           </div>
           
           <GameControls3D
-            onMove={moveBlock}
             onReset={resetGame}
-            onPause={togglePause}
-            disabled={!controlsEnabled}
-            gamePaused={gamePaused}
+            onStartPause={togglePause}
+            isPaused={gamePaused}
             gameOver={gameOver}
           />
         </div>

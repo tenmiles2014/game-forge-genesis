@@ -1,4 +1,5 @@
 
+import React from 'react';
 import Game3D from "@/components/Game3D";
 
 const Index = () => {
