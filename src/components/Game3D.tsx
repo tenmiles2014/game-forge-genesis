@@ -564,7 +564,7 @@ const Game3D: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen p-2 md:p-4 bg-black">
+    <div className="flex flex-col justify-center items-center min-h-screen p-2 md:p-4">
       <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white text-center">
         3D Block Busters
       </h1>
