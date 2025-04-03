@@ -10,23 +10,24 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({ gridSize }) =
   // Center position of the spawn area
   const centerX = Math.floor(gridSize / 2);
   const centerZ = Math.floor(gridSize / 2);
+  const topY = gridSize - 1; // Position at ceiling
   
   // Size of the spawn area frame
-  const frameSize = 6;
+  const frameSize = 10; // Match the 10x10 grid size
   const halfFrameSize = frameSize / 2;
   
-  // Calculate corner positions - now positioned at the ground level (y=0)
-  const frameX = centerX - halfFrameSize;
-  const frameZ = centerZ - halfFrameSize;
+  // Calculate corner positions - aligned with the ground grid but at ceiling height
+  const frameX = centerX - halfFrameSize + 0.5; // +0.5 to align with grid cells
+  const frameZ = centerZ - halfFrameSize + 0.5;
   
-  // Points for the frame - adjusted to be at ground level (y=0)
+  // Points for the frame - at ceiling level
   const framePoints = [
-    // Square at ground level
-    [frameX, 0, frameZ], // Start
-    [frameX + frameSize, 0, frameZ], // to right
-    [frameX + frameSize, 0, frameZ + frameSize], // to back
-    [frameX, 0, frameZ + frameSize], // to left
-    [frameX, 0, frameZ], // back to start
+    // Square at ceiling level
+    [frameX, topY, frameZ], // Start
+    [frameX + frameSize, topY, frameZ], // to right
+    [frameX + frameSize, topY, frameZ + frameSize], // to back
+    [frameX, topY, frameZ + frameSize], // to left
+    [frameX, topY, frameZ], // back to start
   ];
   
   return (
@@ -39,7 +40,7 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({ gridSize }) =
         return (
           <mesh 
             key={`spawnframe-corner-${corner}`} 
-            position={[x, 0, z]}
+            position={[x, topY, z]}
           >
             <boxGeometry args={[0.2, 0.2, 0.2]} />
             <meshStandardMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
