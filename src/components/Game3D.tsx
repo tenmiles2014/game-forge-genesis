@@ -16,10 +16,9 @@ import Gyroscope from './Gyroscope';
 
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
-const MAX_Y_AXIS = 99;
+const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
-const GAME_OVER_Y_LEVEL = 1; // Y-axis level where game ends
 
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
@@ -29,8 +28,6 @@ const VIEW_POINTS: ViewPoint[] = [
   { name: "Corner View", position: [20, 10, 20] },
 ];
 
-const STACK_HEIGHT_THRESHOLD = 2; // Kept at 2, single source of truth
-
 const Game3D: React.FC = () => {
   const [grid, setGrid] = useState<number[][][]>([]);
   const [score, setScore] = useState(0);
@@ -39,22 +36,21 @@ const Game3D: React.FC = () => {
   const [position, setPosition] = useState(INITIAL_POSITION);
   const [gameOver, setGameOver] = useState(false);
   const [controlsEnabled, setControlsEnabled] = useState(true);
-  const [yAxis, setYAxis] = useState(1);
+  const [level, setLevel] = useState(1);
   const [timeLimit, setTimeLimit] = useState(BASE_TIME_LIMIT);
   const [timerActive, setTimerActive] = useState(false);
   const [gamePaused, setGamePaused] = useState(true);
   const orbitControlsRef = useRef(null);
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
-  const [blocksAtWarningLevel, setBlocksAtWarningLevel] = useState(0);
 
   useEffect(() => {
-    const newTimeLimit = Math.max(60, Math.floor(BASE_TIME_LIMIT - (yAxis * 2)));
+    const newTimeLimit = Math.max(60, Math.floor(BASE_TIME_LIMIT - (level * 2)));
     setTimeLimit(newTimeLimit);
-  }, [yAxis]);
+  }, [level]);
 
   const getDropSpeed = () => {
-    return Math.max(100, BASE_DROP_SPEED - (yAxis * 50));
+    return Math.max(100, BASE_DROP_SPEED - (level * 50));
   };
 
   const initializeGrid = () => {
@@ -98,7 +94,7 @@ const Game3D: React.FC = () => {
         gravityTimerRef.current = null;
       }
     };
-  }, [gamePaused, gameOver, yAxis, position]);
+  }, [gamePaused, gameOver, level, position]);
 
   const resetGame = () => {
     setGrid(initializeGrid());
@@ -108,7 +104,7 @@ const Game3D: React.FC = () => {
     setPosition({...INITIAL_POSITION});
     setGameOver(false);
     setControlsEnabled(true);
-    setYAxis(1);
+    setLevel(1);
     setTimerActive(false);
     setGamePaused(true);
     
@@ -169,20 +165,6 @@ const Game3D: React.FC = () => {
     return true;
   };
 
-  const detectBlocksAtYLevel = (grid: number[][][], yLevel: number): number => {
-    let blocksCount = 0;
-    
-    for (let x = 0; x < GRID_SIZE; x++) {
-      for (let z = 0; z < GRID_SIZE; z++) {
-        if (grid[yLevel][x][z] !== 0) {
-          blocksCount++;
-        }
-      }
-    }
-    
-    return blocksCount;
-  };
-
   const placeBlock = () => {
     const newGrid = JSON.parse(JSON.stringify(grid));
     for (let y = 0; y < currentBlock.shape.length; y++) {
@@ -207,19 +189,6 @@ const Game3D: React.FC = () => {
     
     const layersCleared = clearCompleteLayers(newGrid);
     
-    const blocksAtLevelOne = detectBlocksAtYLevel(newGrid, 1);
-    if (blocksAtLevelOne > 0) {
-      setGameOver(true);
-      setControlsEnabled(false);
-      setTimerActive(false);
-      setGamePaused(true);
-      toast({
-        title: "Game Over!",
-        description: `Blocks reached level 1. Final score: ${score} | Y-Axis: ${yAxis}`,
-      });
-      return;
-    }
-    
     const nextBlockPattern = nextBlock;
     setCurrentBlock(nextBlockPattern);
     setNextBlock(getRandomBlockPattern());
@@ -233,21 +202,21 @@ const Game3D: React.FC = () => {
       setGamePaused(true);
       toast({
         title: "Game Over!",
-        description: `No space for new block. Final score: ${score} | Y-Axis: ${yAxis}`,
+        description: `No space for new block. Final score: ${score} | Level: ${level}`,
       });
       return;
     }
     
     setPosition(newPosition);
     
-    if (layersCleared > 0 && yAxis < MAX_Y_AXIS) {
-      const layerThreshold = Math.ceil(yAxis / 5) + 1;
+    if (layersCleared > 0 && level < MAX_LEVEL) {
+      const layerThreshold = Math.ceil(level / 5) + 1;
       if (layersCleared >= layerThreshold) {
-        const newYAxis = Math.min(MAX_Y_AXIS, yAxis + 1);
-        setYAxis(newYAxis);
+        const newLevel = Math.min(MAX_LEVEL, level + 1);
+        setLevel(newLevel);
         toast({
-          title: `Y-Axis Increased!`,
-          description: `Y-Axis is now ${newYAxis}`,
+          title: `Level Up!`,
+          description: `You are now on level ${newLevel}`,
         });
       }
     }
@@ -346,7 +315,7 @@ const Game3D: React.FC = () => {
     applyGravityToBlocks(gridCopy);
     
     if (layersCleared > 0) {
-      const levelMultiplier = 1 + (yAxis * 0.1);
+      const levelMultiplier = 1 + (level * 0.1);
       const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
       setScore(prevScore => prevScore + pointsScored);
       toast({
@@ -380,37 +349,6 @@ const Game3D: React.FC = () => {
     }
   };
 
-  const detectStackedBlocks = (grid: number[][][]) => {
-    let stacks = 0;
-    
-    for (let x = 0; x < GRID_SIZE; x++) {
-      for (let z = 0; z < GRID_SIZE; z++) {
-        let stackHeight = 0;
-        let currentBlock = 0;
-        
-        for (let y = 0; y < GRID_SIZE; y++) {
-          if (grid[y][x][z] !== 0) {
-            if (currentBlock === 0) {
-              currentBlock = grid[y][x][z];
-              stackHeight = 1;
-            } else {
-              stackHeight++;
-              
-              if (stackHeight >= STACK_HEIGHT_THRESHOLD) {
-                stacks++;
-              }
-            }
-          } else {
-            currentBlock = 0;
-            stackHeight = 0;
-          }
-        }
-      }
-    }
-    
-    return stacks;
-  };
-
   const handleTimeUp = () => {
     if (!gameOver) {
       setGameOver(true);
@@ -418,7 +356,7 @@ const Game3D: React.FC = () => {
       setGamePaused(true);
       toast({
         title: "Time's Up!",
-        description: `Final score: ${score} | Y-Axis: ${yAxis}`,
+        description: `Final score: ${score} | Level: ${level}`,
       });
     }
   };
@@ -665,13 +603,13 @@ const Game3D: React.FC = () => {
           <div className="space-y-4">
             <ScoreDisplay score={score} />
             
-            <LevelDisplay level={yAxis} maxLevel={MAX_Y_AXIS} />
+            <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
             
             <GameTimer 
               isActive={timerActive} 
               onTimeUp={handleTimeUp} 
               timeLimit={timeLimit} 
-              level={yAxis}
+              level={level}
             />
             
             <div className="p-4 rounded-lg bg-black bg-opacity-30">
@@ -693,7 +631,7 @@ const Game3D: React.FC = () => {
       
       {gameOver && (
         <div className="mt-6 animate-scale-in">
-          <p className="text-xl text-white mb-3">Game Over! Final Score: {score} | Y-Axis: {yAxis}</p>
+          <p className="text-xl text-white mb-3">Game Over! Final Score: {score} | Level: {level}</p>
         </div>
       )}
       
