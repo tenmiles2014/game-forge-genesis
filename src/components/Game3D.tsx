@@ -16,10 +16,10 @@ import Gyroscope from './Gyroscope';
 
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
-const MAX_LEVEL = 99;
+const MAX_Y_AXIS = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
-const GAME_OVER_Y_LEVEL = 1; // Changed back to level 1
+const GAME_OVER_Y_LEVEL = 1; // Y-axis level where game ends
 
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
@@ -39,7 +39,7 @@ const Game3D: React.FC = () => {
   const [position, setPosition] = useState(INITIAL_POSITION);
   const [gameOver, setGameOver] = useState(false);
   const [controlsEnabled, setControlsEnabled] = useState(true);
-  const [level, setLevel] = useState(1);
+  const [yAxis, setYAxis] = useState(1);
   const [timeLimit, setTimeLimit] = useState(BASE_TIME_LIMIT);
   const [timerActive, setTimerActive] = useState(false);
   const [gamePaused, setGamePaused] = useState(true);
@@ -49,12 +49,12 @@ const Game3D: React.FC = () => {
   const [blocksAtWarningLevel, setBlocksAtWarningLevel] = useState(0);
 
   useEffect(() => {
-    const newTimeLimit = Math.max(60, Math.floor(BASE_TIME_LIMIT - (level * 2)));
+    const newTimeLimit = Math.max(60, Math.floor(BASE_TIME_LIMIT - (yAxis * 2)));
     setTimeLimit(newTimeLimit);
-  }, [level]);
+  }, [yAxis]);
 
   const getDropSpeed = () => {
-    return Math.max(100, BASE_DROP_SPEED - (level * 50));
+    return Math.max(100, BASE_DROP_SPEED - (yAxis * 50));
   };
 
   const initializeGrid = () => {
@@ -98,7 +98,7 @@ const Game3D: React.FC = () => {
         gravityTimerRef.current = null;
       }
     };
-  }, [gamePaused, gameOver, level, position]);
+  }, [gamePaused, gameOver, yAxis, position]);
 
   const resetGame = () => {
     setGrid(initializeGrid());
@@ -108,7 +108,7 @@ const Game3D: React.FC = () => {
     setPosition({...INITIAL_POSITION});
     setGameOver(false);
     setControlsEnabled(true);
-    setLevel(1);
+    setYAxis(1);
     setTimerActive(false);
     setGamePaused(true);
     
@@ -215,7 +215,7 @@ const Game3D: React.FC = () => {
       setGamePaused(true);
       toast({
         title: "Game Over!",
-        description: `Blocks reached level 1. Final score: ${score} | Level: ${level}`,
+        description: `Blocks reached level 1. Final score: ${score} | Y-Axis: ${yAxis}`,
       });
       return;
     }
@@ -233,21 +233,21 @@ const Game3D: React.FC = () => {
       setGamePaused(true);
       toast({
         title: "Game Over!",
-        description: `No space for new block. Final score: ${score} | Level: ${level}`,
+        description: `No space for new block. Final score: ${score} | Y-Axis: ${yAxis}`,
       });
       return;
     }
     
     setPosition(newPosition);
     
-    if (layersCleared > 0 && level < MAX_LEVEL) {
-      const layerThreshold = Math.ceil(level / 5) + 1;
+    if (layersCleared > 0 && yAxis < MAX_Y_AXIS) {
+      const layerThreshold = Math.ceil(yAxis / 5) + 1;
       if (layersCleared >= layerThreshold) {
-        const newLevel = Math.min(MAX_LEVEL, level + 1);
-        setLevel(newLevel);
+        const newYAxis = Math.min(MAX_Y_AXIS, yAxis + 1);
+        setYAxis(newYAxis);
         toast({
-          title: `Level Up!`,
-          description: `You are now on level ${newLevel}`,
+          title: `Y-Axis Increased!`,
+          description: `Y-Axis is now ${newYAxis}`,
         });
       }
     }
@@ -346,7 +346,7 @@ const Game3D: React.FC = () => {
     applyGravityToBlocks(gridCopy);
     
     if (layersCleared > 0) {
-      const levelMultiplier = 1 + (level * 0.1);
+      const levelMultiplier = 1 + (yAxis * 0.1);
       const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
       setScore(prevScore => prevScore + pointsScored);
       toast({
@@ -418,7 +418,7 @@ const Game3D: React.FC = () => {
       setGamePaused(true);
       toast({
         title: "Time's Up!",
-        description: `Final score: ${score} | Level: ${level}`,
+        description: `Final score: ${score} | Y-Axis: ${yAxis}`,
       });
     }
   };
@@ -665,13 +665,13 @@ const Game3D: React.FC = () => {
           <div className="space-y-4">
             <ScoreDisplay score={score} />
             
-            <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
+            <LevelDisplay level={yAxis} maxLevel={MAX_Y_AXIS} />
             
             <GameTimer 
               isActive={timerActive} 
               onTimeUp={handleTimeUp} 
               timeLimit={timeLimit} 
-              level={level}
+              level={yAxis}
             />
             
             <div className="p-4 rounded-lg bg-black bg-opacity-30">
@@ -693,7 +693,7 @@ const Game3D: React.FC = () => {
       
       {gameOver && (
         <div className="mt-6 animate-scale-in">
-          <p className="text-xl text-white mb-3">Game Over! Final Score: {score} | Level: {level}</p>
+          <p className="text-xl text-white mb-3">Game Over! Final Score: {score} | Y-Axis: {yAxis}</p>
         </div>
       )}
       
