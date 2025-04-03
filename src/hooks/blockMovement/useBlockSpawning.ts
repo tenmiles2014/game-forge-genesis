@@ -58,12 +58,11 @@ export function useBlockSpawning({
   const spawnNextBlock = useCallback(() => {
     console.log("🔄 Spawning next block");
     try {
-      // Store the next block that will become the current block
-      let nextBlockToUse = null;
+      // First, get and store the next block
+      let currentBlockToSet = null;
       
-      // Update the current block with the next block that was previously queued
       setCurrentBlock(prevNextBlock => {
-        nextBlockToUse = prevNextBlock;
+        currentBlockToSet = prevNextBlock;
         return prevNextBlock;
       });
       
@@ -72,16 +71,21 @@ export function useBlockSpawning({
       setNextBlock(newNextBlock);
       
       // CRITICAL: Create a fresh object for the spawn position
-      const spawnPosition = { ...INITIAL_POSITION };
+      // This ensures no reference issues with previous positions
+      const spawnPosition = {
+        x: INITIAL_POSITION.x,
+        y: INITIAL_POSITION.y, 
+        z: INITIAL_POSITION.z
+      };
       
-      // Force the position to be at the spawn point
+      // Force reset the position to the spawn point
+      console.log("🎯 Setting fresh spawn position:", spawnPosition);
       setPosition(spawnPosition);
       
-      // Check if the spawn position is valid for the new current block
-      // We must manually check here rather than relying on the state that might not be updated yet
+      // Check if the spawn position is valid for the new block
       const isValid = isValidPosition(spawnPosition);
-      
       console.log(`${isValid ? '✅ Valid' : '❌ Invalid'} spawn position for new block:`, spawnPosition);
+      
       return isValid;
     } catch (error) {
       console.error("Error spawning next block:", error);

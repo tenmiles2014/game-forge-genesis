@@ -127,10 +127,13 @@ export function useDropBlockAction({
       gravityTimerRef.current = null;
     }
     
-    // Spawn next block and check if it's a valid position
-    console.log("🔄 Attempting to spawn next block after successful placement");
+    // Use a short delay before spawning the next block to ensure state updates
+    // have completed and to give visual feedback between block placement and spawn
+    console.log("🔄 Scheduling next block spawn after placement");
     setTimeout(() => {
       try {
+        // Spawn next block and check if it's a valid position
+        console.log("🔄 Attempting to spawn next block after successful placement");
         const validSpawn = spawnNextBlock();
         
         // Check if the new position is valid, if not it's game over
@@ -153,7 +156,7 @@ export function useDropBlockAction({
         // Fallback to ensure game doesn't get stuck
         setControlsEnabled(true);
       }
-    }, 150); // Slightly longer delay to ensure state updates have processed
+    }, 200); // Slightly longer delay to ensure state updates have processed
   }, [
     grid,
     currentBlock,

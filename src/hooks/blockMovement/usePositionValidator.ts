@@ -25,14 +25,21 @@ export function usePositionValidator(
       return false;
     }
     
+    // Make a clean copy of the position to avoid reference issues
+    const positionToCheck = { 
+      x: newPosition.x,
+      y: newPosition.y,
+      z: newPosition.z
+    };
+    
     try {
       // Validate position based on block shape and grid boundaries
       for (let z = 0; z < currentBlock.shape.length; z++) {
         for (let x = 0; x < currentBlock.shape[z].length; x++) {
           if (currentBlock.shape[z][x]) {
-            const gridX = newPosition.x + x;
-            const gridY = newPosition.y;
-            const gridZ = newPosition.z + z;
+            const gridX = positionToCheck.x + x;
+            const gridY = positionToCheck.y;
+            const gridZ = positionToCheck.z + z;
             
             // Check grid boundaries
             if (
@@ -40,14 +47,14 @@ export function usePositionValidator(
               gridY < 0 || gridY >= gridSize ||
               gridZ < 0 || gridZ >= gridSize
             ) {
-              // Debugging boundary violations
               console.log(`📍 Out of bounds at [${gridX}, ${gridY}, ${gridZ}]`);
               return false;
             }
   
             // Check for existing blocks in the grid
             try {
-              if (grid[gridY]?.[gridX]?.[gridZ] !== 0) {
+              // Ensure the grid has this position before checking
+              if (grid[gridY] && grid[gridY][gridX] && grid[gridY][gridX][gridZ] !== 0) {
                 console.log(`📍 Collision at [${gridX}, ${gridY}, ${gridZ}]`);
                 return false;
               }
