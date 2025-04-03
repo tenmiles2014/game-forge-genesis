@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useGameState } from '../../hooks/useGameState';
 import { useBlockMovement } from '../../hooks/useBlockMovement';
@@ -94,7 +93,10 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
   }, [resetGame]);
 
   useEffect(() => {
+    console.log(`Game state changed - gamePaused: ${gamePaused}, gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}`);
+    
     if (gamePaused || gameOver) {
+      console.log("Game paused or over - clearing gravity timer");
       if (gravityTimerRef.current) {
         clearInterval(gravityTimerRef.current);
         gravityTimerRef.current = null;
@@ -102,25 +104,27 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
       return;
     }
 
-    // Clear any existing interval before setting a new one
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
       gravityTimerRef.current = null;
     }
 
     const dropSpeed = getDropSpeed();
+    console.log(`Setting up gravity timer with dropSpeed: ${dropSpeed}ms`);
     
     gravityTimerRef.current = window.setInterval(() => {
+      console.log("Gravity timer triggered - moving block down");
       moveBlock('down');
     }, dropSpeed);
 
     return () => {
+      console.log("Cleaning up gravity timer");
       if (gravityTimerRef.current) {
         clearInterval(gravityTimerRef.current);
         gravityTimerRef.current = null;
       }
     };
-  }, [gamePaused, gameOver, level, position, moveBlock, getDropSpeed, gravityTimerRef]);
+  }, [gamePaused, gameOver, level, position, moveBlock, getDropSpeed, gravityTimerRef, controlsEnabled]);
 
   useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(180 - (level * 2)));

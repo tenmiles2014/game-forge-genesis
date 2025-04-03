@@ -22,7 +22,12 @@ export function useKeyboardControls({
 }: KeyboardControlsProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!controlsEnabled || gamePaused) return;
+      if (!controlsEnabled || gamePaused) {
+        console.log("Controls disabled or game paused - not processing key events");
+        return;
+      }
+      
+      console.log(`Key pressed: ${event.key}, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
       
       switch (event.key) {
         case 'ArrowLeft':

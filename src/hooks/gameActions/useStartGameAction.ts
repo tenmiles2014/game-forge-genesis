@@ -14,6 +14,8 @@ export function useStartGameAction({
   setControlsEnabled
 }: StartGameActionProps) {
   const startGame = useCallback(() => {
+    console.log("Starting game - setting gamePaused to false");
+    
     // Set gamePaused to false to start the game
     setGamePaused(false);
     

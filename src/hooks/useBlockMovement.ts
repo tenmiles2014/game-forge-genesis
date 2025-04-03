@@ -41,7 +41,10 @@ export function useBlockMovement(
   };
 
   const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
-    if (gameOver || !controlsEnabled || gamePaused) return false;
+    if (gameOver || !controlsEnabled || gamePaused) {
+      console.log(`Block movement prevented - gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
+      return false;
+    }
     
     let newX = position.x;
     let newY = position.y;
@@ -53,16 +56,23 @@ export function useBlockMovement(
     if (direction === 'backward') newZ += 1;
     if (direction === 'down') newY -= 1; // Move down on Y-axis (since we start from top)
     
+    console.log(`Attempting to move block ${direction} from (${position.x},${position.y},${position.z}) to (${newX},${newY},${newZ})`);
+    
     if (isValidPosition(currentBlock.shape, newX, newY, newZ)) {
       setPosition({ x: newX, y: newY, z: newZ });
+      console.log(`Block moved to (${newX},${newY},${newZ})`);
       return true;
     }
     
+    console.log(`Invalid position (${newX},${newY},${newZ}), block not moved`);
     return false;
   };
 
   const rotateBlock = (axis: 'x' | 'y' | 'z') => {
-    if (gameOver || !controlsEnabled || gamePaused) return;
+    if (gameOver || !controlsEnabled || gamePaused) {
+      console.log(`Block rotation prevented - gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
+      return;
+    }
     
     const rotatedPattern = [...currentBlock.shape];
     
