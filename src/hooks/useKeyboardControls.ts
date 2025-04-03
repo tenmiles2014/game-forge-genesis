@@ -64,7 +64,7 @@ export function useKeyboardControls({
           }
           break;
         case 's':  // Drop block immediately
-          dropBlock(); 
+          moveBlock('down'); 
           break;
         default:
           break;
