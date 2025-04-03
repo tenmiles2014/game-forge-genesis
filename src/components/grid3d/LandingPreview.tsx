@@ -20,8 +20,6 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
     }
 
     // Only show preview if the block is above the landing position
-    // We don't need to check if it's at the spawn point specifically
-    // Just make sure there's a height difference to show the preview
     const heightDiff = position.y - landingY;
     if (heightDiff <= 0) {
       return [];
@@ -50,7 +48,6 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
           );
 
           // Add drop line between current position and landing position
-          // No need for rotation since cylinder aligns with Y-axis by default
           elements.push(
             <mesh
               key={`line-${x}-${z}`}

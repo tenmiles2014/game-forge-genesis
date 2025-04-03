@@ -126,26 +126,27 @@ export function useDropBlockAction({
       gravityTimerRef.current = null;
     }
     
-    // Spawn next block and check if it's a valid position (CRITICAL FIX: call this immediately)
-    const validSpawn = spawnNextBlock();
-    
-    // Check if the new position is valid, if not it's game over
-    if (!validSpawn) {
-      console.log("🔴 Game over: no space for new blocks");
-      handleGameOver(
-        "No space for new blocks!", 
-        setGameOver, 
-        setTimerActive, 
-        setControlsEnabled, 
-        gravityTimerRef
-      );
-    } else {
-      // Re-enable controls only if spawn was successful
-      console.log("✅ New block spawned successfully, re-enabling controls");
-      setTimeout(() => {
+    // Spawn next block and check if it's a valid position
+    console.log("🔄 Attempting to spawn next block after successful placement");
+    setTimeout(() => {
+      const validSpawn = spawnNextBlock();
+      
+      // Check if the new position is valid, if not it's game over
+      if (!validSpawn) {
+        console.log("🔴 Game over: no space for new blocks");
+        handleGameOver(
+          "No space for new blocks!", 
+          setGameOver, 
+          setTimerActive, 
+          setControlsEnabled, 
+          gravityTimerRef
+        );
+      } else {
+        // Re-enable controls only if spawn was successful
+        console.log("✅ New block spawned successfully, re-enabling controls");
         setControlsEnabled(true);
-      }, 100); // Short delay to prevent immediate input
-    }
+      }
+    }, 100); // Short delay to ensure state updates have processed
   }, [
     grid,
     currentBlock,

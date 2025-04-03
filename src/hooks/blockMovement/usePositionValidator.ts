@@ -27,15 +27,12 @@ export function usePositionValidator(
     
     try {
       // Validate position based on block shape and grid boundaries
-      for (let y = 0; y < currentBlock.shape.length; y++) {
-        for (let x = 0; x < currentBlock.shape[y].length; x++) {
-          if (currentBlock.shape[y][x]) {
+      for (let z = 0; z < currentBlock.shape.length; z++) {
+        for (let x = 0; x < currentBlock.shape[z].length; x++) {
+          if (currentBlock.shape[z][x]) {
             const gridX = newPosition.x + x;
             const gridY = newPosition.y;
-            const gridZ = newPosition.z + y;
-  
-            // Log validation attempt
-            console.log(`📍 Checking position [${gridX}, ${gridY}, ${gridZ}]`);
+            const gridZ = newPosition.z + z;
             
             // Check grid boundaries
             if (

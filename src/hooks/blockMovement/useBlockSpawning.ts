@@ -72,11 +72,7 @@ export function useBlockSpawning({
       setNextBlock(newNextBlock);
       
       // CRITICAL: Create a fresh object for the spawn position
-      const spawnPosition = {
-        x: INITIAL_POSITION.x,
-        y: INITIAL_POSITION.y,
-        z: INITIAL_POSITION.z
-      };
+      const spawnPosition = { ...INITIAL_POSITION };
       
       // Force the position to be at the spawn point
       setPosition(spawnPosition);
@@ -85,7 +81,7 @@ export function useBlockSpawning({
       // We must manually check here rather than relying on the state that might not be updated yet
       const isValid = isValidPosition(spawnPosition);
       
-      console.log(`${isValid ? '✅ Valid' : '❌ Invalid'} spawn position for new block`);
+      console.log(`${isValid ? '✅ Valid' : '❌ Invalid'} spawn position for new block:`, spawnPosition);
       return isValid;
     } catch (error) {
       console.error("Error spawning next block:", error);
