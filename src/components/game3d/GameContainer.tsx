@@ -35,9 +35,9 @@ const GameContainer: React.FC<GameContainerProps> = ({
   const isGameActive = !gamePaused && !gameOver;
 
   return (
-    <div className="game-container w-full h-full min-h-[500px] md:min-h-[600px] lg:min-h-[700px] rounded-lg overflow-hidden relative">
+    <div className="game-container w-full h-full min-h-[400px] md:min-h-[600px] lg:min-h-[700px] rounded-lg overflow-hidden relative">
       <Canvas 
-        className="w-full h-full"
+        className="w-full h-full absolute inset-0"
         camera={{ position: [10, 10, 10], fov: 60 }}
         style={{ width: '100%', height: '100%' }}
       >
@@ -88,4 +88,3 @@ const GameContainer: React.FC<GameContainerProps> = ({
 };
 
 export default GameContainer;
-

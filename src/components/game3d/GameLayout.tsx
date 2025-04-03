@@ -52,9 +52,9 @@ const GameLayout: React.FC<GameLayoutProps> = ({
   onStartPause
 }) => {
   return (
-    <div className="w-full max-w-[1400px] mx-auto">
-      <div className="flex flex-col md:flex-row gap-4 p-4">
-        <div className="flex-1 space-y-4">
+    <div className="w-full h-full max-w-[1400px] mx-auto">
+      <div className="flex flex-col md:flex-row gap-4 h-full">
+        <div className="flex-1 space-y-4 h-full">
           <div className="flex justify-center mb-4">
             <ViewControls
               viewPoints={viewPoints}
@@ -97,4 +97,3 @@ const GameLayout: React.FC<GameLayoutProps> = ({
 };
 
 export default GameLayout;
-
