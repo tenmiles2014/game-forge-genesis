@@ -34,6 +34,7 @@ interface GameActionsProps {
   INITIAL_POSITION: { x: number; y: number; z: number };
   MAX_LEVEL: number;
   gamePaused: boolean;
+  gameOver: boolean; // Add the gameOver prop
   resetPosition?: () => void;
   initializeGrid?: () => number[][][];
 }
@@ -66,6 +67,7 @@ export function useGameActions({
   INITIAL_POSITION,
   MAX_LEVEL,
   gamePaused,
+  gameOver, // Add the gameOver parameter here
   resetPosition,
   initializeGrid
 }: GameActionsProps) {
@@ -94,7 +96,9 @@ export function useGameActions({
     setGameOver,
     setTimerActive,
     setControlsEnabled,
-    gravityTimerRef
+    gravityTimerRef,
+    score, // Pass the score
+    level  // Pass the level
   });
   
   // Toggle game pause

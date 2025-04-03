@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { toast } from "@/components/ui/use-toast";
 
 interface TimeUpActionProps {
+  gameOver: boolean; // Add gameOver property
   setGameOver: (gameOver: boolean) => void;
   setTimerActive: (active: boolean) => void;
   setControlsEnabled: (enabled: boolean) => void;
@@ -12,6 +13,7 @@ interface TimeUpActionProps {
 }
 
 export function useTimeUpAction({
+  gameOver,
   setGameOver,
   setTimerActive,
   setControlsEnabled,
@@ -20,6 +22,12 @@ export function useTimeUpAction({
   level
 }: TimeUpActionProps) {
   const handleTimeUp = useCallback(() => {
+    // Skip if game is already over
+    if (gameOver) {
+      console.log("Game already over, not handling time up");
+      return;
+    }
+    
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
       gravityTimerRef.current = null;
@@ -34,7 +42,7 @@ export function useTimeUpAction({
       description: `Game Over! Score: ${score} | Level: ${level}`,
       variant: "destructive"
     });
-  }, [gravityTimerRef, setGameOver, setTimerActive, setControlsEnabled, score, level]);
+  }, [gameOver, gravityTimerRef, setGameOver, setTimerActive, setControlsEnabled, score, level]);
 
   return { handleTimeUp };
 }

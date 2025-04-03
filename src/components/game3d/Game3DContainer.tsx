@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { getRandomBlockPattern } from '../BlockPatterns';
@@ -44,10 +43,10 @@ const Game3DContainer: React.FC = () => {
     MAX_LEVEL,
     GRID_SIZE,
     VERTICAL_STACK_LIMIT,
-    initializeGrid
+    initializeGrid,
+    resetPosition
   } = useGameState();
 
-  // Initialize grid on mount
   useEffect(() => {
     console.log("🔄 Initializing grid on component mount");
     const newGrid = initializeGrid();
@@ -105,10 +104,12 @@ const Game3DContainer: React.FC = () => {
     getColorIndex,
     INITIAL_POSITION,
     MAX_LEVEL,
-    gamePaused
+    gamePaused,
+    gameOver,
+    resetPosition,
+    initializeGrid
   });
 
-  // Keyboard Controls Hook
   useKeyboardControls({
     moveBlock,
     rotateBlock, 
@@ -119,7 +120,6 @@ const Game3DContainer: React.FC = () => {
     currentBlock
   });
 
-  // Debug Effect for Game State
   useEffect(() => {
     console.log('🎮 Game State Debug:', {
       controlsEnabled,
