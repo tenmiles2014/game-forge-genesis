@@ -207,19 +207,17 @@ const Game3D: React.FC = () => {
     
     const layersCleared = clearCompleteLayers(newGrid);
     
-    for (let y = GAME_OVER_Y_LEVEL; y < GRID_SIZE; y++) {
-      const blocksAtY = detectBlocksAtYLevel(newGrid, y);
-      if (blocksAtY > 0) {
-        setGameOver(true);
-        setControlsEnabled(false);
-        setTimerActive(false);
-        setGamePaused(true);
-        toast({
-          title: "Game Over!",
-          description: `Blocks reached level ${y}. Final score: ${score} | Level: ${level}`,
-        });
-        return;
-      }
+    const blocksAtLevelTwo = detectBlocksAtYLevel(newGrid, 2);
+    if (blocksAtLevelTwo > 0) {
+      setGameOver(true);
+      setControlsEnabled(false);
+      setTimerActive(false);
+      setGamePaused(true);
+      toast({
+        title: "Game Over!",
+        description: `Blocks reached level 2. Final score: ${score} | Level: ${level}`,
+      });
+      return;
     }
     
     const nextBlockPattern = nextBlock;
