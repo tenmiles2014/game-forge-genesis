@@ -34,7 +34,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
   const isGameActive = !gamePaused && !gameOver;
 
   return (
-    <div className="game-board rounded-lg overflow-hidden h-[500px] md:h-[600px] relative">
+    <div className="game-board w-full h-full min-h-[450px] sm:min-h-[500px] md:min-h-[550px] lg:min-h-[600px] rounded-lg overflow-hidden relative bg-gradient-to-b from-black/20 to-black/40">
       <Canvas camera={{ position: currentView.position, fov: 50 }}>
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} />
@@ -53,6 +53,25 @@ const GameContainer: React.FC<GameContainerProps> = ({
           target={currentView.target || [4.5, 4.5, 4.5]}
         />
       </Canvas>
+      
+      {/* Game status overlay during pause or game over */}
+      {(gamePaused || gameOver) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-10">
+          <div className="text-center p-6 bg-black/80 rounded-lg border border-gray-700">
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {gameOver ? 'Game Over' : 'Game Paused'}
+            </h2>
+            {gameOver && (
+              <p className="text-gray-300 mb-4">Final Score: {score}</p>
+            )}
+            <p className="text-gray-400 text-sm">
+              {gameOver 
+                ? 'Press Reset to play again' 
+                : 'Press Start to continue playing'}
+            </p>
+          </div>
+        </div>
+      )}
       
       {/* Grid labels positioned outside the Three.js Canvas */}
       <Grid3DLabels />

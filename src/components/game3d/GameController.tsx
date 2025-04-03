@@ -1,102 +1,67 @@
 
-import React, { useRef } from 'react';
-import { useGameState } from '../../hooks/useGameState';
-import { useBlockMovement } from '../../hooks/useBlockMovement';
-import { useGridOperations } from '../../hooks/useGridOperations';
-import { useGameActions } from '../../hooks/useGameActions';
+import React, { useState } from 'react';
 import { useKeyboardControls } from '../../hooks/useKeyboardControls';
-import { BlockPattern, getRandomBlockPattern } from '../BlockPatterns';
 import { VIEW_POINTS } from './GameViewManager';
 import GameLayout from './GameLayout';
+import { useGameController } from '../../hooks/game3d/useGameController';
 
 const GameController: React.FC = () => {
+  const [currentView, setCurrentView] = useState(VIEW_POINTS[0]);
+  
   const {
-    grid, setGrid,
-    score, setScore,
-    currentBlock, setCurrentBlock,
-    nextBlock, setNextBlock,
-    position, setPosition,
-    gameOver, setGameOver,
-    controlsEnabled, setControlsEnabled,
-    level, setLevel,
-    timeLimit, setTimeLimit,
-    timerActive, setTimerActive,
-    gamePaused, setGamePaused,
-    linesCleared, setLinesCleared,
-    gravityTimerRef,
-    getColorIndex,
-    INITIAL_POSITION,
-    MAX_LEVEL,
-    GRID_SIZE,
-    VERTICAL_STACK_LIMIT,
-    initializeGrid
-  } = useGameState();
-
-  // Reference for orbit controls to update camera position
-  const orbitControlsRef = useRef(null);
-
-  const { isValidPosition, moveBlock, rotateBlock, dropBlock } = useBlockMovement(
-    grid, currentBlock, position, setPosition, gamePaused, gameOver, controlsEnabled
-  );
-
-  const { clearCompleteLayers, checkIfStackedBlocks, checkVerticalStackLimit } = useGridOperations(
-    grid, 
-    setGrid, 
-    setScore,
-    setLinesCleared,
-    level, 
-    GRID_SIZE, 
-    VERTICAL_STACK_LIMIT
-  );
-
-  // Create local object with all props for useGameActions
-  const gameActionProps = {
     grid,
-    setGrid,
-    score,
-    setScore,
     currentBlock,
-    setCurrentBlock,
     nextBlock,
-    setNextBlock,
     position,
-    setPosition,
-    setGameOver,
-    setControlsEnabled,
-    setTimerActive,
-    setGamePaused,
+    linesCleared,
+    score,
     level,
-    setLevel,
-    gravityTimerRef,
-    setLinesCleared,
-    clearCompleteLayers,
-    checkIfStackedBlocks,
-    checkVerticalStackLimit,
-    isValidPosition,
-    getRandomBlockPattern,
-    getColorIndex,
-    INITIAL_POSITION,
     MAX_LEVEL,
+    timerActive,
+    timeLimit,
     gamePaused,
-    gameOver
-  };
-
-  const {
-    resetGame,
+    gameOver,
+    controlsEnabled,
+    orbitControlsRef,
     handleTimeUp,
-    toggleGamePause,
-    startGame
-  } = useGameActions(gameActionProps);
+    resetGame,
+    startGame,
+    toggleGamePause
+  } = useGameController();
 
+  // Connect keyboard controls
   useKeyboardControls({
-    moveBlock,
-    rotateBlock, 
-    dropBlock,
+    moveBlock: () => false, // Controller doesn't directly handle movement
+    rotateBlock: () => null,
+    dropBlock: () => {},
     controlsEnabled,
     gamePaused,
     setCurrentBlock,
     currentBlock
   });
+
+  // Handle view selection
+  const handleViewSelection = (viewPoint: any) => {
+    setCurrentView(viewPoint);
+    if (orbitControlsRef.current) {
+      const controls = orbitControlsRef.current;
+      
+      if (controls.object) {
+        controls.object.position.set(...viewPoint.position);
+        
+        if (viewPoint.target) {
+          controls.target.set(...viewPoint.target);
+        } else {
+          controls.target.set(4.5, 4.5, 4.5);
+        }
+        
+        controls.update();
+      }
+    }
+  };
+
+  // Handle game actions
+  const handleGameAction = gamePaused ? startGame : toggleGamePause;
 
   return (
     <GameLayout
@@ -114,28 +79,12 @@ const GameController: React.FC = () => {
       gameOver={gameOver}
       controlsEnabled={controlsEnabled}
       viewPoints={VIEW_POINTS}
-      currentView={VIEW_POINTS[0]}
+      currentView={currentView}
       orbitControlsRef={orbitControlsRef}
-      onSelectView={(viewPoint) => {
-        if (orbitControlsRef.current) {
-          const controls = orbitControlsRef.current as any;
-          
-          if (controls.object) {
-            controls.object.position.set(...viewPoint.position);
-            
-            if (viewPoint.target) {
-              controls.target.set(...viewPoint.target);
-            } else {
-              controls.target.set(4.5, 4.5, 4.5);
-            }
-            
-            controls.update();
-          }
-        }
-      }}
+      onSelectView={handleViewSelection}
       onTimeUp={handleTimeUp}
       onReset={resetGame}
-      onStartPause={gamePaused ? startGame : toggleGamePause}
+      onStartPause={handleGameAction}
     />
   );
 };

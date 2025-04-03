@@ -1,10 +1,8 @@
 
 import React from 'react';
-import GameHeader from './GameHeader';
-import GameSidebar from './GameSidebar';
-import GameContainer from './GameContainer';
-import GameOverlay from './GameOverlay';
-import GameFooter from './GameFooter';
+import GameMainContent from './GameMainContent';
+import GameControlPanel from './GameControlPanel';
+import ViewControls from './ViewControls';
 import { ViewPoint } from '../ViewControls';
 import { BlockPattern } from '../BlockPatterns';
 
@@ -54,39 +52,46 @@ const GameLayout: React.FC<GameLayoutProps> = ({
   onStartPause
 }) => {
   return (
-    <div className="game-container rounded-lg overflow-hidden w-full max-w-[1400px] flex flex-col md:flex-row gap-4 bg-black bg-opacity-30">
-      <div className="flex-1 min-h-[550px] md:min-h-[650px]">
-        <GameHeader viewPoints={viewPoints} onSelectView={onSelectView} />
+    <div className="w-full max-w-[1400px] mx-auto">
+      <div className="flex flex-col md:flex-row gap-4 p-4">
+        <div className="flex-1 space-y-4">
+          <div className="flex justify-center mb-4">
+            <ViewControls
+              viewPoints={viewPoints}
+              currentView={currentView}
+              orbitControlsRef={orbitControlsRef}
+              onSelectView={onSelectView}
+            />
+          </div>
+          
+          <GameMainContent
+            grid={grid}
+            currentBlock={currentBlock}
+            position={position}
+            linesCleared={linesCleared}
+            controlsEnabled={controlsEnabled}
+            currentView={currentView}
+            orbitControlsRef={orbitControlsRef}
+            gamePaused={isPaused}
+            gameOver={gameOver}
+          />
+        </div>
         
-        <GameContainer 
-          grid={grid}
-          currentBlock={currentBlock}
-          position={position}
+        <GameControlPanel
+          score={score}
+          level={level}
+          maxLevel={maxLevel}
           linesCleared={linesCleared}
-          controlsEnabled={controlsEnabled}
-          currentView={currentView}
-          orbitControlsRef={orbitControlsRef}
-          gamePaused={isPaused}
+          nextBlock={nextBlock}
+          timerActive={timerActive}
+          timeLimit={timeLimit}
+          onTimeUp={onTimeUp}
+          onReset={onReset}
+          onStartPause={onStartPause}
+          isPaused={isPaused}
           gameOver={gameOver}
         />
-        
-        <GameOverlay />
       </div>
-      
-      <GameSidebar
-        score={score}
-        linesCleared={linesCleared}
-        level={level}
-        maxLevel={maxLevel}
-        timerActive={timerActive}
-        onTimeUp={onTimeUp}
-        timeLimit={timeLimit}
-        nextBlock={nextBlock}
-        onReset={onReset}
-        onStartPause={onStartPause}
-        isPaused={isPaused}
-        gameOver={gameOver}
-      />
     </div>
   );
 };

@@ -1,12 +1,12 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useGameState } from '../../hooks/useGameState';
 import { useBlockMovement } from '../../hooks/useBlockMovement';
 import { useGridOperations } from '../../hooks/useGridOperations';
 import { useKeyboardControls } from '../../hooks/useKeyboardControls';
 import { useGameActions } from '../../hooks/useGameActions';
-import { getRandomBlockPattern } from '../BlockPatterns';
-import { useGameInitialization } from '../../hooks/useGameInitialization';
+import { useGameInitialization } from '../../hooks/game3d/useGameInitialization';
+import { useGravityTimer } from '../../hooks/game3d/useGravityTimer';
 import { useBlockSpawning } from '../../hooks/blockMovement/useBlockSpawning';
 
 interface GameInitializerProps {
@@ -53,7 +53,7 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
 
   // Block spawning logic
   const { initializeBlocks } = useBlockSpawning({
-    getRandomBlockPattern,
+    getRandomBlockPattern: () => null, // Not used, we're using the hook from useGameInitialization
     setCurrentBlock,
     setNextBlock,
     setPosition,
@@ -65,12 +65,15 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
   const { initializeGame } = useGameInitialization({
     initializeGrid,
     setGrid,
+    setCurrentBlock,
+    setNextBlock,
+    setPosition,
     setGameOver,
     setGamePaused,
     setScore,
     setLinesCleared,
     setControlsEnabled,
-    initializeBlocks
+    INITIAL_POSITION
   });
 
   const resetPosition = () => {
@@ -102,7 +105,7 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     checkIfStackedBlocks,
     checkVerticalStackLimit,
     isValidPosition,
-    getRandomBlockPattern,
+    getRandomBlockPattern: () => null, // Not used directly
     getColorIndex,
     INITIAL_POSITION,
     MAX_LEVEL,
@@ -124,77 +127,24 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     currentBlock
   });
   
-  useEffect(() => {
-    console.log(`Game state changed - gamePaused: ${gamePaused}, gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}, timerActive: ${timerActive}`);
-    
-    if (gamePaused || gameOver) {
-      console.log("Game paused or over - clearing gravity timer");
-      if (gravityTimerRef.current) {
-        clearInterval(gravityTimerRef.current);
-        gravityTimerRef.current = null;
-      }
-      return;
-    }
-
-    if (!controlsEnabled && !gamePaused && !gameOver) {
-      console.log("Game active but controls disabled - enabling controls");
-      setControlsEnabled(true);
-    }
-
-    // Always clear the existing timer before setting a new one
-    if (gravityTimerRef.current) {
-      clearInterval(gravityTimerRef.current);
-      gravityTimerRef.current = null;
-    }
-    
-    // Don't set up the timer if the grid isn't initialized
-    if (!grid || grid.length === 0) {
-      console.log("Grid not initialized yet, delaying gravity timer setup");
-      return;
-    }
-
-    if (!currentBlock?.shape) {
-      console.log("No active block yet, delaying gravity timer setup");
-      return;
-    }
-
-    // Setup the gravity timer to automatically move blocks down
-    const dropSpeed = getDropSpeed();
-    console.log(`Setting up gravity timer with dropSpeed: ${dropSpeed}ms, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
-    
-    gravityTimerRef.current = window.setInterval(() => {
-      if (!gamePaused && !gameOver && controlsEnabled) {
-        console.log("Gravity timer triggered - moving block down");
-        const moved = moveBlock('down');
-        if (!moved) {
-          console.log("Block can't move down further, dropping it");
-          dropBlock();
-        }
-      }
-    }, dropSpeed);
-
-    return () => {
-      console.log("Cleaning up gravity timer");
-      if (gravityTimerRef.current) {
-        clearInterval(gravityTimerRef.current);
-        gravityTimerRef.current = null;
-      }
-    };
-  }, [
-    gamePaused, 
-    gameOver, 
-    level, 
-    moveBlock, 
-    dropBlock, 
-    getDropSpeed, 
-    controlsEnabled, 
-    setControlsEnabled, 
-    timerActive, 
+  // Manage gravity timer
+  useGravityTimer({
     grid,
-    currentBlock?.shape
-  ]);
+    currentBlock,
+    gamePaused,
+    gameOver,
+    controlsEnabled,
+    timerActive,
+    level,
+    moveBlock,
+    dropBlock,
+    gravityTimerRef,
+    getDropSpeed,
+    setControlsEnabled
+  });
 
-  useEffect(() => {
+  // Update timeLimit based on level
+  React.useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(180 - (level * 2)));
     setTimeLimit(newTimeLimit);
   }, [level, setTimeLimit]);
