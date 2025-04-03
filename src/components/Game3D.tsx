@@ -19,7 +19,7 @@ const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
-const GAME_OVER_Y_LEVEL = 2; // Game over if blocks reach level 2 or above
+const GAME_OVER_Y_LEVEL = 1; // Changed from 2 to 1
 
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
@@ -207,15 +207,15 @@ const Game3D: React.FC = () => {
     
     const layersCleared = clearCompleteLayers(newGrid);
     
-    const blocksAtLevelTwo = detectBlocksAtYLevel(newGrid, 2);
-    if (blocksAtLevelTwo > 0) {
+    const blocksAtLevelOne = detectBlocksAtYLevel(newGrid, 1);
+    if (blocksAtLevelOne > 0) {
       setGameOver(true);
       setControlsEnabled(false);
       setTimerActive(false);
       setGamePaused(true);
       toast({
         title: "Game Over!",
-        description: `Blocks reached level 2. Final score: ${score} | Level: ${level}`,
+        description: `Blocks reached level 1. Final score: ${score} | Level: ${level}`,
       });
       return;
     }
