@@ -7,6 +7,11 @@ interface GridBlocksProps {
 }
 
 const GridBlocks: React.FC<GridBlocksProps> = ({ grid }) => {
+  // Safety check
+  if (!grid || !Array.isArray(grid) || grid.length === 0) {
+    return null;
+  }
+  
   return (
     <>
       {grid.flatMap((layer, y) =>

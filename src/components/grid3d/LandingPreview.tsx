@@ -9,8 +9,8 @@ interface LandingPreviewProps {
 }
 
 const LandingPreview: React.FC<LandingPreviewProps> = ({ currentBlock, position, landingY }) => {
-  // Skip rendering if landing position is the same as current position
-  if (landingY === position.y) {
+  // Safety checks - skip rendering on invalid props
+  if (!currentBlock || !position || landingY === undefined || landingY === position.y) {
     return null;
   }
   

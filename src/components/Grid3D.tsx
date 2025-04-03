@@ -24,14 +24,13 @@ const Grid3D: React.FC<Grid3DProps> = ({
   linesCleared,
   isGameActive = false
 }) => {
-  const gridSize = grid.length;
+  // Default grid size if grid is not initialized yet
+  const gridSize = grid?.length || 10;
   
-  // Calculate landing position for preview
-  const landingPosition = grid.length > 0 ? calculateLandingPosition(
-    grid, 
-    currentBlock, 
-    position
-  ) : { ...position };
+  // Calculate landing position for preview, with safety check for grid
+  const landingPosition = grid && grid.length > 0 && currentBlock
+    ? calculateLandingPosition(grid, currentBlock, position)
+    : { ...position };
 
   return (
     <group>
@@ -39,22 +38,26 @@ const Grid3D: React.FC<Grid3DProps> = ({
       <GridBoundaries gridSize={gridSize} />
       
       {/* Active blocks in the grid */}
-      {grid.length > 0 && (
+      {grid && grid.length > 0 && (
         <GridBlocks grid={grid} />
       )}
       
       {/* Current moving block */}
-      <ActiveBlock 
-        currentBlock={currentBlock}
-        position={position} 
-      />
+      {currentBlock && (
+        <ActiveBlock 
+          currentBlock={currentBlock}
+          position={position} 
+        />
+      )}
       
       {/* Landing preview */}
-      <LandingPreview 
-        currentBlock={currentBlock}
-        position={position}
-        landingY={landingPosition.y}
-      />
+      {currentBlock && landingPosition && (
+        <LandingPreview 
+          currentBlock={currentBlock}
+          position={position}
+          landingY={landingPosition.y}
+        />
+      )}
       
       {/* Flash effect on line clear */}
       <FlashEffect 

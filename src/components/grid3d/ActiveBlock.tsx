@@ -8,6 +8,11 @@ interface ActiveBlockProps {
 }
 
 const ActiveBlock: React.FC<ActiveBlockProps> = ({ currentBlock, position }) => {
+  // Safety check
+  if (!currentBlock || !currentBlock.shape || !position) {
+    return null;
+  }
+  
   return (
     <>
       {currentBlock.shape.flatMap((row, y) =>

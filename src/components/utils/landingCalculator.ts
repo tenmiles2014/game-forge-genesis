@@ -2,14 +2,17 @@
 import { BlockPattern } from '../BlockPatterns';
 
 export const calculateLandingPosition = (
-  position: { x: number; y: number; z: number },
+  grid: number[][][],
   currentBlock: BlockPattern,
-  grid: number[][][]
-): number => {
-  let landingY = position.y;
+  position: { x: number; y: number; z: number }
+): { x: number; y: number; z: number } => {
+  // Return current position if grid or block is invalid
+  if (!grid || grid.length === 0 || !currentBlock) {
+    console.log("Invalid grid or block data for landing position calculation");
+    return { ...position };
+  }
   
-  // Clone the current grid to check collisions
-  const gridCopy = JSON.parse(JSON.stringify(grid));
+  let landingY = position.y;
   
   // Check each possible position below the current one
   while (landingY > 0) {
@@ -38,7 +41,7 @@ export const calculateLandingPosition = (
             gridZ >= 0 && 
             gridZ < grid.length
           ) {
-            if (gridCopy[nextY][gridX][gridZ] !== 0) {
+            if (grid[nextY][gridX][gridZ] !== 0) {
               canMoveDown = false;
               break;
             }
@@ -52,5 +55,5 @@ export const calculateLandingPosition = (
     landingY--;
   }
   
-  return landingY;
+  return { x: position.x, y: landingY, z: position.z };
 };
