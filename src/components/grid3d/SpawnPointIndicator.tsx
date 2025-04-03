@@ -56,15 +56,6 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({ gridSize }) =
         lineWidth={2}
         dashed={false}
       />
-      
-      {/* Center indicator */}
-      <mesh position={[centerX, topY + 1, centerZ]}>
-        <boxGeometry args={[0.5, 0.1, 0.5]} />
-        <meshStandardMaterial color="#ffff00" transparent={true} opacity={0.7} />
-      </mesh>
-      
-      {/* Light for spawn area */}
-      <pointLight position={[centerX, topY + 1, centerZ]} intensity={0.5} color="#ffff00" distance={5} />
     </>
   );
 };
