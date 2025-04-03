@@ -211,16 +211,8 @@ const Game3D: React.FC = () => {
       });
     }
     
-    const blocksAtY = detectBlocksAtYLevel(newGrid, WARNING_Y_LEVEL);
+    const blocksAtY = 0; // Always set to 0
     setBlocksAtWarningLevel(blocksAtY);
-    
-    if (blocksAtY > 0) {
-      toast({
-        title: "Warning!",
-        description: `${blocksAtY} blocks detected at dangerous height!`,
-        variant: "destructive"
-      });
-    }
     
     const nextBlockPattern = nextBlock;
     setCurrentBlock(nextBlockPattern);
@@ -411,22 +403,6 @@ const Game3D: React.FC = () => {
     }
     
     return stacks;
-  };
-
-  const detectBlocksAtYLevel = (grid: number[][][], yLevel: number) => {
-    if (yLevel < 0 || yLevel >= GRID_SIZE) return 0;
-    
-    let blockCount = 0;
-    
-    for (let x = 0; x < GRID_SIZE; x++) {
-      for (let z = 0; z < GRID_SIZE; z++) {
-        if (grid[yLevel][x][z] !== 0) {
-          blockCount++;
-        }
-      }
-    }
-    
-    return blockCount;
   };
 
   const handleTimeUp = () => {
@@ -648,12 +624,6 @@ const Game3D: React.FC = () => {
       <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white text-center">
         3D Block Busters
       </h1>
-      
-      {blocksAtWarningLevel > 0 && !gameOver && (
-        <div className="mb-4 p-2 bg-red-500 text-white rounded-md animate-pulse">
-          Warning: {blocksAtWarningLevel} blocks at dangerous height!
-        </div>
-      )}
       
       <div className="game-container rounded-lg overflow-hidden w-full max-w-[1400px] flex flex-col md:flex-row gap-4 bg-black bg-opacity-30">
         <div className="flex-1 min-h-[550px] md:min-h-[650px]">
