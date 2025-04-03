@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
@@ -225,7 +224,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
       {renderGhostBlock}
       {renderGridBoundaries}
       {renderHeightLimit}
-      {/* Removed gridHelper */}
+      <gridHelper args={[10, 10]} position={[4.5, -0.5, 4.5]} />
     </group>
   );
 };

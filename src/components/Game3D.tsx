@@ -596,7 +596,6 @@ const Game3D: React.FC = () => {
               />
             </Canvas>
             <Grid3DLabels />
-            <Gyroscope size={100} className="hidden md:block" />
           </div>
         </div>
         
