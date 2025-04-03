@@ -27,22 +27,13 @@ const Grid3D: React.FC<Grid3DProps> = ({
   const gridSize = grid?.length || 10;
   
   // Calculate the landing position for the current block
-  const landingData = useMemo(() => {
+  const landingPosition = useMemo(() => {
     // Safety check for required data
     if (!grid || !currentBlock?.shape || !position) {
-      return { 
-        landingPosition: {...position}, 
-        isValid: false 
-      };
+      return { ...position };
     }
     
-    const calculatedLanding = calculateLandingPosition(grid, currentBlock, position);
-    const isValid = calculatedLanding.y !== position.y;
-    
-    return {
-      landingPosition: calculatedLanding,
-      isValid: isValid
-    };
+    return calculateLandingPosition(grid, currentBlock, position);
   }, [grid, currentBlock, position]);
   
   return (
@@ -60,11 +51,11 @@ const Grid3D: React.FC<Grid3DProps> = ({
         />
       )}
       
-      {currentBlock?.shape && landingData.isValid && (
+      {currentBlock?.shape && position && isGameActive && (
         <LandingPreview 
           currentBlock={currentBlock}
           position={position}
-          landingY={landingData.landingPosition.y}
+          landingY={landingPosition.y}
         />
       )}
       

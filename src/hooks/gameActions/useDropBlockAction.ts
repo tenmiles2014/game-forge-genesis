@@ -116,7 +116,9 @@ export function useDropBlockAction({
     }
     
     // Handle level up if layers were cleared
-    handleLevelUp(layersCleared, level, MAX_LEVEL, setLevel);
+    if (layersCleared > 0) {
+      handleLevelUp(layersCleared, level, MAX_LEVEL, setLevel);
+    }
     
     // Important: Clean timeout before spawning the next block
     if (gravityTimerRef.current) {
@@ -124,29 +126,26 @@ export function useDropBlockAction({
       gravityTimerRef.current = null;
     }
     
-    // Introduce a delay before spawning next block
-    // This helps ensure the current block is fully placed before spawning the next one
-    setTimeout(() => {
-      // Spawn next block and check if it's a valid position
-      console.log("⏱️ Spawning next block after delay");
-      const validSpawn = spawnNextBlock();
-      
-      // Check if the new position is valid, if not it's game over
-      if (!validSpawn) {
-        console.log("🔴 Game over: no space for new blocks");
-        handleGameOver(
-          "No space for new blocks!", 
-          setGameOver, 
-          setTimerActive, 
-          setControlsEnabled, 
-          gravityTimerRef
-        );
-      } else {
-        // Re-enable controls only if spawn was successful
-        console.log("✅ New block spawned successfully, re-enabling controls");
+    // Spawn next block and check if it's a valid position (CRITICAL FIX: call this immediately)
+    const validSpawn = spawnNextBlock();
+    
+    // Check if the new position is valid, if not it's game over
+    if (!validSpawn) {
+      console.log("🔴 Game over: no space for new blocks");
+      handleGameOver(
+        "No space for new blocks!", 
+        setGameOver, 
+        setTimerActive, 
+        setControlsEnabled, 
+        gravityTimerRef
+      );
+    } else {
+      // Re-enable controls only if spawn was successful
+      console.log("✅ New block spawned successfully, re-enabling controls");
+      setTimeout(() => {
         setControlsEnabled(true);
-      }
-    }, 100); // Slightly longer delay for more consistent behavior
+      }, 100); // Short delay to prevent immediate input
+    }
   }, [
     grid,
     currentBlock,

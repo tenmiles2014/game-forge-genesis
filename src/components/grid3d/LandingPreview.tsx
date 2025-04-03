@@ -15,18 +15,18 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
 }) => {
   // Generate preview elements
   const previewElements = useMemo(() => {
-    if (!currentBlock?.shape || !position || landingY === undefined || landingY === position.y) {
+    if (!currentBlock?.shape || position === undefined || landingY === undefined) {
       return [];
     }
 
-    const elements = [];
+    // Only show preview if current position is different from landing position
     const heightDiff = position.y - landingY;
-    
-    // Only show preview if there's a meaningful distance and it's not negative
     if (heightDiff <= 0) {
       return [];
     }
 
+    const elements = [];
+    
     // Create ghost blocks at landing position
     for (let z = 0; z < currentBlock.shape.length; z++) {
       for (let x = 0; x < currentBlock.shape[z].length; x++) {
@@ -41,35 +41,33 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
               <meshStandardMaterial 
                 color={currentBlock.color}
                 transparent={true}
-                opacity={0.4}
+                opacity={0.3}
                 wireframe={true}
               />
             </mesh>
           );
 
-          // Add drop line between current position and landing
-          if (heightDiff > 1) {
-            elements.push(
-              <mesh
-                key={`line-${x}-${z}`}
-                position={[
-                  position.x + x,
-                  position.y - (heightDiff / 2),
-                  position.z + z
-                ]}
-                rotation={[Math.PI / 2, 0, 0]}
-              >
-                <cylinderGeometry 
-                  args={[0.05, 0.05, heightDiff, 8]} 
-                />
-                <meshBasicMaterial
-                  color={currentBlock.color}
-                  transparent={true}
-                  opacity={0.3}
-                />
-              </mesh>
-            );
-          }
+          // Add drop line between current position and landing position
+          elements.push(
+            <mesh
+              key={`line-${x}-${z}`}
+              position={[
+                position.x + x,
+                position.y - (heightDiff / 2),
+                position.z + z
+              ]}
+              rotation={[Math.PI / 2, 0, 0]}
+            >
+              <cylinderGeometry 
+                args={[0.05, 0.05, heightDiff, 8]} 
+              />
+              <meshBasicMaterial
+                color={currentBlock.color}
+                transparent={true}
+                opacity={0.2}
+              />
+            </mesh>
+          );
         }
       }
     }
@@ -77,7 +75,6 @@ const LandingPreview: React.FC<LandingPreviewProps> = React.memo(({
     return elements;
   }, [currentBlock, position, landingY]);
 
-  // Return preview elements
   return <>{previewElements}</>;
 });
 
