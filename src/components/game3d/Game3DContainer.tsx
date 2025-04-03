@@ -15,7 +15,8 @@ const Game3DContainer: React.FC = () => {
     gameOver,
     level,
     setCurrentBlock,
-    setNextBlock
+    setNextBlock,
+    initializeGrid
   } = useGameState();
 
   useEffect(() => {
@@ -24,24 +25,7 @@ const Game3DContainer: React.FC = () => {
     setGrid(newGrid);
     setCurrentBlock(getRandomBlockPattern());
     setNextBlock(getRandomBlockPattern());
-  }, []);
-
-  const initializeGrid = () => {
-    const gridSize = 10;
-    const newGrid: number[][][] = [];
-    for (let y = 0; y < gridSize; y++) {
-      const layer: number[][] = [];
-      for (let x = 0; x < gridSize; x++) {
-        const row: number[] = [];
-        for (let z = 0; z < gridSize; z++) {
-          row.push(0);
-        }
-        layer.push(row);
-      }
-      newGrid.push(layer);
-    }
-    return newGrid;
-  };
+  }, [setGrid, setCurrentBlock, setNextBlock, initializeGrid]);
 
   return (
     <div className="flex flex-col justify-center items-center min-h-screen p-2 md:p-4">

@@ -87,7 +87,7 @@ export function useGameActions(props: GameActionsProps) {
     setLevel,
     gravityTimerRef,
     setLinesCleared,
-    getRandomBlockPattern: props.getRandomBlockPattern,
+    getRandomBlockPattern,
     INITIAL_POSITION,
     initializeGrid
   });

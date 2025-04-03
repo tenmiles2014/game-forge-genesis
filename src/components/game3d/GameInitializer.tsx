@@ -8,7 +8,6 @@ import { useGameActions } from '../../hooks/useGameActions';
 import { getRandomBlockPattern } from '../BlockPatterns';
 import { useGameInitialization } from '../../hooks/useGameInitialization';
 import { useBlockSpawning } from '../../hooks/blockMovement/useBlockSpawning';
-import { toast } from "@/components/ui/use-toast";
 
 interface GameInitializerProps {
   children: React.ReactNode;
@@ -79,7 +78,8 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     setPosition({...INITIAL_POSITION});
   };
 
-  const { resetGame, handleTimeUp, toggleGamePause, startGame } = useGameActions({
+  // Create gameActionProps object
+  const gameActionProps = {
     grid,
     setGrid,
     score,
@@ -110,7 +110,9 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     gameOver,
     resetPosition,
     initializeGrid
-  });
+  };
+
+  const { resetGame, handleTimeUp, toggleGamePause, startGame } = useGameActions(gameActionProps);
 
   useKeyboardControls({
     moveBlock,

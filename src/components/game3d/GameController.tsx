@@ -5,7 +5,7 @@ import { useBlockMovement } from '../../hooks/useBlockMovement';
 import { useGridOperations } from '../../hooks/useGridOperations';
 import { useGameActions } from '../../hooks/useGameActions';
 import { useKeyboardControls } from '../../hooks/useKeyboardControls';
-import { BlockPattern, getRandomBlockPattern } from '../../components/BlockPatterns';
+import { BlockPattern, getRandomBlockPattern } from '../BlockPatterns';
 import { VIEW_POINTS } from './GameViewManager';
 import GameLayout from './GameLayout';
 
@@ -29,8 +29,7 @@ const GameController: React.FC = () => {
     MAX_LEVEL,
     GRID_SIZE,
     VERTICAL_STACK_LIMIT,
-    initializeGrid,
-    resetPosition
+    initializeGrid
   } = useGameState();
 
   // Reference for orbit controls to update camera position
@@ -79,9 +78,7 @@ const GameController: React.FC = () => {
     INITIAL_POSITION,
     MAX_LEVEL,
     gamePaused,
-    gameOver,
-    resetPosition,
-    initializeGrid
+    gameOver
   };
 
   const {
