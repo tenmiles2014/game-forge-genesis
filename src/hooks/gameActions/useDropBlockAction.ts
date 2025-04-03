@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { BlockPattern } from '../../components/BlockPatterns';
@@ -52,6 +53,14 @@ export function useDropBlockAction({
   MAX_LEVEL
 }: DropBlockActionProps) {
   const dropBlock = useCallback(() => {
+    console.log("🎮 Executing drop block action");
+    
+    // Safety check for grid initialization
+    if (!grid || grid.length === 0) {
+      console.error("Grid not initialized in dropBlock action");
+      return;
+    }
+    
     // Find the lowest valid position
     let y = position.y;
     
@@ -61,8 +70,10 @@ export function useDropBlockAction({
     }
     
     // Place the block in the grid
-    const newGrid = [...grid];
+    const newGrid = JSON.parse(JSON.stringify(grid)); // Deep clone to avoid mutation
     const colorIndex = getColorIndex(currentBlock.color);
+    
+    console.log(`Placing block at position [x:${position.x}, y:${y}, z:${position.z}]`);
     
     for (let yy = 0; yy < currentBlock.shape.length; yy++) {
       for (let xx = 0; xx < currentBlock.shape[yy].length; xx++) {
@@ -92,6 +103,8 @@ export function useDropBlockAction({
     const isStackTooHigh = checkVerticalStackLimit(newGrid);
     
     if (isStackTooHigh) {
+      console.log("🎮 Game over: blocks stacked too high");
+      
       if (gravityTimerRef.current) {
         clearInterval(gravityTimerRef.current);
         gravityTimerRef.current = null;
@@ -116,6 +129,7 @@ export function useDropBlockAction({
         const newLevel = Math.min(MAX_LEVEL, Math.floor(1 + (level + (layersCleared / 10))));
         
         if (newLevel > level) {
+          console.log(`🎮 Level up! Now at level ${newLevel}`);
           setLevel(newLevel);
           
           toast({
@@ -129,10 +143,17 @@ export function useDropBlockAction({
     // Generate a new block and update position
     setCurrentBlock(nextBlock);
     setNextBlock(getRandomBlockPattern());
-    setPosition({...INITIAL_POSITION});
+    
+    // Important: Create a new position object to ensure reference change
+    const newPosition = {...INITIAL_POSITION};
+    setPosition(newPosition);
+    
+    console.log(`New block set, position reset to ${JSON.stringify(newPosition)}`);
     
     // Check if the new position is valid, if not it's game over
     if (!isValidPosition(nextBlock.shape, INITIAL_POSITION.x, INITIAL_POSITION.y, INITIAL_POSITION.z)) {
+      console.log("🎮 Game over: no space for new blocks");
+      
       if (gravityTimerRef.current) {
         clearInterval(gravityTimerRef.current);
         gravityTimerRef.current = null;

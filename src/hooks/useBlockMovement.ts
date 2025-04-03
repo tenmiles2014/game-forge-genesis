@@ -12,19 +12,13 @@ export function useBlockMovement(
   gameOver: boolean,
   controlsEnabled: boolean
 ) {
-  const gridSize = grid.length || 10;
+  const gridSize = grid?.length || 10;
 
   // Check if position is valid based on grid and block shape
   const isValidPosition = useCallback((newPosition: { x: number; y: number; z: number }): boolean => {
-    // Check if grid is initialized
-    if (!grid || grid.length === 0) {
-      console.warn('❌ Grid not initialized');
-      return false;
-    }
-    
-    // Check if block is available
-    if (!currentBlock || !currentBlock.shape) {
-      console.warn('❌ Current block not initialized');
+    // Check if block or grid is missing - fail safely
+    if (!currentBlock?.shape || !grid || grid.length === 0) {
+      console.log('⚠️ Missing data for position check - grid or currentBlock not ready');
       return false;
     }
     
@@ -63,24 +57,29 @@ export function useBlockMovement(
   const moveBlock = useCallback((direction: 'left' | 'right' | 'forward' | 'backward' | 'down'): boolean => {
     console.log(`🕹️ Attempting to move block: ${direction}`);
     
-    // Comprehensive pre-movement checks
+    // Safety checks
+    if (!grid || grid.length === 0) {
+      console.log('⚠️ Grid not initialized - cannot move block');
+      return false;
+    }
+    
+    if (!currentBlock || !currentBlock.shape) {
+      console.log('⚠️ Current block not initialized - cannot move block');
+      return false;
+    }
+    
     if (gameOver) {
-      console.warn('❌ Cannot move: Game is over');
+      console.log('🛑 Game is over - cannot move block');
       return false;
     }
     
     if (gamePaused) {
-      console.warn('❌ Cannot move: Game is paused');
+      console.log('⏸️ Game is paused - cannot move block');
       return false;
     }
     
     if (!controlsEnabled) {
-      console.warn('❌ Cannot move: Controls are disabled');
-      return false;
-    }
-    
-    if (!grid || grid.length === 0) {
-      console.warn('❌ Cannot move: Grid not initialized');
+      console.log('🔒 Controls disabled - cannot move block');
       return false;
     }
 
@@ -105,14 +104,14 @@ export function useBlockMovement(
           break;
       }
   
-      console.log(`📍 New Position: ${JSON.stringify(newPosition)}`);
+      console.log(`📍 Testing position: ${JSON.stringify(newPosition)}`);
   
       if (isValidPosition(newPosition)) {
         setPosition(newPosition);
         console.log(`✅ Block moved successfully: ${direction}`);
         return true;
       } else {
-        console.warn(`❌ Invalid move: ${direction}`);
+        console.log(`❌ Invalid move: ${direction}`);
         return false;
       }
     } catch (error) {
@@ -126,15 +125,26 @@ export function useBlockMovement(
     gameOver, 
     gamePaused, 
     controlsEnabled,
-    grid
+    grid,
+    currentBlock
   ]);
 
   const rotateBlock = useCallback((axis: 'x' | 'y' | 'z'): number[][] | null => {
     console.log(`🔄 Attempting to rotate block around ${axis} axis`);
     
-    // Comprehensive pre-rotation checks
+    // Safety checks
+    if (!grid || grid.length === 0) {
+      console.log('⚠️ Grid not initialized - cannot rotate block');
+      return null;
+    }
+    
+    if (!currentBlock || !currentBlock.shape) {
+      console.log('⚠️ Current block not initialized - cannot rotate block');
+      return null;
+    }
+    
     if (gameOver || gamePaused || !controlsEnabled) {
-      console.warn('❌ Cannot rotate block');
+      console.log('⛔ Game state prevents rotation');
       return null;
     }
 
@@ -148,16 +158,15 @@ export function useBlockMovement(
       const rotatedShape = rotateMatrix(currentBlock.shape);
       
       // Test rotated position validity
-      const testPosition = { ...currentPosition };
       const isValid = isValidPosition({ 
-        ...testPosition
+        ...currentPosition
       });
   
       if (isValid) {
         console.log('✅ Block rotation successful');
         return rotatedShape;
       } else {
-        console.warn('❌ Invalid block rotation');
+        console.log('❌ Invalid block rotation');
         return null;
       }
     } catch (error) {
@@ -170,21 +179,36 @@ export function useBlockMovement(
     isValidPosition, 
     gameOver, 
     gamePaused, 
-    controlsEnabled
+    controlsEnabled,
+    grid
   ]);
 
   const dropBlock = useCallback(() => {
     console.log('⬇️ Attempting to drop block');
     
+    // Safety checks
+    if (!grid || grid.length === 0) {
+      console.log('⚠️ Grid not initialized - cannot drop block');
+      return;
+    }
+    
     if (gameOver || gamePaused || !controlsEnabled) {
-      console.warn('❌ Cannot drop block');
+      console.log('⛔ Game state prevents dropping');
       return;
     }
 
     try {
       let newPosition = { ...currentPosition };
-      while (isValidPosition({ ...newPosition, y: newPosition.y - 1 })) {
-        newPosition.y -= 1;
+      let foundBottom = false;
+      
+      // Find the lowest valid position
+      while (!foundBottom) {
+        let testPosition = { ...newPosition, y: newPosition.y - 1 };
+        if (isValidPosition(testPosition)) {
+          newPosition = testPosition;
+        } else {
+          foundBottom = true;
+        }
       }
   
       setPosition(newPosition);
@@ -198,7 +222,8 @@ export function useBlockMovement(
     setPosition, 
     gameOver, 
     gamePaused, 
-    controlsEnabled
+    controlsEnabled,
+    grid
   ]);
 
   return {

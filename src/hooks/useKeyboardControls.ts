@@ -27,43 +27,50 @@ export function useKeyboardControls({
       - Game Paused: ${gamePaused}`);
     
     const handleKeyDown = (event: KeyboardEvent) => {
-      console.log(`🕹️ Key Pressed: ${event.key}`);
-      
-      // Make sure gameplay keys don't affect game pause state
+      // Skip all gamepad-related keys entirely to avoid affecting game state
       if (["Enter", "Escape", "p", "P"].includes(event.key)) {
-        console.log("Game control key pressed, but ignored to prevent affecting game state");
+        console.log("Game control key pressed, ignoring to prevent affecting game state");
         return;
       }
       
-      // More verbose check
+      // Check game state before responding to movement keys
       if (gamePaused) {
-        console.warn('⛔ Game is paused, blocking key events');
-        return; // Don't show toast on every key press when paused
+        console.log("🔒 Game is paused - movement keys disabled");
+        return;
       }
       
       if (!controlsEnabled) {
-        console.warn('⛔ Controls are not enabled');
-        return; // Don't show toast when controls disabled
+        console.log("🔒 Controls are disabled - movement keys disabled");
+        return;
       }
 
+      console.log(`🕹️ Processing key: ${event.key}`);
+      
       try {
+        // Only handle defined movement keys
         switch (event.key) {
           case 'ArrowLeft':
+            console.log("Moving left");
             moveBlock('left');
             break;
           case 'ArrowRight':
+            console.log("Moving right");
             moveBlock('right');
             break;
           case 'ArrowUp':
+            console.log("Moving forward");
             moveBlock('forward');
             break;
           case 'ArrowDown':
+            console.log("Moving backward");
             moveBlock('backward');
             break;
           case ' ':
+            console.log("Dropping block");
             dropBlock();
             break;
           case 'z':
+            console.log("Rotating around z-axis");
             const rotatedZ = rotateBlock('z');
             if (rotatedZ) {
               setCurrentBlock({
@@ -73,6 +80,7 @@ export function useKeyboardControls({
             }
             break;
           case 'x':
+            console.log("Rotating around x-axis");
             const rotatedX = rotateBlock('x');
             if (rotatedX) {
               setCurrentBlock({
@@ -82,7 +90,11 @@ export function useKeyboardControls({
             }
             break;
           case 's':
+            console.log("Moving down");
             moveBlock('down');
+            break;
+          default:
+            // Ignore other keys
             break;
         }
       } catch (error) {
