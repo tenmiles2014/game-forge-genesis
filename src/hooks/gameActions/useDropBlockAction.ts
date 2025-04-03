@@ -68,7 +68,8 @@ export function useDropBlockAction({
   const dropBlock = useCallback(() => {
     console.log("🎮 Executing drop block action", { 
       currentPosition: JSON.stringify(position),
-      currentBlock: currentBlock?.color
+      currentBlock: currentBlock?.color,
+      hasGrid: !!grid && grid.length > 0
     });
     
     // Safety check for grid initialization
@@ -95,7 +96,7 @@ export function useDropBlockAction({
     const newGrid = placeBlockInGrid(grid, position, currentBlock, colorIndex);
     
     console.log("📥 Placed block in grid at:", JSON.stringify(position));
-    setGrid(newGrid);
+    setGrid([...newGrid]); // Create a new array to ensure state update
 
     // Clear any completed layers
     const layersCleared = clearCompleteLayers(newGrid);
@@ -129,24 +130,30 @@ export function useDropBlockAction({
     // Spawn next block and check if it's a valid position
     console.log("🔄 Attempting to spawn next block after successful placement");
     setTimeout(() => {
-      const validSpawn = spawnNextBlock();
-      
-      // Check if the new position is valid, if not it's game over
-      if (!validSpawn) {
-        console.log("🔴 Game over: no space for new blocks");
-        handleGameOver(
-          "No space for new blocks!", 
-          setGameOver, 
-          setTimerActive, 
-          setControlsEnabled, 
-          gravityTimerRef
-        );
-      } else {
-        // Re-enable controls only if spawn was successful
-        console.log("✅ New block spawned successfully, re-enabling controls");
+      try {
+        const validSpawn = spawnNextBlock();
+        
+        // Check if the new position is valid, if not it's game over
+        if (!validSpawn) {
+          console.log("🔴 Game over: no space for new blocks");
+          handleGameOver(
+            "No space for new blocks!", 
+            setGameOver, 
+            setTimerActive, 
+            setControlsEnabled, 
+            gravityTimerRef
+          );
+        } else {
+          // Re-enable controls only if spawn was successful
+          console.log("✅ New block spawned successfully, re-enabling controls");
+          setControlsEnabled(true);
+        }
+      } catch (error) {
+        console.error("Error in block spawning process:", error);
+        // Fallback to ensure game doesn't get stuck
         setControlsEnabled(true);
       }
-    }, 100); // Short delay to ensure state updates have processed
+    }, 150); // Slightly longer delay to ensure state updates have processed
   }, [
     grid,
     currentBlock,

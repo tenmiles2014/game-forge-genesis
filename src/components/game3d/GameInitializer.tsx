@@ -153,13 +153,18 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
       return;
     }
 
+    if (!currentBlock?.shape) {
+      console.log("No active block yet, delaying gravity timer setup");
+      return;
+    }
+
     // Setup the gravity timer to automatically move blocks down
     const dropSpeed = getDropSpeed();
     console.log(`Setting up gravity timer with dropSpeed: ${dropSpeed}ms, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
     
     gravityTimerRef.current = window.setInterval(() => {
-      console.log("Gravity timer triggered - moving block down");
-      if (!gamePaused && !gameOver) {
+      if (!gamePaused && !gameOver && controlsEnabled) {
+        console.log("Gravity timer triggered - moving block down");
         const moved = moveBlock('down');
         if (!moved) {
           console.log("Block can't move down further, dropping it");
@@ -175,7 +180,19 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
         gravityTimerRef.current = null;
       }
     };
-  }, [gamePaused, gameOver, level, moveBlock, dropBlock, getDropSpeed, controlsEnabled, setControlsEnabled, timerActive, grid]);
+  }, [
+    gamePaused, 
+    gameOver, 
+    level, 
+    moveBlock, 
+    dropBlock, 
+    getDropSpeed, 
+    controlsEnabled, 
+    setControlsEnabled, 
+    timerActive, 
+    grid,
+    currentBlock?.shape
+  ]);
 
   useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(180 - (level * 2)));

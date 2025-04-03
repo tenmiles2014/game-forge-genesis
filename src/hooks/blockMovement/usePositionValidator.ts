@@ -40,13 +40,14 @@ export function usePositionValidator(
               gridY < 0 || gridY >= gridSize ||
               gridZ < 0 || gridZ >= gridSize
             ) {
+              // Debugging boundary violations
               console.log(`📍 Out of bounds at [${gridX}, ${gridY}, ${gridZ}]`);
               return false;
             }
   
             // Check for existing blocks in the grid
             try {
-              if (grid[gridY][gridX][gridZ] !== 0) {
+              if (grid[gridY]?.[gridX]?.[gridZ] !== 0) {
                 console.log(`📍 Collision at [${gridX}, ${gridY}, ${gridZ}]`);
                 return false;
               }

@@ -18,10 +18,25 @@ export function useBlockMove(
   const { gamePaused, gameOver, controlsEnabled } = gameState;
 
   const moveBlock = useCallback((direction: 'left' | 'right' | 'forward' | 'backward' | 'down'): boolean => {
-    console.log(`🕹️ Attempting to move block: ${direction}`);
+    console.log(`🕹️ Attempting to move block: ${direction}`, {
+      currentPosition,
+      controlsEnabled,
+      gamePaused,
+      gameOver,
+      hasGrid: !!grid && Array.isArray(grid) && grid.length > 0,
+      hasBlock: !!currentBlock?.shape
+    });
     
     if (gameOver || gamePaused || !controlsEnabled) {
-      console.log('❌ Cannot move block - game state prevents it');
+      console.log('❌ Cannot move block - game state prevents it', 
+        { gameOver, gamePaused, controlsEnabled });
+      return false;
+    }
+
+    // Safety check for required data
+    if (!currentBlock?.shape || !grid || grid.length === 0) {
+      console.log('❌ Cannot move block - missing data', 
+        { hasBlock: !!currentBlock?.shape, hasGrid: !!grid && grid.length > 0 });
       return false;
     }
 
@@ -45,9 +60,11 @@ export function useBlockMove(
         break;
     }
 
-    if (isValidPosition(newPosition)) {
-      setPosition(newPosition);
-      console.log(`✅ Block moved successfully: ${direction}`);
+    const valid = isValidPosition(newPosition);
+    
+    if (valid) {
+      console.log(`✅ Block moved successfully: ${direction} to`, newPosition);
+      setPosition({...newPosition}); // Create fresh object to ensure state updates
       return true;
     } else {
       console.log(`❌ Invalid move: ${direction} - Position would be invalid`);
@@ -65,7 +82,9 @@ export function useBlockMove(
     setPosition, 
     gameOver, 
     gamePaused, 
-    controlsEnabled
+    controlsEnabled,
+    currentBlock,
+    grid
   ]);
 
   return { moveBlock };
