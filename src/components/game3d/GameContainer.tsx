@@ -17,6 +17,7 @@ interface GameContainerProps {
   orbitControlsRef: React.RefObject<any>;
   gamePaused: boolean;
   gameOver: boolean;
+  score?: number;
 }
 
 const GameContainer: React.FC<GameContainerProps> = ({
@@ -28,7 +29,8 @@ const GameContainer: React.FC<GameContainerProps> = ({
   currentView,
   orbitControlsRef,
   gamePaused,
-  gameOver
+  gameOver,
+  score = 0
 }) => {
   // Game is active when it's not paused and not over
   const isGameActive = !gamePaused && !gameOver;
@@ -47,7 +49,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
         />
         <OrbitControls 
           ref={orbitControlsRef} 
-          enabled={controlsEnabled}
+          enabled={false} // Disable orbit controls completely
           minDistance={10}
           maxDistance={30}
           target={currentView.target || [4.5, 4.5, 4.5]}

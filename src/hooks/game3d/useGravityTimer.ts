@@ -69,9 +69,15 @@ export function useGravityTimer({
     const dropSpeed = getDropSpeed();
     console.log(`Setting up gravity timer with dropSpeed: ${dropSpeed}ms, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
     
+    // The timer should always run when the game is active
     gravityTimerRef.current = window.setInterval(() => {
-      if (!gamePaused && !gameOver && controlsEnabled) {
+      if (!gamePaused && !gameOver) {
         console.log("Gravity timer triggered - moving block down");
+        // Make sure controls are enabled before attempting to move the block
+        if (!controlsEnabled) {
+          setControlsEnabled(true);
+        }
+        
         const moved = moveBlock('down');
         if (!moved) {
           console.log("Block can't move down further, dropping it");

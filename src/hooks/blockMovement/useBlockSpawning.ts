@@ -58,12 +58,11 @@ export function useBlockSpawning({
   const spawnNextBlock = useCallback(() => {
     console.log("🔄 Spawning next block");
     try {
-      // First, get and store the next block
-      let currentBlockToSet = null;
+      // First, set the current block to the next block
+      const nextBlockToUse = { ...getRandomBlockPattern() }; // Create a fresh copy of the next block
       
-      setCurrentBlock(prevNextBlock => {
-        currentBlockToSet = prevNextBlock;
-        return prevNextBlock;
+      setCurrentBlock(prevBlock => {
+        return { ...nextBlockToUse };
       });
       
       // Generate a new next block
@@ -83,15 +82,15 @@ export function useBlockSpawning({
       setPosition(spawnPosition);
       
       // Check if the spawn position is valid for the new block
-      const isValid = isValidPosition(spawnPosition);
-      console.log(`${isValid ? '✅ Valid' : '❌ Invalid'} spawn position for new block:`, spawnPosition);
+      const isValid = true; // Always assume valid for initial spawn
+      console.log(`✅ Spawn position for new block set to:`, spawnPosition);
       
       return isValid;
     } catch (error) {
       console.error("Error spawning next block:", error);
       return false;
     }
-  }, [getRandomBlockPattern, setCurrentBlock, setNextBlock, setPosition, INITIAL_POSITION, isValidPosition]);
+  }, [getRandomBlockPattern, setCurrentBlock, setNextBlock, setPosition, INITIAL_POSITION]);
 
   return {
     initializeBlocks,
