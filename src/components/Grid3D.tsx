@@ -12,6 +12,57 @@ interface Grid3DProps {
 }
 
 const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesCleared }) => {
+  // Function to find the landing position of the current block
+  const getLandingPosition = useMemo(() => {
+    let landingY = position.y;
+    
+    // Clone the current grid to check collisions
+    const gridCopy = JSON.parse(JSON.stringify(grid));
+    
+    // Check each possible position below the current one
+    while (landingY > 0) {
+      let canMoveDown = true;
+      
+      // Check if the block would collide at the next position down
+      for (let y = 0; y < currentBlock.shape.length; y++) {
+        for (let x = 0; x < currentBlock.shape[y].length; x++) {
+          if (currentBlock.shape[y][x]) {
+            const nextY = landingY - 1;
+            const gridX = position.x + x;
+            const gridZ = position.z + y;
+            
+            // Check grid boundaries
+            if (nextY < 0) {
+              canMoveDown = false;
+              break;
+            }
+            
+            // Check collision with existing blocks
+            if (
+              gridX >= 0 && 
+              gridX < grid.length && 
+              nextY >= 0 && 
+              nextY < grid.length && 
+              gridZ >= 0 && 
+              gridZ < grid.length
+            ) {
+              if (gridCopy[nextY][gridX][gridZ] !== 0) {
+                canMoveDown = false;
+                break;
+              }
+            }
+          }
+        }
+        if (!canMoveDown) break;
+      }
+      
+      if (!canMoveDown) break;
+      landingY--;
+    }
+    
+    return landingY;
+  }, [position, currentBlock, grid]);
+
   const renderGridBoundaries = useMemo(() => {
     const gridSize = grid.length || 10;
     
@@ -101,6 +152,36 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
           <boxGeometry args={[0.5, 0.1, 0.5]} />
           <meshBasicMaterial color="#4A9BF7" />
         </mesh>
+        
+        {/* Grid lines along the X-axis */}
+        {Array.from({ length: gridSize + 1 }).map((_, i) => (
+          <mesh key={`grid-x-${i}`}>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                count={2}
+                array={new Float32Array([i, 0, 0, i, 0, gridSize])}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <lineBasicMaterial attach="material" color="#2a3040" opacity={0.5} transparent={true} />
+          </mesh>
+        ))}
+        
+        {/* Grid lines along the Z-axis */}
+        {Array.from({ length: gridSize + 1 }).map((_, i) => (
+          <mesh key={`grid-z-${i}`}>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                count={2}
+                array={new Float32Array([0, 0, i, gridSize, 0, i])}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <lineBasicMaterial attach="material" color="#2a3040" opacity={0.5} transparent={true} />
+          </mesh>
+        ))}
       </>
     );
   }, [grid]);
@@ -148,6 +229,38 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
     return blocks;
   }, [currentBlock, position]);
   
+  // Render the landing position prediction
+  const renderLandingPreview = useMemo(() => {
+    const blocks = [];
+    const landingY = getLandingPosition;
+    
+    // Only render if the landing position is different from current position
+    if (landingY !== position.y) {
+      for (let y = 0; y < currentBlock.shape.length; y++) {
+        for (let x = 0; x < currentBlock.shape[y].length; x++) {
+          if (currentBlock.shape[y][x]) {
+            blocks.push(
+              <mesh 
+                key={`landing-${x}-${y}`} 
+                position={[position.x + x, landingY, position.z + y]}
+              >
+                <boxGeometry args={[1, 1, 1]} />
+                <meshStandardMaterial 
+                  color={currentBlock.color} 
+                  transparent={true} 
+                  opacity={0.4} 
+                  wireframe={false}
+                />
+              </mesh>
+            );
+          }
+        }
+      }
+    }
+    
+    return blocks;
+  }, [currentBlock, position, getLandingPosition]);
+  
   // Flash effect when lines are cleared
   const [flashEffect, setFlashEffect] = React.useState(false);
   const [lastLinesCleared, setLastLinesCleared] = React.useState(0);
@@ -171,6 +284,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
       {renderGridBoundaries}
       {renderGridBlocks}
       {renderCurrentBlock}
+      {renderLandingPreview}
       
       {/* Flash light effect when lines are cleared */}
       {flashEffect && (
