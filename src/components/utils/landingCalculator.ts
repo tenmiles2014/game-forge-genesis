@@ -6,81 +6,73 @@ export const calculateLandingPosition = (
   currentBlock: BlockPattern,
   position: { x: number; y: number; z: number }
 ): { x: number; y: number; z: number } => {
-  console.log("🔍 Landing calculation - Input:", { 
-    gridExists: !!grid, 
-    gridSize: grid?.length ?? 0,
-    blockShape: currentBlock?.shape?.length,
-    position
-  });
-  
-  // Strict validation
-  if (!grid || grid.length === 0 || !currentBlock?.shape) {
-    console.warn("Invalid grid or block for landing calculation");
+  // Validate inputs
+  if (!grid || grid.length === 0 || !currentBlock?.shape || !position) {
     return { ...position };
   }
 
   const gridSize = grid.length;
   let landingY = position.y;
   
-  // Safety check: ensure position is within grid
-  const safeX = Math.max(0, Math.min(position.x, gridSize - 1));
-  const safeZ = Math.max(0, Math.min(position.z, gridSize - 1));
+  // Check if the block is completely out of bounds, if so return original position
+  if (position.x < 0 || position.z < 0 || 
+      position.x + currentBlock.shape[0].length > gridSize || 
+      position.z + currentBlock.shape.length > gridSize) {
+    return { ...position };
+  }
   
   // Start from current position and move down until we hit something
-  while (landingY > 0) {
-    let canMoveDown = true;
+  let hitGround = false;
+  
+  // Only check positions that are equal to or below the current position
+  while (landingY > 0 && !hitGround) {
+    const nextY = landingY - 1;  // Try one position down
     
-    for (let blockZ = 0; blockZ < currentBlock.shape.length && canMoveDown; blockZ++) {
-      for (let blockX = 0; blockX < currentBlock.shape[blockZ].length && canMoveDown; blockX++) {
+    // Check each block in the shape
+    outerLoop: for (let blockZ = 0; blockZ < currentBlock.shape.length; blockZ++) {
+      for (let blockX = 0; blockX < currentBlock.shape[blockZ].length; blockX++) {
         // Only check cells where the block has a cube
         if (currentBlock.shape[blockZ][blockX]) {
-          const checkY = landingY - 1; // Position below current Y
-          const checkX = safeX + blockX;
-          const checkZ = safeZ + blockZ;
+          const gridX = position.x + blockX;
+          const gridZ = position.z + blockZ;
           
-          // Check if position is out of bounds or occupied by another block
-          if (checkY < 0) {
-            // Hit bottom of grid
-            canMoveDown = false;
-            break;
+          // Skip checks for out-of-bounds positions
+          if (gridX < 0 || gridZ < 0 || gridX >= gridSize || gridZ >= gridSize) {
+            continue;
           }
           
-          if (checkX < 0 || checkZ < 0 || checkX >= gridSize || checkZ >= gridSize) {
-            // Out of horizontal bounds
-            canMoveDown = false;
-            break;
+          // Check if we hit the bottom of the grid
+          if (nextY < 0) {
+            hitGround = true;
+            break outerLoop;
           }
           
           // Check if position is already occupied by another block
           try {
-            if (grid[checkY][checkX][checkZ] !== 0) {
-              canMoveDown = false;
-              break;
+            if (grid[nextY][gridX][gridZ] !== 0) {
+              hitGround = true;
+              break outerLoop;
             }
           } catch (error) {
-            console.error("Grid access error:", error, { checkY, checkX, checkZ, gridSize });
-            canMoveDown = false;
-            break;
+            // If there's an error accessing the grid, assume we hit something
+            hitGround = true;
+            break outerLoop;
           }
         }
       }
     }
     
-    if (!canMoveDown) {
-      break;
+    // If we didn't hit anything, continue moving down
+    if (!hitGround) {
+      landingY = nextY;
     }
-    
-    landingY--;
   }
 
-  const finalPosition = {
-    x: safeX,
-    y: Math.max(0, landingY),
-    z: safeZ
+  return {
+    x: position.x,
+    y: landingY,
+    z: position.z
   };
-  
-  console.log("🎯 Landing calculation - Result:", finalPosition, "Original:", position);
-  return finalPosition;
 };
 
 export const isValidLandingPosition = (
@@ -88,29 +80,13 @@ export const isValidLandingPosition = (
   currentBlock: BlockPattern,
   position: { x: number; y: number; z: number }
 ): boolean => {
-  try {
-    if (!grid || !currentBlock?.shape || !position) {
-      console.warn("❌ Invalid inputs for landing position validation");
-      return false;
-    }
-    
-    const landingPosition = calculateLandingPosition(grid, currentBlock, position);
-    
-    // Valid landing position is one that's different from the current position
-    // and within the grid bounds
-    const isValid = landingPosition.y !== position.y && 
-                   landingPosition.y >= 0 && 
-                   landingPosition.y < (grid?.length || 10);
-                   
-    console.log("✅ Landing position validation:", {
-      original: position,
-      landing: landingPosition,
-      valid: isValid
-    });
-    
-    return isValid;
-  } catch (error) {
-    console.error("❌ Landing position validation error:", error);
+  if (!grid || !currentBlock?.shape || !position) {
     return false;
   }
+  
+  const landingPosition = calculateLandingPosition(grid, currentBlock, position);
+  
+  // Valid landing position is one that's different from the current position
+  // (means we can actually move down) and within the grid bounds
+  return landingPosition.y !== position.y && landingPosition.y >= 0;
 };
