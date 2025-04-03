@@ -39,26 +39,21 @@ export function useStartGameAction({
     console.log("🔓 Enabling controls immediately");
     setControlsEnabled(true);
     
-    // Sequential state updates with small delays to ensure proper order
-    setTimeout(() => {
-      // First activate the timer
-      console.log("⏱️ Activating timer");
-      setTimerActive(true);
-      
-      setTimeout(() => {
-        // Finally unpause the game
-        console.log("▶️ Unpausing game");
-        setGamePaused(false);
-        
-        // Show a toast notification
-        toast({
-          title: "Game Started",
-          description: "Use arrow keys to move and Z/X to rotate blocks",
-        });
-        
-        console.log("✅ Game started - controls enabled, timer active, game unpaused");
-      }, 100);
-    }, 100);
+    // Unpause the game directly instead of using setTimeout
+    console.log("▶️ Unpausing game");
+    setGamePaused(false);
+    
+    // Activate the timer directly
+    console.log("⏱️ Activating timer");
+    setTimerActive(true);
+    
+    // Show a toast notification
+    toast({
+      title: "Game Started",
+      description: "Use arrow keys to move and Z/X to rotate blocks",
+    });
+    
+    console.log("✅ Game started - controls enabled, timer active, game unpaused");
   }, [setGamePaused, setTimerActive, setControlsEnabled, resetPosition, setGrid, initializeGrid]);
 
   return { startGame };

@@ -20,7 +20,7 @@ export function useBlockSpawning({
 
     setCurrentBlock(initialBlock);
     setNextBlock(nextBlock);
-    setPosition(INITIAL_POSITION);
+    setPosition({...INITIAL_POSITION});
   }, [setCurrentBlock, setNextBlock, setPosition, INITIAL_POSITION]);
 
   const spawnNextBlock = useCallback(() => {
@@ -35,7 +35,7 @@ export function useBlockSpawning({
 
     setCurrentBlock(nextBlockToUse);
     setNextBlock(nextNextBlock);
-    setPosition(INITIAL_POSITION);
+    setPosition({...INITIAL_POSITION}); // Use spread to create a new object reference
 
     return true;
   }, [setCurrentBlock, setNextBlock, setPosition, INITIAL_POSITION]);

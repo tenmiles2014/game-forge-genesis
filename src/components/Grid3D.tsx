@@ -15,6 +15,8 @@ interface Grid3DProps {
   position: { x: number; y: number; z: number };
   linesCleared: number;
   isGameActive?: boolean;
+  level?: number;
+  maxLevel?: number;
 }
 
 const Grid3D: React.FC<Grid3DProps> = ({ 
@@ -22,7 +24,9 @@ const Grid3D: React.FC<Grid3DProps> = ({
   currentBlock, 
   position, 
   linesCleared,
-  isGameActive = false
+  isGameActive = false,
+  level = 1,
+  maxLevel = 99
 }) => {
   const gridSize = grid?.length || 10;
   
@@ -68,6 +72,8 @@ const Grid3D: React.FC<Grid3DProps> = ({
       <SpawnPointIndicator 
         gridSize={gridSize}
         isGameActive={isGameActive}
+        level={level}
+        maxLevel={maxLevel}
       />
     </group>
   );
