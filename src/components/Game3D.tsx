@@ -21,6 +21,7 @@ const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
 const STACK_HEIGHT_THRESHOLD = 2; // Minimum height to detect a stack
+const WARNING_Y_LEVEL = 1; // Y level to check for warning (2nd level from bottom)
 
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
@@ -47,6 +48,7 @@ const Game3D: React.FC = () => {
   const gravityTimerRef = useRef<number | null>(null);
   const [stackDialogOpen, setStackDialogOpen] = useState(false);
   const [stackedBlocks, setStackedBlocks] = useState(0);
+  const [blocksAtWarningLevel, setBlocksAtWarningLevel] = useState(0);
 
   useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(BASE_TIME_LIMIT - (level * 2)));
@@ -206,6 +208,17 @@ const Game3D: React.FC = () => {
       toast({
         title: "Stacking bonus!",
         description: `+${stackBonus} points for creating ${stacks} stacks`,
+      });
+    }
+    
+    const blocksAtY = detectBlocksAtYLevel(newGrid, WARNING_Y_LEVEL);
+    setBlocksAtWarningLevel(blocksAtY);
+    
+    if (blocksAtY > 0) {
+      toast({
+        title: "Warning!",
+        description: `${blocksAtY} blocks detected at dangerous height!`,
+        variant: "destructive"
       });
     }
     
@@ -398,6 +411,22 @@ const Game3D: React.FC = () => {
     }
     
     return stacks;
+  };
+
+  const detectBlocksAtYLevel = (grid: number[][][], yLevel: number) => {
+    if (yLevel < 0 || yLevel >= GRID_SIZE) return 0;
+    
+    let blockCount = 0;
+    
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let z = 0; z < GRID_SIZE; z++) {
+        if (grid[yLevel][x][z] !== 0) {
+          blockCount++;
+        }
+      }
+    }
+    
+    return blockCount;
   };
 
   const handleTimeUp = () => {
@@ -619,6 +648,12 @@ const Game3D: React.FC = () => {
       <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white text-center">
         3D Block Busters
       </h1>
+      
+      {blocksAtWarningLevel > 0 && !gameOver && (
+        <div className="mb-4 p-2 bg-red-500 text-white rounded-md animate-pulse">
+          Warning: {blocksAtWarningLevel} blocks at dangerous height!
+        </div>
+      )}
       
       <div className="game-container rounded-lg overflow-hidden w-full max-w-[1400px] flex flex-col md:flex-row gap-4 bg-black bg-opacity-30">
         <div className="flex-1 min-h-[550px] md:min-h-[650px]">
