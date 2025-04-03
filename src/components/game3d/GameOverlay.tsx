@@ -4,9 +4,9 @@ import Grid3DLabels from '../Grid3DLabels';
 
 const GameOverlay: React.FC = () => {
   return (
-    <>
+    <div className="game-overlay">
       <Grid3DLabels />
-    </>
+    </div>
   );
 };
 
