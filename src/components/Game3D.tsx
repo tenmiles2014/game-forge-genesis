@@ -54,9 +54,10 @@ const Game3D: React.FC = () => {
   );
 
   const { clearCompleteLayers, checkIfStackedBlocks } = useGridOperations(
-    grid, setGrid, 
-    (points: number) => setScore(prevScore => prevScore + points),
-    (lines: number) => setLinesCleared(prevLines => prevLines + lines),
+    grid, 
+    setGrid, 
+    setScore, // Pass the function directly
+    setLinesCleared, // Pass the function directly
     level, 
     GRID_SIZE, 
     VERTICAL_STACK_LIMIT

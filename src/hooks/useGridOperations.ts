@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { getRandomBlockPattern } from '../components/BlockPatterns';
@@ -6,8 +5,8 @@ import { getRandomBlockPattern } from '../components/BlockPatterns';
 export function useGridOperations(
   grid: number[][][],
   setGrid: (grid: number[][][]) => void,
-  setScore: (score: number) => void,
-  setLinesCleared: (lines: number) => void,
+  setScore: (score: (prev: number) => number) => void,
+  setLinesCleared: (lines: (prev: number) => number) => void,
   level: number,
   GRID_SIZE: number,
   VERTICAL_STACK_LIMIT: number
@@ -94,9 +93,8 @@ export function useGridOperations(
     if (layersCleared > 0) {
       const levelMultiplier = 1 + (level * 0.1);
       const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
-      // Instead of using updater functions, first get current values outside of this hook
-      setScore(pointsScored);
-      setLinesCleared(layersCleared);
+      setScore((prev) => prev + pointsScored);
+      setLinesCleared((prev) => prev + layersCleared);
       toast({
         title: `${layersCleared} lines cleared!`,
         description: `+${pointsScored} points`,
