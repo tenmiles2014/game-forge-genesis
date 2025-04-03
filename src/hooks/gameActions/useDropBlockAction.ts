@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { BlockPattern } from '../../components/BlockPatterns';
@@ -21,7 +20,7 @@ interface DropBlockActionProps {
   clearCompleteLayers: (gridState: number[][][]) => number;
   checkIfStackedBlocks: (gridState: number[][][]) => boolean;
   checkVerticalStackLimit: (gridState: number[][][]) => boolean;
-  isValidPosition: (pattern: number[][], newX: number, newY: number, newZ: number) => boolean;
+  isValidPosition: (newPosition: { x: number; y: number; z: number }) => boolean;
   getRandomBlockPattern: () => BlockPattern;
   getColorIndex: (color: string) => number;
   INITIAL_POSITION: { x: number; y: number; z: number };
@@ -65,7 +64,7 @@ export function useDropBlockAction({
     let y = position.y;
     
     // Keep moving down until we hit the bottom or another block
-    while (isValidPosition(currentBlock.shape, position.x, y - 1, position.z)) {
+    while (isValidPosition({ x: position.x, y: y - 1, z: position.z })) {
       y--;
     }
     
@@ -145,13 +144,18 @@ export function useDropBlockAction({
     setNextBlock(getRandomBlockPattern());
     
     // Important: Create a new position object to ensure reference change
-    const newPosition = {...INITIAL_POSITION};
+    // Start the new block at the top of the grid
+    const newPosition = {
+      x: INITIAL_POSITION.x,
+      y: INITIAL_POSITION.y,
+      z: INITIAL_POSITION.z
+    };
     setPosition(newPosition);
     
     console.log(`New block set, position reset to ${JSON.stringify(newPosition)}`);
     
     // Check if the new position is valid, if not it's game over
-    if (!isValidPosition(nextBlock.shape, INITIAL_POSITION.x, INITIAL_POSITION.y, INITIAL_POSITION.z)) {
+    if (!isValidPosition({ x: newPosition.x, y: newPosition.y, z: newPosition.z })) {
       console.log("🎮 Game over: no space for new blocks");
       
       if (gravityTimerRef.current) {

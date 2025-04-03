@@ -6,15 +6,22 @@ interface StartGameActionProps {
   setGamePaused: (paused: boolean) => void;
   setTimerActive: (active: boolean) => void;
   setControlsEnabled: (enabled: boolean) => void;
+  resetPosition?: () => void;
 }
 
 export function useStartGameAction({
   setGamePaused,
   setTimerActive,
-  setControlsEnabled
+  setControlsEnabled,
+  resetPosition
 }: StartGameActionProps) {
   const startGame = useCallback(() => {
     console.log("🚀 Starting game - sequence initiated");
+    
+    // If we have a reset position function, call it to ensure block starts from the top
+    if (resetPosition) {
+      resetPosition();
+    }
     
     // Sequential state updates with small delays to ensure proper order
     setTimeout(() => {
@@ -42,7 +49,7 @@ export function useStartGameAction({
         }, 100);
       }, 100);
     }, 100);
-  }, [setGamePaused, setTimerActive, setControlsEnabled]);
+  }, [setGamePaused, setTimerActive, setControlsEnabled, resetPosition]);
 
   return { startGame };
 }
