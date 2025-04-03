@@ -44,13 +44,12 @@ export function useGameInitialization({
     setNextBlock(nextBlock);
     setPosition({...INITIAL_POSITION}); // Use spread to ensure we create a new object
     setGameOver(false);
-    setGamePaused(true);
+    setGamePaused(true); // Start paused
     setScore(0);
     setLinesCleared(0);
-    setControlsEnabled(false);
+    setControlsEnabled(true); // Set controls to enabled by default
 
-    // Make sure the block is positioned at the top of the grid
-    console.log("Game initialized with block at position:", INITIAL_POSITION);
+    console.log("✅ Game initialization complete - Controls enabled");
 
   }, [
     initializeGrid, 

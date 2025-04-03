@@ -35,19 +35,16 @@ export function useStartGameAction({
       resetPosition();
     }
     
-    // First ensure controls are enabled
-    console.log("🔓 Enabling controls immediately");
+    console.log("🔓 Enabling controls");
     setControlsEnabled(true);
     
-    // Unpause the game directly instead of using setTimeout
-    console.log("▶️ Unpausing game");
-    setGamePaused(false);
-    
-    // Activate the timer directly
+    // Important: First activate the timer, then unpause the game
     console.log("⏱️ Activating timer");
     setTimerActive(true);
     
-    // Show a toast notification
+    console.log("▶️ Unpausing game");
+    setGamePaused(false);
+    
     toast({
       title: "Game Started",
       description: "Use arrow keys to move and Z/X to rotate blocks",
