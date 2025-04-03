@@ -16,17 +16,17 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({ gridSize }) =
   const frameSize = 10;
   const halfFrameSize = frameSize / 2;
   
-  // Calculate corner positions - precisely aligned with grid
-  const frameX = centerX - halfFrameSize;
-  const frameZ = centerZ - halfFrameSize;
+  // Calculate corner positions with even padding
+  const frameX = centerX - halfFrameSize - 0.5; // Adjust to center with even padding
+  const frameZ = centerZ - halfFrameSize - 0.5;
   
   // Points for the frame - at ceiling level
   const framePoints = [
     // Square at ceiling level
     [frameX, topY, frameZ], // Start
-    [frameX + frameSize, topY, frameZ], // to right
-    [frameX + frameSize, topY, frameZ + frameSize], // to back
-    [frameX, topY, frameZ + frameSize], // to left
+    [frameX + frameSize + 1, topY, frameZ], // to right
+    [frameX + frameSize + 1, topY, frameZ + frameSize + 1], // to back
+    [frameX, topY, frameZ + frameSize + 1], // to left
     [frameX, topY, frameZ], // back to start
   ];
   
@@ -34,8 +34,8 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({ gridSize }) =
     <>
       {/* Frame corners */}
       {[0, 1, 2, 3].map((corner) => {
-        const x = frameX + (corner % 2) * frameSize;
-        const z = frameZ + Math.floor(corner / 2) * frameSize;
+        const x = frameX + (corner % 2) * (frameSize + 1);
+        const z = frameZ + Math.floor(corner / 2) * (frameSize + 1);
         
         return (
           <mesh 
