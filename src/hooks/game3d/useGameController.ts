@@ -1,121 +1,43 @@
 
-import { useRef } from 'react';
-import { useGameState } from '../useGameState';
-import { useBlockMovement } from '../useBlockMovement';
-import { useGridOperations } from '../useGridOperations';
-import { useGameActions } from '../useGameActions';
+import { useRef, useState } from 'react';
 import { getRandomBlockPattern } from '../../components/BlockPatterns';
 
 export function useGameController() {
-  // Reference for orbit controls to update camera position
+  const [currentBlock, setCurrentBlock] = useState(getRandomBlockPattern());
+  const [position, setPosition] = useState({ x: 4, y: 0, z: 4 });
+  const [controlsEnabled, setControlsEnabled] = useState(true);
+
   const orbitControlsRef = useRef(null);
-  
-  const {
-    grid, setGrid,
-    score, setScore,
-    currentBlock, setCurrentBlock,
-    nextBlock, setNextBlock,
-    position, setPosition,
-    gameOver, setGameOver,
-    controlsEnabled, setControlsEnabled,
-    level, setLevel,
-    timeLimit, setTimeLimit,
-    timerActive, setTimerActive,
-    gamePaused, setGamePaused,
-    linesCleared, setLinesCleared,
-    gravityTimerRef,
-    getDropSpeed,
-    getColorIndex,
-    INITIAL_POSITION,
-    MAX_LEVEL,
-    GRID_SIZE,
-    VERTICAL_STACK_LIMIT,
-    initializeGrid
-  } = useGameState();
 
-  // Get block movement utilities
-  const { isValidPosition, moveBlock, rotateBlock, dropBlock } = useBlockMovement(
-    grid, currentBlock, position, setPosition, gamePaused, gameOver, controlsEnabled
-  );
+  const moveBlock = (direction) => {
+    const newPosition = { ...position };
+    
+    switch (direction) {
+      case 'left': newPosition.x -= 1; break;
+      case 'right': newPosition.x += 1; break;
+      case 'forward': newPosition.z -= 1; break;
+      case 'backward': newPosition.z += 1; break;
+      case 'down': newPosition.y += 1; break;
+    }
 
-  // Get grid operation utilities
-  const { clearCompleteLayers, checkIfStackedBlocks, checkVerticalStackLimit } = useGridOperations(
-    grid, 
-    setGrid, 
-    setScore,
-    setLinesCleared,
-    level, 
-    GRID_SIZE, 
-    VERTICAL_STACK_LIMIT
-  );
-
-  // Create reset position function
-  const resetPosition = () => {
-    console.log("🔄 Resetting block position to initial position");
-    setPosition({...INITIAL_POSITION});
+    setPosition(newPosition);
+    return true;
   };
 
-  // Create game action props
-  const gameActionProps = {
-    grid,
-    setGrid,
-    score,
-    setScore,
-    currentBlock,
-    setCurrentBlock,
-    nextBlock,
-    setNextBlock,
-    position,
-    setPosition,
-    setGameOver,
-    setControlsEnabled,
-    setTimerActive,
-    setGamePaused,
-    level,
-    setLevel,
-    gravityTimerRef,
-    setLinesCleared,
-    clearCompleteLayers,
-    checkIfStackedBlocks,
-    checkVerticalStackLimit,
-    isValidPosition,
-    getRandomBlockPattern,
-    getColorIndex,
-    INITIAL_POSITION,
-    MAX_LEVEL,
-    gamePaused,
-    gameOver,
-    resetPosition,
-    initializeGrid
+  const dropBlock = () => {
+    setCurrentBlock(getRandomBlockPattern());
+    setPosition({ x: 4, y: 0, z: 4 });
+    setControlsEnabled(true);
+    return true;
   };
-
-  // Get game actions
-  const {
-    resetGame,
-    handleTimeUp,
-    toggleGamePause,
-    startGame
-  } = useGameActions(gameActionProps);
 
   return {
-    grid,
     currentBlock,
-    nextBlock,
     position,
-    linesCleared,
-    score,
-    level,
-    MAX_LEVEL,
-    timerActive,
-    timeLimit,
-    gamePaused,
-    gameOver,
     controlsEnabled,
     orbitControlsRef,
-    handleTimeUp,
-    resetGame,
-    startGame,
-    toggleGamePause,
+    moveBlock,
+    dropBlock,
     setCurrentBlock
   };
 }
