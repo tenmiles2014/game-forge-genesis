@@ -14,13 +14,17 @@ export function useStartGameAction({
   setControlsEnabled
 }: StartGameActionProps) {
   const startGame = useCallback(() => {
+    // Set gamePaused to false to start the game
     setGamePaused(false);
+    
+    // Activate the timer and enable controls
     setTimerActive(true);
     setControlsEnabled(true);
     
+    // Show a toast notification
     toast({
       title: "Game Started",
-      description: "Good luck!",
+      description: "Use arrow keys to move and Z/X to rotate blocks",
     });
   }, [setGamePaused, setTimerActive, setControlsEnabled]);
 

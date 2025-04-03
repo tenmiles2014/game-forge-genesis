@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useGameState } from '../../hooks/useGameState';
 import { useBlockMovement } from '../../hooks/useBlockMovement';
@@ -99,6 +100,12 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
         gravityTimerRef.current = null;
       }
       return;
+    }
+
+    // Clear any existing interval before setting a new one
+    if (gravityTimerRef.current) {
+      clearInterval(gravityTimerRef.current);
+      gravityTimerRef.current = null;
     }
 
     const dropSpeed = getDropSpeed();
