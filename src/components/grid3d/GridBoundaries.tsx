@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Grid } from '@react-three/drei';
-import * as THREE from 'three';
 
 interface GridBoundariesProps {
   gridSize: number;
@@ -38,12 +37,6 @@ const GridBoundaries: React.FC<GridBoundariesProps> = ({ gridSize }) => {
           <meshBasicMaterial color="#4A9BF7" />
         </mesh>
       ))}
-
-      {/* Visible bounding box for the play area */}
-      <lineSegments>
-        <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(gridSize, gridSize, gridSize)]} />
-        <lineBasicMaterial attach="material" color="#4A9BF7" opacity={0.5} transparent />
-      </lineSegments>
       
       {/* Height indicator lines */}
       {[0, 2, 4, 6, 8].map((height) => (
