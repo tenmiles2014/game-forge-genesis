@@ -31,9 +31,17 @@ const Grid3D: React.FC<Grid3DProps> = ({
   
   // Memoized landing position calculation
   const { landingPosition, isValid } = useMemo(() => {
+    console.log("📊 Grid3D calculating landing position for:", {
+      blockColor: currentBlock?.color,
+      blockShape: currentBlock?.shape?.length,
+      position: position,
+      gridInitialized: !!grid && grid.length > 0
+    });
+    
     if (!grid || !currentBlock?.shape || !position) {
+      console.warn("⚠️ Missing data for landing calculation");
       return { 
-        landingPosition: position, 
+        landingPosition: {...position}, 
         isValid: false 
       };
     }
@@ -41,11 +49,25 @@ const Grid3D: React.FC<Grid3DProps> = ({
     const calculatedLandingPosition = calculateLandingPosition(grid, currentBlock, position);
     const validLanding = isValidLandingPosition(grid, currentBlock, position);
     
+    // Log differences for debugging
+    if (calculatedLandingPosition.y !== position.y) {
+      console.log("🔍 Landing diff:", calculatedLandingPosition.y - position.y);
+    }
+    
     return {
       landingPosition: calculatedLandingPosition,
-      isValid: validLanding
+      isValid: validLanding && (calculatedLandingPosition.y !== position.y)
     };
   }, [grid, currentBlock, position]);
+  
+  useEffect(() => {
+    console.log("🎮 Grid3D rendering with:", { 
+      isValid, 
+      landingY: landingPosition?.y,
+      currentY: position?.y,
+      diff: landingPosition ? landingPosition.y - position?.y : "unknown"
+    });
+  }, [landingPosition, position, isValid]);
 
   return (
     <group>
@@ -62,7 +84,7 @@ const Grid3D: React.FC<Grid3DProps> = ({
         />
       )}
       
-      {currentBlock?.shape && isValid && (
+      {currentBlock?.shape && isValid && landingPosition && (
         <LandingPreview 
           currentBlock={currentBlock}
           position={position}
