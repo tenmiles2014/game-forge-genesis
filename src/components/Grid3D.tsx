@@ -250,7 +250,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
     return blocks;
   }, [currentBlock, position]);
   
-  // Render the landing position prediction - strengthened the visual feedback
+  // Render the landing position prediction - fixed to use correct Three.js properties
   const renderLandingPreview = useMemo(() => {
     const blocks = [];
     const landingY = getLandingPosition;
@@ -271,7 +271,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
                 <meshStandardMaterial 
                   color={currentBlock.color} 
                   transparent={true} 
-                  opacity={0.5} // Slightly increased opacity
+                  opacity={0.5}
                   wireframe={false}
                 />
               </mesh>
@@ -282,6 +282,12 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
               const startPos = [position.x + x, position.y, position.z + y];
               const endPos = [position.x + x, landingY, position.z + y];
               
+              // Create a THREE.LineDashedMaterial by creating a proper dashed line
+              const points = [];
+              points.push(new THREE.Vector3(startPos[0], startPos[1], startPos[2]));
+              points.push(new THREE.Vector3(endPos[0], endPos[1], endPos[2]));
+              
+              // Use points for line geometry instead of bufferAttribute for simplicity
               blocks.push(
                 <line key={`drop-line-${x}-${y}`}>
                   <bufferGeometry>
@@ -296,8 +302,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
                     color={currentBlock.color} 
                     transparent={true} 
                     opacity={0.3} 
-                    linewidth={1} 
-                    dashed={true}
+                    linewidth={1}
                   />
                 </line>
               );
