@@ -29,31 +29,44 @@ export function useBlockSpawning({
     
     setCurrentBlock(firstBlock);
     setNextBlock(secondBlock);
-    setPosition({...INITIAL_POSITION});
+    
+    // Always create a fresh copy of the position object to avoid reference issues
+    const freshPosition = {
+      x: INITIAL_POSITION.x,
+      y: INITIAL_POSITION.y,
+      z: INITIAL_POSITION.z
+    };
+    
+    setPosition(freshPosition);
     
     console.log("✅ Block patterns initialized:", {
       current: firstBlock.color,
       next: secondBlock.color,
-      position: INITIAL_POSITION
+      position: freshPosition
     });
   }, [getRandomBlockPattern, setCurrentBlock, setNextBlock, setPosition, INITIAL_POSITION]);
 
   // Spawn next block at starting position
   const spawnNextBlock = useCallback(() => {
     console.log("🔄 Spawning next block");
-    const newNextBlock = getRandomBlockPattern();
     
-    setCurrentBlock((prevCurrentBlock) => {
+    // Get the next block that was previously prepared
+    let currentNextBlock;
+    
+    setCurrentBlock((prevNextBlock) => {
+      currentNextBlock = prevNextBlock;
       console.log("📦 Current block updated:", {
-        from: prevCurrentBlock?.color,
-        to: newNextBlock.color
+        to: prevNextBlock?.color
       });
-      return newNextBlock;
+      return prevNextBlock;
     });
     
+    // Prepare a new next block
+    const newNextBlock = getRandomBlockPattern();
     setNextBlock(newNextBlock);
     
-    // Reset position for the new block
+    // IMPORTANT: Create a fresh object for the spawn position
+    // This ensures we're not using a reference that might be modified elsewhere
     const spawnPosition = {
       x: INITIAL_POSITION.x,
       y: INITIAL_POSITION.y,
@@ -61,6 +74,8 @@ export function useBlockSpawning({
     };
     
     console.log(`📍 Resetting position to spawn point: ${JSON.stringify(spawnPosition)}`);
+    
+    // Force position to be at spawn point, regardless of previous position
     setPosition(spawnPosition);
     
     // Return whether the spawn position is valid (for game over detection)

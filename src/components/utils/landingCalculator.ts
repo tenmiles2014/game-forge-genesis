@@ -6,17 +6,21 @@ export const calculateLandingPosition = (
   currentBlock: BlockPattern,
   position: { x: number; y: number; z: number }
 ): { x: number; y: number; z: number } => {
-  // Return current position if grid, block, or position is invalid
-  if (!grid || grid.length === 0 || !currentBlock || !position || position.y === undefined) {
+  // Perform thorough validation of input data
+  if (!grid || grid.length === 0 || !currentBlock || !currentBlock.shape || 
+      !position || position.y === undefined) {
     console.log("Invalid input data for landing position calculation", { 
       gridExists: !!grid, 
       gridLength: grid?.length || 0,
       blockExists: !!currentBlock,
-      positionExists: !!position
+      blockShapeExists: !!currentBlock?.shape,
+      positionExists: !!position,
+      positionYDefined: position?.y !== undefined
     });
     return position ? { ...position } : { x: 0, y: 0, z: 0 };
   }
   
+  // Start at current position and move down
   let landingY = position.y;
   
   try {
@@ -61,6 +65,7 @@ export const calculateLandingPosition = (
       landingY--;
     }
     
+    console.log(`Landing position calculated: x=${position.x}, y=${landingY}, z=${position.z}`);
     return { x: position.x, y: landingY, z: position.z };
   } catch (error) {
     console.error("Error in landing position calculation:", error);

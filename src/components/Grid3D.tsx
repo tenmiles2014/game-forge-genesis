@@ -27,18 +27,40 @@ const Grid3D: React.FC<Grid3DProps> = ({
   // Default grid size if grid is not initialized yet
   const gridSize = grid?.length || 10;
   
-  // Calculate landing position for preview, with additional safety checks
-  let landingPosition = null;
+  // Calculate landing position for preview, with enhanced safety checks
+  let landingPosition = { x: 0, y: 0, z: 0 }; // Default fallback position
+  
   try {
-    if (grid && grid.length > 0 && currentBlock && position) {
+    if (grid && grid.length > 0 && currentBlock && position && position.y !== undefined) {
       landingPosition = calculateLandingPosition(grid, currentBlock, position);
+      console.log("Landing position calculated:", landingPosition);
     } else {
-      landingPosition = position ? { ...position } : null;
+      console.warn("Cannot calculate landing position - missing required data", {
+        gridExists: !!grid,
+        gridLength: grid?.length || 0,
+        currentBlockExists: !!currentBlock,
+        positionExists: !!position,
+        positionY: position?.y
+      });
+      // Use position as fallback if it exists
+      if (position) {
+        landingPosition = { ...position };
+      }
     }
   } catch (error) {
     console.error("Error calculating landing position:", error);
-    landingPosition = position ? { ...position } : null;
+    // Use position as fallback if it exists
+    if (position) {
+      landingPosition = { ...position };
+    }
   }
+
+  // Safety check for landing position
+  const validLandingPosition = landingPosition && 
+                              landingPosition.y !== undefined && 
+                              position && 
+                              position.y !== undefined && 
+                              position.y !== landingPosition.y;
 
   return (
     <group>
@@ -51,7 +73,7 @@ const Grid3D: React.FC<Grid3DProps> = ({
       )}
       
       {/* Current moving block */}
-      {currentBlock && position && (
+      {currentBlock && position && position.y !== undefined && (
         <ActiveBlock 
           currentBlock={currentBlock}
           position={position} 
@@ -59,7 +81,7 @@ const Grid3D: React.FC<Grid3DProps> = ({
       )}
       
       {/* Landing preview - only render if all required props are valid */}
-      {currentBlock && position && landingPosition && landingPosition.y !== undefined && position.y !== landingPosition.y && (
+      {currentBlock && validLandingPosition && (
         <LandingPreview 
           currentBlock={currentBlock}
           position={position}

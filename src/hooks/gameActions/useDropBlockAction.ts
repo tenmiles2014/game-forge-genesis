@@ -55,7 +55,7 @@ export function useDropBlockAction({
   MAX_LEVEL
 }: DropBlockActionProps) {
   
-  // Use our new block spawning hook
+  // Use block spawning hook
   const { spawnNextBlock } = useBlockSpawning({
     getRandomBlockPattern,
     setCurrentBlock,
@@ -74,6 +74,16 @@ export function useDropBlockAction({
     // Safety check for grid initialization
     if (!grid || grid.length === 0) {
       console.error("Grid not initialized in dropBlock action");
+      return;
+    }
+    
+    // Safety check for current block and position
+    if (!currentBlock || !position || position.y === undefined) {
+      console.error("Invalid currentBlock or position in dropBlock action", {
+        hasCurrentBlock: !!currentBlock,
+        hasPosition: !!position,
+        positionY: position?.y
+      });
       return;
     }
     
@@ -102,21 +112,31 @@ export function useDropBlockAction({
     // Handle level up if layers were cleared
     handleLevelUp(layersCleared, level, MAX_LEVEL, setLevel);
     
-    // Spawn next block and check if it's a valid position
-    const validSpawn = spawnNextBlock();
-    
-    // Check if the new position is valid, if not it's game over
-    if (!validSpawn) {
-      handleGameOver(
-        "No space for new blocks!", 
-        setGameOver, 
-        setTimerActive, 
-        setControlsEnabled, 
-        gravityTimerRef
-      );
-    } else {
-      console.log("✅ New block placed successfully at starting position");
+    // Important: Clean timeout before spawning the next block
+    if (gravityTimerRef.current) {
+      clearTimeout(gravityTimerRef.current);
+      gravityTimerRef.current = null;
     }
+    
+    // Introduce a small delay before spawning next block
+    // This helps ensure the current block is fully placed before spawning the next one
+    setTimeout(() => {
+      // Spawn next block and check if it's a valid position
+      const validSpawn = spawnNextBlock();
+      
+      // Check if the new position is valid, if not it's game over
+      if (!validSpawn) {
+        handleGameOver(
+          "No space for new blocks!", 
+          setGameOver, 
+          setTimerActive, 
+          setControlsEnabled, 
+          gravityTimerRef
+        );
+      } else {
+        console.log("✅ New block placed successfully at starting position");
+      }
+    }, 50);
   }, [
     grid,
     currentBlock,

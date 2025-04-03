@@ -9,8 +9,18 @@ interface LandingPreviewProps {
 }
 
 const LandingPreview: React.FC<LandingPreviewProps> = ({ currentBlock, position, landingY }) => {
-  // Enhanced safety checks - skip rendering on invalid props
-  if (!currentBlock || !currentBlock.shape || !position || landingY === undefined || landingY === position.y) {
+  // Enhanced safety checks
+  if (!currentBlock || !currentBlock.shape || !position || 
+      landingY === undefined || position.y === undefined || 
+      landingY === position.y || landingY < 0) {
+    console.log("Skipping landing preview due to invalid props", {
+      hasCurrentBlock: !!currentBlock,
+      hasShape: !!currentBlock?.shape,
+      hasPosition: !!position,
+      landingY,
+      positionY: position?.y,
+      isSamePosition: position && landingY === position.y
+    });
     return null;
   }
   
