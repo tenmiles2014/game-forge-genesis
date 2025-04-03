@@ -95,7 +95,7 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
 
   // This effect handles the gravity timer and updates the game state
   useEffect(() => {
-    console.log(`Game state changed - gamePaused: ${gamePaused}, gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}`);
+    console.log(`Game state changed - gamePaused: ${gamePaused}, gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}, timerActive: ${timerActive}`);
     
     // Skip setup if game is paused or over
     if (gamePaused || gameOver) {
@@ -140,7 +140,7 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
         gravityTimerRef.current = null;
       }
     };
-  }, [gamePaused, gameOver, level, position, moveBlock, getDropSpeed, gravityTimerRef, controlsEnabled, setControlsEnabled, dropBlock]);
+  }, [gamePaused, gameOver, level, position, moveBlock, getDropSpeed, gravityTimerRef, controlsEnabled, setControlsEnabled, dropBlock, timerActive]);
 
   useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(180 - (level * 2)));

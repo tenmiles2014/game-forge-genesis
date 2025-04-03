@@ -14,18 +14,18 @@ export function useStartGameAction({
   setControlsEnabled
 }: StartGameActionProps) {
   const startGame = useCallback(() => {
-    console.log("Starting game - setting gamePaused to false");
+    console.log("Starting game - setting states for gameplay");
     
-    // CRITICAL FIX: Make sure controls are enabled first
+    // First enable controls
     setControlsEnabled(true);
     
-    // Then set game state to not paused
-    setGamePaused(false);
-    
-    // Finally activate the timer
+    // Then activate the timer
     setTimerActive(true);
     
-    console.log("Game started - controlsEnabled: true, gamePaused: false");
+    // Finally unpause the game as the last step
+    setGamePaused(false);
+    
+    console.log("Game started - controlsEnabled: true, gamePaused: false, timerActive: true");
     
     // Show a toast notification
     toast({
