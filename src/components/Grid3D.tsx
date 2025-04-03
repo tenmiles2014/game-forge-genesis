@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import { BlockPattern } from './BlockPatterns';
 import * as THREE from 'three';
+import { Grid } from '@react-three/drei';
 
 interface Grid3DProps {
   grid: number[][][];
@@ -64,6 +65,41 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
             />
           </bufferGeometry>
           <lineBasicMaterial attach="material" color="green" />
+        </mesh>
+        
+        {/* Floor grid plane matching the screenshot */}
+        <Grid
+          position={[gridSize/2 - 0.5, -0.01, gridSize/2 - 0.5]}
+          args={[gridSize + 2, gridSize + 2]}
+          cellSize={1}
+          cellThickness={0.3}
+          cellColor="#2a3040"
+          sectionSize={gridSize/2}
+          sectionThickness={0.5}
+          sectionColor="#4A9BF7"
+          fadeStrength={1.5}
+          infiniteGrid={false}
+        />
+        
+        {/* Corner markers for the grid */}
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[0.5, 0.1, 0.5]} />
+          <meshBasicMaterial color="#4A9BF7" />
+        </mesh>
+        
+        <mesh position={[gridSize - 1, 0, 0]}>
+          <boxGeometry args={[0.5, 0.1, 0.5]} />
+          <meshBasicMaterial color="#4A9BF7" />
+        </mesh>
+        
+        <mesh position={[0, 0, gridSize - 1]}>
+          <boxGeometry args={[0.5, 0.1, 0.5]} />
+          <meshBasicMaterial color="#4A9BF7" />
+        </mesh>
+        
+        <mesh position={[gridSize - 1, 0, gridSize - 1]}>
+          <boxGeometry args={[0.5, 0.1, 0.5]} />
+          <meshBasicMaterial color="#4A9BF7" />
         </mesh>
       </>
     );
