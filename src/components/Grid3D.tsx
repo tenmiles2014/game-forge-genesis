@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
@@ -30,14 +31,19 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
       'purple': new THREE.Color('#a855f7'),
       'yellow': new THREE.Color('#eab308')
     };
-    return colorMap[currentBlock.color] || new THREE.Color('gray');
-  }, [currentBlock.color]);
+    return colorMap[currentBlock?.color || 'gray'] || new THREE.Color('gray');
+  }, [currentBlock?.color]);
 
   // Calculate ghost position (where block will land)
   const ghostPosition = useMemo(() => {
-    let lowestValidY = position.y;
-    const pattern = currentBlock.shape;
-    const gridSize = grid.length || 10;
+    let lowestValidY = position?.y || 0;
+    const pattern = currentBlock?.shape || [];
+    const gridSize = grid?.length || 10;
+    
+    // If we don't have valid inputs, return the current position
+    if (!grid || !currentBlock?.shape || !position) {
+      return { x: 0, y: 0, z: 0 };
+    }
     
     // Loop downward until we find a collision or hit the bottom
     while (lowestValidY > 0) {
@@ -69,7 +75,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
     
     return { x: position.x, y: lowestValidY, z: position.z };
-  }, [grid, currentBlock.shape, position]);
+  }, [grid, currentBlock?.shape, position]);
 
   // Render placed blocks from grid
   const renderPlacedBlocks = useMemo(() => {
@@ -103,9 +109,13 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
 
   // Render ghost block (prediction)
   const renderGhostBlock = useMemo(() => {
+    if (!currentBlock?.shape || !position || !ghostPosition) {
+      return [];
+    }
+    
     const blocks = [];
     const pattern = currentBlock.shape;
-    const gridSize = grid.length || 10;
+    const gridSize = grid?.length || 10;
     
     // Only render if the ghost is lower than the current position
     if (ghostPosition.y < position.y) {
@@ -142,13 +152,17 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
     
     return blocks;
-  }, [currentBlock.shape, ghostPosition, position.y, blockColor, grid.length]);
+  }, [currentBlock?.shape, ghostPosition, position?.y, blockColor, grid?.length]);
 
   // Render current falling block
   const renderCurrentBlock = useMemo(() => {
+    if (!currentBlock?.shape || !position) {
+      return [];
+    }
+    
     const blocks = [];
     const pattern = currentBlock.shape;
-    const gridSize = grid.length || 10;
+    const gridSize = grid?.length || 10;
     
     for (let y = 0; y < pattern.length; y++) {
       for (let x = 0; x < pattern[y].length; x++) {
@@ -182,11 +196,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
     
     return blocks;
-  }, [currentBlock, position, blockColor, grid.length]);
+  }, [currentBlock?.shape, position, blockColor, grid?.length]);
 
   // Render grid boundaries
   const renderGridBoundaries = useMemo(() => {
-    const gridSize = grid.length || 10;
+    const gridSize = grid?.length || 10;
     
     return (
       <mesh position={[gridSize/2 - 0.5, gridSize/2 - 0.5, gridSize/2 - 0.5]}>
@@ -199,11 +213,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
         />
       </mesh>
     );
-  }, [grid]);
+  }, [grid?.length]);
 
   // Render height limit indicator
   const renderHeightLimit = useMemo(() => {
-    const gridSize = grid.length || 10;
+    const gridSize = grid?.length || 10;
     
     return (
       <mesh position={[gridSize/2 - 0.5, 0, gridSize/2 - 0.5]}>
@@ -215,7 +229,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
         />
       </mesh>
     );
-  }, [grid]);
+  }, [grid?.length]);
 
   return (
     <group>
