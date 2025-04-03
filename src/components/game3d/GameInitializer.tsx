@@ -49,7 +49,7 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     VERTICAL_STACK_LIMIT
   );
 
-  const { dropBlock, resetGame } = useGameActions({
+  const { resetGame, handleTimeUp, toggleGamePause, startGame, dropBlock } = useGameActions({
     grid,
     setGrid,
     score,
@@ -90,7 +90,7 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
   
   useEffect(() => {
     resetGame();
-  }, []);
+  }, [resetGame]);
 
   useEffect(() => {
     if (gamePaused || gameOver) {

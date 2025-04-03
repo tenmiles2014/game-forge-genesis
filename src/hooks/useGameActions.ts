@@ -1,11 +1,17 @@
 
-import React, { useCallback } from 'react';
-import { toast } from "@/components/ui/use-toast";
+import React from 'react';
 import { BlockPattern } from '../components/BlockPatterns';
+
+// Import all the modularized hooks
+import { useResetGameAction } from './gameActions/useResetGameAction';
+import { useTimeUpAction } from './gameActions/useTimeUpAction';
+import { useGamePauseAction } from './gameActions/useGamePauseAction';
+import { useStartGameAction } from './gameActions/useStartGameAction';
+import { useDropBlockAction } from './gameActions/useDropBlockAction';
 
 interface GameActionProps {
   grid: number[][][];
-  setGrid: (grid: number[][][]) => void;
+  setGrid: (grid: number[][][] | ((prevGrid: number[][][]) => number[][][])) => void;
   score: number;
   setScore: (score: number) => void;
   currentBlock: BlockPattern;
@@ -133,10 +139,3 @@ export function useGameActions({
     dropBlock
   };
 }
-
-// Import all the modularized hooks
-import { useResetGameAction } from './gameActions/useResetGameAction';
-import { useTimeUpAction } from './gameActions/useTimeUpAction';
-import { useGamePauseAction } from './gameActions/useGamePauseAction';
-import { useStartGameAction } from './gameActions/useStartGameAction';
-import { useDropBlockAction } from './gameActions/useDropBlockAction';

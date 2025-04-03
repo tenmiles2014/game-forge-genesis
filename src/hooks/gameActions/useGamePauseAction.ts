@@ -21,8 +21,11 @@ export function useGamePauseAction({
       gravityTimerRef.current = null;
     }
     
+    // Save current state to use in the toast message
+    let newPausedState = false;
+    
     setGamePaused(prevPaused => {
-      const newPausedState = !prevPaused;
+      newPausedState = !prevPaused;
       
       if (newPausedState) {
         toast({
@@ -39,8 +42,10 @@ export function useGamePauseAction({
       return newPausedState;
     });
     
-    setTimerActive(prevActive => !prevActive);
-    setControlsEnabled(prevEnabled => !prevEnabled);
+    // Use direct boolean values instead of functional updates
+    setTimerActive(false); // Will be updated by the effect that watches gamePaused
+    setControlsEnabled(false); // Will be updated by the effect that watches gamePaused
+    
   }, [gravityTimerRef, setGamePaused, setTimerActive, setControlsEnabled]);
 
   return { toggleGamePause };

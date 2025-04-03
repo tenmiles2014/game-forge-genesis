@@ -4,7 +4,7 @@ import { toast } from "@/components/ui/use-toast";
 import { BlockPattern } from '../../components/BlockPatterns';
 
 interface ResetGameActionProps {
-  setGrid: (grid: number[][][]) => void;
+  setGrid: (grid: number[][][] | ((prevGrid: number[][][]) => number[][][])) => void;
   setScore: (score: number) => void;
   setCurrentBlock: (block: BlockPattern) => void;
   setNextBlock: (block: BlockPattern) => void;
@@ -42,8 +42,8 @@ export function useResetGameAction({
       gravityTimerRef.current = null;
     }
     
-    setGrid(prevGrid => {
-      // Create a new empty grid based on the previous grid size
+    // Create a function that produces a new grid based on the previous size
+    const createNewGrid = (prevGrid: number[][][]) => {
       const size = prevGrid.length || 10;
       const newGrid: number[][][] = [];
       
@@ -60,7 +60,10 @@ export function useResetGameAction({
       }
       
       return newGrid;
-    });
+    };
+    
+    // Pass the function to setGrid
+    setGrid(createNewGrid);
     
     setScore(0);
     setLinesCleared(() => 0);
