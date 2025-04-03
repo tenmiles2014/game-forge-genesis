@@ -1,12 +1,6 @@
-
 import { useCallback } from 'react';
 import { toast } from "@/components/ui/use-toast";
-
-// Define BlockPattern type if it's causing issues
-interface BlockPattern {
-  shape: number[][];
-  color: string;
-}
+import { BlockPattern } from '../../components/BlockPatterns';
 
 interface ResetGameActionProps {
   setGrid: (grid: number[][][] | ((prevGrid: number[][][]) => number[][][])) => void;
@@ -49,7 +43,6 @@ export function useResetGameAction({
       gravityTimerRef.current = null;
     }
     
-    // Create a function that produces a new grid based on the previous size
     const createNewGrid = (prevGrid: number[][][]) => {
       const size = prevGrid.length || 10;
       const newGrid: number[][][] = [];
@@ -69,14 +62,12 @@ export function useResetGameAction({
       return newGrid;
     };
     
-    // Use initializeGrid if provided, otherwise use createNewGrid
     if (initializeGrid) {
       setGrid(initializeGrid());
     } else {
       setGrid(createNewGrid);
     }
     
-    // Get new blocks
     try {
       const newCurrentBlock = getRandomBlockPattern();
       const newNextBlock = getRandomBlockPattern();
@@ -90,7 +81,6 @@ export function useResetGameAction({
       setNextBlock(newNextBlock);
     } catch (error) {
       console.error("Error generating block patterns:", error);
-      // Provide fallback block patterns if getRandomBlockPattern fails
       setCurrentBlock({ shape: [[1]], color: 'blue' });
       setNextBlock({ shape: [[1]], color: 'red' });
     }

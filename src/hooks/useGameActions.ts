@@ -4,7 +4,7 @@ import { useResetGameAction } from './gameActions/useResetGameAction';
 import { useTimeUpAction } from './gameActions/useTimeUpAction';
 import { useGamePauseAction } from './gameActions/useGamePauseAction';
 import { useStartGameAction } from './useStartGameAction';
-import { BlockPattern } from '../components/BlockPatterns';
+import { BlockPattern, getRandomBlockPattern } from '../components/BlockPatterns';
 
 interface GameActionsProps {
   grid: number[][][];
@@ -87,7 +87,7 @@ export function useGameActions(props: GameActionsProps) {
     setLevel,
     gravityTimerRef,
     setLinesCleared,
-    getRandomBlockPattern,
+    getRandomBlockPattern: props.getRandomBlockPattern,
     INITIAL_POSITION,
     initializeGrid
   });
