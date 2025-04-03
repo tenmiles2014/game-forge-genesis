@@ -96,11 +96,6 @@ export function useKeyboardControls({
               });
             }
             break;
-          case 's':
-            console.log("Moving down");
-            event.preventDefault();
-            moveBlock('down');
-            break;
           default:
             // Ignore other keys
             break;

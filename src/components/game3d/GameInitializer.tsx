@@ -171,7 +171,7 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
         gravityTimerRef.current = null;
       }
     };
-  }, [gamePaused, gameOver, level, position, moveBlock, getDropSpeed, gravityTimerRef, controlsEnabled, setControlsEnabled, dropBlock, timerActive, grid, currentBlock]);
+  }, [gamePaused, gameOver, level, moveBlock, dropBlock, getDropSpeed, controlsEnabled, setControlsEnabled, timerActive, grid]);
 
   useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(180 - (level * 2)));

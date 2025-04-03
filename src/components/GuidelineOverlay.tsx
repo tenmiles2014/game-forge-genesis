@@ -63,8 +63,6 @@ const GuidelineOverlay: React.FC<GuidelineOverlayProps> = ({ className }) => {
           
           <div className="text-sm text-gray-200 space-y-2">
             <p><span className="font-medium">Arrow Keys:</span> Move X/Z</p>
-            <p><span className="font-medium">S:</span> Move Down</p>
-            <p><span className="font-medium">W:</span> Move Up</p>
             <p><span className="font-medium">Z/X:</span> Rotate</p>
             <p><span className="font-medium">Space:</span> Drop</p>
           </div>
