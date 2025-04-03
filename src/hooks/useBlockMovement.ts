@@ -41,7 +41,7 @@ export function useBlockMovement(
   };
 
   const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
-    // CRITICAL FIX: Only check if game is paused or game over, not controlsEnabled
+    // Only check for game paused or game over state
     if (gameOver || gamePaused) {
       console.log(`Block movement prevented - gameOver: ${gameOver}, gamePaused: ${gamePaused}`);
       return false;
@@ -70,7 +70,7 @@ export function useBlockMovement(
   };
 
   const rotateBlock = (axis: 'x' | 'y' | 'z') => {
-    // CRITICAL FIX: Only check if game is paused or game over, not controlsEnabled
+    // Only check for game paused or game over state
     if (gameOver || gamePaused) {
       console.log(`Block rotation prevented - gameOver: ${gameOver}, gamePaused: ${gamePaused}`);
       return null;

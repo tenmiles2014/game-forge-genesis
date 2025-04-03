@@ -108,8 +108,8 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     }
 
     // Ensure controls are enabled when game is active
-    if (gamePaused === false && controlsEnabled === false) {
-      console.log("Game active but controls disabled - enabling controls");
+    if (!gamePaused && !gameOver) {
+      console.log("Game active - ensuring controls are enabled");
       setControlsEnabled(true);
     }
 
@@ -125,7 +125,12 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     
     gravityTimerRef.current = window.setInterval(() => {
       console.log("Gravity timer triggered - moving block down");
-      moveBlock('down');
+      const moved = moveBlock('down');
+      if (!moved) {
+        // If block can't move down further, drop it
+        console.log("Block can't move down further, dropping it");
+        dropBlock();
+      }
     }, dropSpeed);
 
     return () => {
@@ -135,7 +140,7 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
         gravityTimerRef.current = null;
       }
     };
-  }, [gamePaused, gameOver, level, position, moveBlock, getDropSpeed, gravityTimerRef, controlsEnabled, setControlsEnabled]);
+  }, [gamePaused, gameOver, level, position, moveBlock, getDropSpeed, gravityTimerRef, controlsEnabled, setControlsEnabled, dropBlock]);
 
   useEffect(() => {
     const newTimeLimit = Math.max(60, Math.floor(180 - (level * 2)));

@@ -6,6 +6,7 @@ import ActiveBlock from './grid3d/ActiveBlock';
 import LandingPreview from './grid3d/LandingPreview';
 import FlashEffect from './grid3d/FlashEffect';
 import { calculateLandingPosition } from './utils/landingCalculator';
+import SpawnPointIndicator from './grid3d/SpawnPointIndicator';
 
 interface Grid3DProps {
   grid: number[][][];
@@ -47,6 +48,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
       <GridBoundaries 
         gridSize={gridSize} 
         verticalStackLimit={VERTICAL_STACK_LIMIT} 
+      />
+      
+      {/* Spawn point indicator */}
+      <SpawnPointIndicator 
+        gridSize={gridSize} 
       />
       
       {/* Existing blocks in the grid */}

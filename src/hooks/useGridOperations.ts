@@ -122,7 +122,7 @@ export function useGridOperations(
         let emptyY = -1;
         
         // Find blocks and empty spaces, moving from bottom to top
-        for (let y = gridSize - 1; y >= 0; y--) {
+        for (let y = 0; y < gridSize; y++) {
           if (gridState[y][x][z] === 0) {
             // Found an empty space
             if (emptyY === -1) emptyY = y;
@@ -141,16 +141,17 @@ export function useGridOperations(
   };
 
   const checkIfStackedBlocks = (gridState: number[][][]) => {
-    // This function shouldn't change as it checks for stacked blocks in general
+    // Check if blocks are stacked on top of each other
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
-        let blockCount = 0;
+        let found = false;
         for (let y = 0; y < GRID_SIZE; y++) {
           if (gridState[y][x][z] !== 0) {
-            blockCount++;
-          }
-          if (blockCount > 1) {
-            return true;
+            if (found) {
+              // Found a second block in the same column
+              return true;
+            }
+            found = true;
           }
         }
       }
@@ -158,7 +159,6 @@ export function useGridOperations(
     return false;
   };
   
-  // Updated to check for blocks stacked too high from the top
   const checkVerticalStackLimit = (gridState: number[][][]) => {
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {

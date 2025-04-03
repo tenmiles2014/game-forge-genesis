@@ -24,8 +24,7 @@ export function useKeyboardControls({
     console.log(`Keyboard controls mounted - controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
     
     const handleKeyDown = (event: KeyboardEvent) => {
-      // CRITICAL FIX: Only check if game is paused, not controlsEnabled
-      // This ensures keyboard inputs work when the game is running
+      // Critical fix: Only check if game is paused, ignore controlsEnabled state
       if (gamePaused) {
         console.log(`Game paused - not processing key events. gamePaused: ${gamePaused}`);
         return;
