@@ -93,9 +93,11 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     resetGame();
   }, [resetGame]);
 
+  // This effect handles the gravity timer and updates the game state
   useEffect(() => {
     console.log(`Game state changed - gamePaused: ${gamePaused}, gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}`);
     
+    // Skip setup if game is paused or over
     if (gamePaused || gameOver) {
       console.log("Game paused or over - clearing gravity timer");
       if (gravityTimerRef.current) {
@@ -105,18 +107,21 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
       return;
     }
 
-    if (!controlsEnabled) {
-      console.log("Controls are disabled but game is not paused - enabling controls");
+    // Ensure controls are enabled when game is active
+    if (gamePaused === false && controlsEnabled === false) {
+      console.log("Game active but controls disabled - enabling controls");
       setControlsEnabled(true);
     }
 
+    // Clear any existing gravity timer before setting a new one
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
       gravityTimerRef.current = null;
     }
 
+    // Calculate drop speed based on level and set up gravity timer
     const dropSpeed = getDropSpeed();
-    console.log(`Setting up gravity timer with dropSpeed: ${dropSpeed}ms`);
+    console.log(`Setting up gravity timer with dropSpeed: ${dropSpeed}ms, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
     
     gravityTimerRef.current = window.setInterval(() => {
       console.log("Gravity timer triggered - moving block down");

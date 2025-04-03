@@ -21,13 +21,15 @@ export function useKeyboardControls({
   currentBlock
 }: KeyboardControlsProps) {
   useEffect(() => {
+    console.log(`Keyboard controls mounted - controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
+    
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!controlsEnabled || gamePaused) {
-        console.log("Controls disabled or game paused - not processing key events");
+        console.log(`Controls disabled or game paused - not processing key events. controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
         return;
       }
       
-      console.log(`Key pressed: ${event.key}, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
+      console.log(`Processing key press: ${event.key}`);
       
       switch (event.key) {
         case 'ArrowLeft':
@@ -70,7 +72,7 @@ export function useKeyboardControls({
             });
           }
           break;
-        case 's':  // Drop block immediately
+        case 's':  // Move block down
           console.log("Moving block down");
           moveBlock('down'); 
           break;
@@ -80,11 +82,10 @@ export function useKeyboardControls({
     };
     
     window.addEventListener('keydown', handleKeyDown);
-    console.log(`Keyboard controls mounted - controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
     
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
       console.log("Keyboard controls unmounted");
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [moveBlock, rotateBlock, dropBlock, controlsEnabled, gamePaused, currentBlock, setCurrentBlock]);
 }
