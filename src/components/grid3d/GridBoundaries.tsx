@@ -2,7 +2,6 @@
 import React from 'react';
 import { Grid } from '@react-three/drei';
 import * as THREE from 'three';
-import { Frame } from 'lucide-react';
 
 interface GridBoundariesProps {
   gridSize: number;
@@ -21,12 +20,6 @@ const GridBoundaries: React.FC<GridBoundariesProps> = ({ gridSize, verticalStack
           opacity={0.02}
           wireframe={true} 
         />
-      </mesh>
-      
-      {/* Spawn point indicator frame at top center of grid */}
-      <mesh position={[gridSize/2 - 0.5, gridSize - 1, gridSize/2 - 0.5]} rotation={[Math.PI/2, 0, 0]}>
-        <ringGeometry args={[1.5, 1.8, 4]} />
-        <meshBasicMaterial color="#4ADF7F" transparent={true} opacity={0.8} />
       </mesh>
       
       {/* X-axis line */}
@@ -98,9 +91,9 @@ const GridBoundaries: React.FC<GridBoundariesProps> = ({ gridSize, verticalStack
         </mesh>
       ))}
       
-      {/* Floor grid plane */}
+      {/* Floor grid plane - moved to exactly at ground level (y=0) */}
       <Grid
-        position={[gridSize/2 - 0.5, -0.01, gridSize/2 - 0.5]}
+        position={[gridSize/2 - 0.5, 0, gridSize/2 - 0.5]}
         args={[gridSize + 2, gridSize + 2]}
         cellSize={1}
         cellThickness={0.6}
