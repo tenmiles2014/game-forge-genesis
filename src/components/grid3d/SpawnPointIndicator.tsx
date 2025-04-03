@@ -12,13 +12,13 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({ gridSize }) =
   const centerZ = Math.floor(gridSize / 2);
   const topY = gridSize - 1; // Position at ceiling
   
-  // Size of the spawn area frame
-  const frameSize = 10; // Match the 10x10 grid size
+  // Size of the spawn area frame - exactly 10x10
+  const frameSize = 10;
   const halfFrameSize = frameSize / 2;
   
-  // Calculate corner positions - aligned with the ground grid but at ceiling height
-  const frameX = centerX - halfFrameSize + 0.5; // +0.5 to align with grid cells
-  const frameZ = centerZ - halfFrameSize + 0.5;
+  // Calculate corner positions - precisely aligned with grid
+  const frameX = centerX - halfFrameSize;
+  const frameZ = centerZ - halfFrameSize;
   
   // Points for the frame - at ceiling level
   const framePoints = [
