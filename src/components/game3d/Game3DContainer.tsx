@@ -176,6 +176,8 @@ const Game3DContainer: React.FC = () => {
               controlsEnabled={controlsEnabled}
               currentView={currentView}
               orbitControlsRef={orbitControlsRef}
+              gamePaused={gamePaused}
+              gameOver={gameOver}
             />
             
             <GameOverlay />

@@ -14,6 +14,8 @@ interface GameContainerProps {
   controlsEnabled: boolean;
   currentView: ViewPoint;
   orbitControlsRef: React.RefObject<any>;
+  gamePaused: boolean;
+  gameOver: boolean;
 }
 
 const GameContainer: React.FC<GameContainerProps> = ({
@@ -23,8 +25,13 @@ const GameContainer: React.FC<GameContainerProps> = ({
   linesCleared,
   controlsEnabled,
   currentView,
-  orbitControlsRef
+  orbitControlsRef,
+  gamePaused,
+  gameOver
 }) => {
+  // Game is active when it's not paused and not over
+  const isGameActive = !gamePaused && !gameOver;
+
   return (
     <div className="game-board rounded-lg overflow-hidden h-[500px] md:h-[600px] relative">
       <Canvas camera={{ position: currentView.position, fov: 50 }}>
@@ -35,6 +42,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
           currentBlock={currentBlock} 
           position={position}
           linesCleared={linesCleared}
+          isGameActive={isGameActive}
         />
         <OrbitControls 
           ref={orbitControlsRef} 

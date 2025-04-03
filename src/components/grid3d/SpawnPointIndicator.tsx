@@ -4,9 +4,13 @@ import * as THREE from 'three';
 
 interface SpawnPointIndicatorProps {
   gridSize: number;
+  isGameActive?: boolean;
 }
 
-const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({ gridSize }) => {
+const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({ 
+  gridSize, 
+  isGameActive = false 
+}) => {
   const [radius, setRadius] = useState(gridSize * 1.5);
   const [shrinking, setShrinking] = useState(true);
   const [opacity, setOpacity] = useState(0.7);
@@ -19,6 +23,18 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({ gridSize }) =
   const pulseSpeed = 0.02; // Speed of opacity pulsing
   
   useEffect(() => {
+    // Only animate if the game is active
+    if (!isGameActive) {
+      // Reset to static state when game is paused/not started
+      setRadius(gridSize * 1.2);
+      setOpacity(0.5);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+      return;
+    }
+
     const animate = () => {
       setRadius(prevRadius => {
         let newRadius = prevRadius;
@@ -55,9 +71,10 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({ gridSize }) =
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
       }
     };
-  }, [shrinking, gridSize, minRadius, maxRadius]);
+  }, [shrinking, gridSize, minRadius, maxRadius, isGameActive]);
   
   return (
     <group>
