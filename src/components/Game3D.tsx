@@ -238,36 +238,21 @@ const Game3D: React.FC = () => {
   const clearCompleteLayers = (grid: number[][][]) => {
     let layersCleared = 0;
     const gridCopy = JSON.parse(JSON.stringify(grid));
+    const gridSize = GRID_SIZE;
     
-    for (let y = 0; y < GRID_SIZE; y++) {
-      for (let z = 0; z < GRID_SIZE; z++) {
-        let rowFull = true;
-        for (let x = 0; x < GRID_SIZE; x++) {
-          if (gridCopy[y][x][z] === 0) {
-            rowFull = false;
-            break;
+    // Check for rows with 10 blocks (X-axis rows in each Y layer)
+    for (let y = 0; y < gridSize; y++) {
+      for (let z = 0; z < gridSize; z++) {
+        let blockCount = 0;
+        for (let x = 0; x < gridSize; x++) {
+          if (gridCopy[y][x][z] !== 0) {
+            blockCount++;
           }
         }
         
-        if (rowFull) {
-          for (let x = 0; x < GRID_SIZE; x++) {
-            gridCopy[y][x][z] = 0;
-          }
-          layersCleared++;
-        }
-      }
-      
-      for (let x = 0; x < GRID_SIZE; x++) {
-        let rowFull = true;
-        for (let z = 0; z < GRID_SIZE; z++) {
-          if (gridCopy[y][x][z] === 0) {
-            rowFull = false;
-            break;
-          }
-        }
-        
-        if (rowFull) {
-          for (let z = 0; z < GRID_SIZE; z++) {
+        // If 10 blocks are in this row, clear it
+        if (blockCount === 10) {
+          for (let x = 0; x < gridSize; x++) {
             gridCopy[y][x][z] = 0;
           }
           layersCleared++;
@@ -275,18 +260,19 @@ const Game3D: React.FC = () => {
       }
     }
     
-    for (let x = 0; x < GRID_SIZE; x++) {
-      for (let z = 0; z < GRID_SIZE; z++) {
-        let columnFull = true;
-        for (let y = 0; y < GRID_SIZE; y++) {
-          if (gridCopy[y][x][z] === 0) {
-            columnFull = false;
-            break;
+    // Check for rows along Z-axis in each Y layer
+    for (let y = 0; y < gridSize; y++) {
+      for (let x = 0; x < gridSize; x++) {
+        let blockCount = 0;
+        for (let z = 0; z < gridSize; z++) {
+          if (gridCopy[y][x][z] !== 0) {
+            blockCount++;
           }
         }
         
-        if (columnFull) {
-          for (let y = 0; y < GRID_SIZE; y++) {
+        // If 10 blocks are in this row, clear it
+        if (blockCount === 10) {
+          for (let z = 0; z < gridSize; z++) {
             gridCopy[y][x][z] = 0;
           }
           layersCleared++;
@@ -294,19 +280,41 @@ const Game3D: React.FC = () => {
       }
     }
     
-    for (let y = 0; y < GRID_SIZE; y++) {
-      let layerFull = true;
-      for (let x = 0; x < GRID_SIZE && layerFull; x++) {
-        for (let z = 0; z < GRID_SIZE && layerFull; z++) {
-          if (gridCopy[y][x][z] === 0) {
-            layerFull = false;
+    // Check for columns (vertical Y-axis)
+    for (let x = 0; x < gridSize; x++) {
+      for (let z = 0; z < gridSize; z++) {
+        let blockCount = 0;
+        for (let y = 0; y < gridSize; y++) {
+          if (gridCopy[y][x][z] !== 0) {
+            blockCount++;
+          }
+        }
+        
+        // If 10 blocks are in this column, clear it
+        if (blockCount === 10) {
+          for (let y = 0; y < gridSize; y++) {
+            gridCopy[y][x][z] = 0;
+          }
+          layersCleared++;
+        }
+      }
+    }
+    
+    // Check entire Y layers
+    for (let y = 0; y < gridSize; y++) {
+      let blockCount = 0;
+      for (let x = 0; x < gridSize; x++) {
+        for (let z = 0; z < gridSize; z++) {
+          if (gridCopy[y][x][z] !== 0) {
+            blockCount++;
           }
         }
       }
       
-      if (layerFull) {
-        for (let x = 0; x < GRID_SIZE; x++) {
-          for (let z = 0; z < GRID_SIZE; z++) {
+      // If the entire layer is filled (10x10 = 100 blocks), clear it
+      if (blockCount === 100) {
+        for (let x = 0; x < gridSize; x++) {
+          for (let z = 0; z < gridSize; z++) {
             gridCopy[y][x][z] = 0;
           }
         }
