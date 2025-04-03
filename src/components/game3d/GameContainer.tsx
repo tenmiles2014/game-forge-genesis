@@ -36,8 +36,8 @@ const GameContainer: React.FC<GameContainerProps> = ({
   const isGameActive = !gamePaused && !gameOver;
 
   return (
-    <div className="game-board w-full h-full min-h-[450px] sm:min-h-[500px] md:min-h-[550px] lg:min-h-[600px] rounded-lg overflow-hidden relative">
-      <Canvas camera={{ position: currentView.position, fov: 75 }}>
+    <div className="game-container w-full h-full min-h-[500px] md:min-h-[600px] lg:min-h-[700px] rounded-lg overflow-hidden">
+      <Canvas camera={{ position: currentView.position, fov: 60 }}>
         <color attach="background" args={['#000000']} />
         <ambientLight intensity={0.7} />
         <pointLight position={[10, 10, 10]} intensity={1.0} />
@@ -50,7 +50,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
         />
         <OrbitControls 
           ref={orbitControlsRef} 
-          enabled={false}
+          enabled={true}
           minDistance={10}
           maxDistance={30}
           target={currentView.target || [4.5, 4.5, 4.5]}
