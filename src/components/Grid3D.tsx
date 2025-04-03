@@ -27,10 +27,18 @@ const Grid3D: React.FC<Grid3DProps> = ({
   // Default grid size if grid is not initialized yet
   const gridSize = grid?.length || 10;
   
-  // Calculate landing position for preview, with safety check for grid
-  const landingPosition = grid && grid.length > 0 && currentBlock
-    ? calculateLandingPosition(grid, currentBlock, position)
-    : { ...position };
+  // Calculate landing position for preview, with additional safety checks
+  let landingPosition = null;
+  try {
+    if (grid && grid.length > 0 && currentBlock && position) {
+      landingPosition = calculateLandingPosition(grid, currentBlock, position);
+    } else {
+      landingPosition = position ? { ...position } : null;
+    }
+  } catch (error) {
+    console.error("Error calculating landing position:", error);
+    landingPosition = position ? { ...position } : null;
+  }
 
   return (
     <group>
@@ -43,15 +51,15 @@ const Grid3D: React.FC<Grid3DProps> = ({
       )}
       
       {/* Current moving block */}
-      {currentBlock && (
+      {currentBlock && position && (
         <ActiveBlock 
           currentBlock={currentBlock}
           position={position} 
         />
       )}
       
-      {/* Landing preview */}
-      {currentBlock && landingPosition && (
+      {/* Landing preview - only render if all required props are valid */}
+      {currentBlock && position && landingPosition && landingPosition.y !== undefined && position.y !== landingPosition.y && (
         <LandingPreview 
           currentBlock={currentBlock}
           position={position}
