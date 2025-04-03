@@ -1,6 +1,6 @@
 
 import React from 'react';
-import * as THREE from 'three';
+import { Line } from '@react-three/drei';
 
 interface SpawnPointIndicatorProps {
   gridSize: number;
@@ -17,74 +17,53 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({ gridSize }) =
   const frameThickness = 0.05;
   const halfFrameSize = frameSize / 2;
   
-  // Create frame corners
-  const frameCorners = [];
-  
   // Calculate corner positions
   const frameX = centerX - halfFrameSize;
   const frameZ = centerZ - halfFrameSize;
   
-  // Create the frame - horizontal edges first
-  for (let x = 0; x < frameSize; x++) {
-    for (let z = 0; z < frameSize; z++) {
-      // Only add blocks for the edges
-      if (x === 0 || x === frameSize - 1 || z === 0 || z === frameSize - 1) {
-        frameCorners.push(
-          <mesh 
-            key={`spawnframe-${x}-${z}`} 
-            position={[frameX + x, topY + 0.5, frameZ + z]}
-          >
-            <boxGeometry args={[frameThickness, frameThickness, frameThickness]} />
-            <meshStandardMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
-          </mesh>
-        );
-      }
-    }
-  }
-  
-  // Add connecting lines
-  const points = [
-    // Top frame
-    [frameX, topY + 0.5, frameZ],
-    [frameX + frameSize, topY + 0.5, frameZ],
-    
-    [frameX + frameSize, topY + 0.5, frameZ],
-    [frameX + frameSize, topY + 0.5, frameZ + frameSize],
-    
-    [frameX + frameSize, topY + 0.5, frameZ + frameSize],
-    [frameX, topY + 0.5, frameZ + frameSize],
-    
-    [frameX, topY + 0.5, frameZ + frameSize],
-    [frameX, topY + 0.5, frameZ],
+  // Points for the frame
+  const framePoints = [
+    // Top square
+    [frameX, topY + 0.5, frameZ], // Start
+    [frameX + frameSize, topY + 0.5, frameZ], // to right
+    [frameX + frameSize, topY + 0.5, frameZ + frameSize], // to back
+    [frameX, topY + 0.5, frameZ + frameSize], // to left
+    [frameX, topY + 0.5, frameZ], // back to start
   ];
-  
-  const lines = [];
-  
-  for (let i = 0; i < points.length; i += 2) {
-    const start = points[i];
-    const end = points[i + 1];
-    
-    const linePoints = [];
-    linePoints.push(new THREE.Vector3(start[0], start[1], start[2]));
-    linePoints.push(new THREE.Vector3(end[0], end[1], end[2]));
-    
-    const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
-    
-    lines.push(
-      <line key={`line-${i}`} geometry={lineGeometry}>
-        <lineBasicMaterial color="#ffff00" linewidth={2} />
-      </line>
-    );
-  }
   
   return (
     <>
-      {frameCorners}
-      {lines}
+      {/* Frame corners */}
+      {[0, 1, 2, 3].map((corner) => {
+        const x = frameX + (corner % 2) * frameSize;
+        const z = frameZ + Math.floor(corner / 2) * frameSize;
+        
+        return (
+          <mesh 
+            key={`spawnframe-corner-${corner}`} 
+            position={[x, topY + 0.5, z]}
+          >
+            <boxGeometry args={[0.2, 0.2, 0.2]} />
+            <meshStandardMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
+          </mesh>
+        );
+      })}
+      
+      {/* Frame outline using drei's Line component */}
+      <Line
+        points={framePoints}
+        color="#ffff00"
+        lineWidth={2}
+        dashed={false}
+      />
+      
+      {/* Center indicator */}
       <mesh position={[centerX, topY + 1, centerZ]}>
         <boxGeometry args={[0.5, 0.1, 0.5]} />
         <meshStandardMaterial color="#ffff00" transparent={true} opacity={0.7} />
       </mesh>
+      
+      {/* Light for spawn area */}
       <pointLight position={[centerX, topY + 1, centerZ]} intensity={0.5} color="#ffff00" distance={5} />
     </>
   );
