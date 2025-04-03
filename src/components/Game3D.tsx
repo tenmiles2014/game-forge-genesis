@@ -13,7 +13,7 @@ import ViewControls, { ViewPoint } from './ViewControls';
 import GuidelineOverlay from './GuidelineOverlay';
 import Grid3DLabels from './Grid3DLabels';
 import Gyroscope from './Gyroscope';
-import StackingDialog from './StackingDialog';
+// Removed StackingDialog import
 
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
@@ -46,8 +46,6 @@ const Game3D: React.FC = () => {
   const orbitControlsRef = useRef(null);
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
-  const [stackDialogOpen, setStackDialogOpen] = useState(false);
-  const [stackedBlocks, setStackedBlocks] = useState(0);
   const [blocksAtWarningLevel, setBlocksAtWarningLevel] = useState(0);
 
   useEffect(() => {
@@ -113,8 +111,6 @@ const Game3D: React.FC = () => {
     setLevel(1);
     setTimerActive(false);
     setGamePaused(true);
-    setStackDialogOpen(false);
-    setStackedBlocks(0);
     
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
@@ -196,23 +192,6 @@ const Game3D: React.FC = () => {
     setGrid(newGrid);
     
     const layersCleared = clearCompleteLayers(newGrid);
-    
-    const stacks = detectStackedBlocks(newGrid);
-    if (stacks > 0) {
-      setStackedBlocks(stacks);
-      setStackDialogOpen(true);
-      
-      const stackBonus = stacks * 5 * level;
-      setScore(prevScore => prevScore + stackBonus);
-      
-      toast({
-        title: "Stacking bonus!",
-        description: `+${stackBonus} points for creating ${stacks} stacks`,
-      });
-    }
-    
-    const blocksAtY = 0; // Always set to 0
-    setBlocksAtWarningLevel(blocksAtY);
     
     const nextBlockPattern = nextBlock;
     setCurrentBlock(nextBlockPattern);
@@ -692,12 +671,6 @@ const Game3D: React.FC = () => {
       )}
       
       <GuidelineOverlay />
-      
-      <StackingDialog 
-        open={stackDialogOpen}
-        onOpenChange={setStackDialogOpen}
-        stackedBlocks={stackedBlocks}
-      />
     </div>
   );
 };
