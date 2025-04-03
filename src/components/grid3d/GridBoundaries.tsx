@@ -91,10 +91,10 @@ const GridBoundaries: React.FC<GridBoundariesProps> = ({ gridSize, verticalStack
         </mesh>
       ))}
       
-      {/* Floor grid plane - moved to exactly at ground level (y=0) */}
+      {/* Floor grid plane - positioned at 0 for floor-level alignment (bottom of blocks) */}
       <Grid
         position={[gridSize/2 - 0.5, 0, gridSize/2 - 0.5]}
-        args={[gridSize + 2, gridSize + 2]}
+        args={[gridSize, gridSize]}
         cellSize={1}
         cellThickness={0.6}
         cellColor="#4A9BF7"
