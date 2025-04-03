@@ -2,6 +2,7 @@
 import React from 'react';
 import { Grid } from '@react-three/drei';
 import * as THREE from 'three';
+import { Frame } from 'lucide-react';
 
 interface GridBoundariesProps {
   gridSize: number;
@@ -20,6 +21,12 @@ const GridBoundaries: React.FC<GridBoundariesProps> = ({ gridSize, verticalStack
           opacity={0.02}
           wireframe={true} 
         />
+      </mesh>
+      
+      {/* Spawn point indicator frame at top center of grid */}
+      <mesh position={[gridSize/2 - 0.5, gridSize - 1, gridSize/2 - 0.5]} rotation={[Math.PI/2, 0, 0]}>
+        <ringGeometry args={[1.5, 1.8, 4]} />
+        <meshBasicMaterial color="#4ADF7F" transparent={true} opacity={0.8} />
       </mesh>
       
       {/* X-axis line */}
@@ -61,24 +68,35 @@ const GridBoundaries: React.FC<GridBoundariesProps> = ({ gridSize, verticalStack
         <lineBasicMaterial attach="material" color="green" />
       </mesh>
       
-      {/* Vertical stack limit warning line */}
-      <mesh>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={5}
-            array={new Float32Array([
-              0, verticalStackLimit, 0,
-              gridSize, verticalStackLimit, 0,
-              gridSize, verticalStackLimit, gridSize,
-              0, verticalStackLimit, gridSize,
-              0, verticalStackLimit, 0
-            ])}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial attach="material" color="#ff0000" transparent={true} opacity={0.7} />
-      </mesh>
+      {/* Grid lines along the X-axis */}
+      {Array.from({ length: gridSize + 1 }).map((_, i) => (
+        <mesh key={`grid-x-${i}`}>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              count={2}
+              array={new Float32Array([i, 0, 0, i, 0, gridSize])}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial attach="material" color="#4A9BF7" opacity={0.7} transparent={true} />
+        </mesh>
+      ))}
+      
+      {/* Grid lines along the Z-axis */}
+      {Array.from({ length: gridSize + 1 }).map((_, i) => (
+        <mesh key={`grid-z-${i}`}>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              count={2}
+              array={new Float32Array([0, 0, i, gridSize, 0, i])}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial attach="material" color="#4A9BF7" opacity={0.7} transparent={true} />
+        </mesh>
+      ))}
       
       {/* Floor grid plane */}
       <Grid
@@ -114,36 +132,6 @@ const GridBoundaries: React.FC<GridBoundariesProps> = ({ gridSize, verticalStack
         <boxGeometry args={[0.5, 0.2, 0.5]} />
         <meshBasicMaterial color="#4A9BF7" />
       </mesh>
-      
-      {/* Grid lines along the X-axis */}
-      {Array.from({ length: gridSize + 1 }).map((_, i) => (
-        <mesh key={`grid-x-${i}`}>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={2}
-              array={new Float32Array([i, 0, 0, i, 0, gridSize])}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial attach="material" color="#4A9BF7" opacity={0.7} transparent={true} />
-        </mesh>
-      ))}
-      
-      {/* Grid lines along the Z-axis */}
-      {Array.from({ length: gridSize + 1 }).map((_, i) => (
-        <mesh key={`grid-z-${i}`}>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={2}
-              array={new Float32Array([0, 0, i, gridSize, 0, i])}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial attach="material" color="#4A9BF7" opacity={0.7} transparent={true} />
-        </mesh>
-      ))}
     </>
   );
 };

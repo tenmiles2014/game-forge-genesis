@@ -41,12 +41,9 @@ export function useBlockMovement(
   };
 
   const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
-    // Log complete state to help with debugging
-    console.log(`moveBlock called with direction: ${direction}`);
-    console.log(`Game state - gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
-    
-    if (gameOver || !controlsEnabled || gamePaused) {
-      console.log(`Block movement prevented - gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
+    // CRITICAL FIX: Only check if game is paused or game over, not controlsEnabled
+    if (gameOver || gamePaused) {
+      console.log(`Block movement prevented - gameOver: ${gameOver}, gamePaused: ${gamePaused}`);
       return false;
     }
     
@@ -73,9 +70,10 @@ export function useBlockMovement(
   };
 
   const rotateBlock = (axis: 'x' | 'y' | 'z') => {
-    if (gameOver || !controlsEnabled || gamePaused) {
-      console.log(`Block rotation prevented - gameOver: ${gameOver}, controlsEnabled: ${controlsEnabled}, gamePaused: ${gamePaused}`);
-      return;
+    // CRITICAL FIX: Only check if game is paused or game over, not controlsEnabled
+    if (gameOver || gamePaused) {
+      console.log(`Block rotation prevented - gameOver: ${gameOver}, gamePaused: ${gamePaused}`);
+      return null;
     }
     
     const rotatedPattern = [...currentBlock.shape];

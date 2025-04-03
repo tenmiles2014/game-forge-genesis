@@ -16,7 +16,7 @@ export function useStartGameAction({
   const startGame = useCallback(() => {
     console.log("Starting game - setting gamePaused to false");
     
-    // First, enable controls to ensure they're active when the game starts
+    // CRITICAL FIX: Make sure controls are enabled first
     setControlsEnabled(true);
     
     // Then set game state to not paused
