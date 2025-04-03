@@ -1,7 +1,12 @@
 
 import { useCallback } from 'react';
 import { toast } from "@/components/ui/use-toast";
-import { BlockPattern } from '../../components/BlockPatterns';
+
+// Define BlockPattern type if it's causing issues
+interface BlockPattern {
+  shape: number[][];
+  color: string;
+}
 
 interface ResetGameActionProps {
   setGrid: (grid: number[][][] | ((prevGrid: number[][][]) => number[][][])) => void;
@@ -18,6 +23,7 @@ interface ResetGameActionProps {
   setLinesCleared: (linesCleared: (prev: number) => number) => void;
   getRandomBlockPattern: () => BlockPattern;
   INITIAL_POSITION: { x: number; y: number; z: number };
+  initializeGrid?: () => number[][][];
 }
 
 export function useResetGameAction({
@@ -34,7 +40,8 @@ export function useResetGameAction({
   gravityTimerRef,
   setLinesCleared,
   getRandomBlockPattern,
-  INITIAL_POSITION
+  INITIAL_POSITION,
+  initializeGrid
 }: ResetGameActionProps) {
   const resetGame = useCallback(() => {
     if (gravityTimerRef.current) {
@@ -62,13 +69,34 @@ export function useResetGameAction({
       return newGrid;
     };
     
-    // Pass the function to setGrid
-    setGrid(createNewGrid);
+    // Use initializeGrid if provided, otherwise use createNewGrid
+    if (initializeGrid) {
+      setGrid(initializeGrid());
+    } else {
+      setGrid(createNewGrid);
+    }
+    
+    // Get new blocks
+    try {
+      const newCurrentBlock = getRandomBlockPattern();
+      const newNextBlock = getRandomBlockPattern();
+      
+      console.log("Reset Game - New blocks generated:", { 
+        current: newCurrentBlock?.color, 
+        next: newNextBlock?.color 
+      });
+      
+      setCurrentBlock(newCurrentBlock);
+      setNextBlock(newNextBlock);
+    } catch (error) {
+      console.error("Error generating block patterns:", error);
+      // Provide fallback block patterns if getRandomBlockPattern fails
+      setCurrentBlock({ shape: [[1]], color: 'blue' });
+      setNextBlock({ shape: [[1]], color: 'red' });
+    }
     
     setScore(0);
     setLinesCleared(() => 0);
-    setCurrentBlock(getRandomBlockPattern());
-    setNextBlock(getRandomBlockPattern());
     setPosition({...INITIAL_POSITION});
     setGameOver(false);
     setGamePaused(true);
@@ -94,7 +122,8 @@ export function useResetGameAction({
     setLevel,
     setLinesCleared,
     getRandomBlockPattern,
-    INITIAL_POSITION
+    INITIAL_POSITION,
+    initializeGrid
   ]);
 
   return { resetGame };

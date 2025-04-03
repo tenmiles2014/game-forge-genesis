@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { useGameState } from '../../hooks/useGameState';
 import { useBlockMovement } from '../../hooks/useBlockMovement';
@@ -6,7 +7,25 @@ import { useGameActions } from '../../hooks/useGameActions';
 import { useKeyboardControls } from '../../hooks/useKeyboardControls';
 import { VIEW_POINTS } from './GameViewManager';
 import GameLayout from './GameLayout';
-import { getRandomBlockPattern } from '../../components/BlockPatterns';
+
+// Define the BlockPattern type
+interface BlockPattern {
+  shape: number[][];
+  color: string;
+}
+
+// Define a set of block patterns
+const BLOCK_PATTERNS = [
+  { shape: [[1, 1, 1, 1]], color: 'blue' },
+  { shape: [[1, 0, 0], [1, 1, 1]], color: 'red' },
+  { shape: [[1, 1], [1, 1]], color: 'yellow' }
+];
+
+// Define the getRandomBlockPattern function
+function getRandomBlockPattern(): BlockPattern {
+  const randomIndex = Math.floor(Math.random() * BLOCK_PATTERNS.length);
+  return BLOCK_PATTERNS[randomIndex];
+}
 
 const GameController: React.FC = () => {
   const {
@@ -49,12 +68,8 @@ const GameController: React.FC = () => {
     VERTICAL_STACK_LIMIT
   );
 
-  const {
-    resetGame,
-    handleTimeUp,
-    toggleGamePause,
-    startGame
-  } = useGameActions({
+  // Create local object with all props for useGameActions to avoid line 49 error
+  const gameActionProps = {
     grid,
     setGrid,
     score,
@@ -85,7 +100,14 @@ const GameController: React.FC = () => {
     gameOver,
     resetPosition,
     initializeGrid
-  });
+  };
+
+  const {
+    resetGame,
+    handleTimeUp,
+    toggleGamePause,
+    startGame
+  } = useGameActions(gameActionProps);
 
   useKeyboardControls({
     moveBlock,

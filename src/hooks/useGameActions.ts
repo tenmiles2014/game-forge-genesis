@@ -34,43 +34,45 @@ interface GameActionsProps {
   INITIAL_POSITION: { x: number; y: number; z: number };
   MAX_LEVEL: number;
   gamePaused: boolean;
-  gameOver: boolean; // Make sure gameOver is included in the props
+  gameOver: boolean;
   resetPosition?: () => void;
   initializeGrid?: () => number[][][];
 }
 
-export function useGameActions({
-  grid,
-  setGrid,
-  score,
-  setScore,
-  currentBlock,
-  setCurrentBlock,
-  nextBlock,
-  setNextBlock,
-  position,
-  setPosition,
-  setGameOver,
-  setControlsEnabled,
-  setTimerActive,
-  setGamePaused,
-  level,
-  setLevel,
-  gravityTimerRef,
-  setLinesCleared,
-  clearCompleteLayers,
-  checkIfStackedBlocks,
-  checkVerticalStackLimit,
-  isValidPosition,
-  getRandomBlockPattern,
-  getColorIndex,
-  INITIAL_POSITION,
-  MAX_LEVEL,
-  gamePaused,
-  gameOver, // Make sure gameOver is received as a parameter
-  resetPosition,
-  initializeGrid
-}: GameActionsProps) {
+export function useGameActions(props: GameActionsProps) {
+  const {
+    grid,
+    setGrid,
+    score,
+    setScore,
+    currentBlock,
+    setCurrentBlock,
+    nextBlock,
+    setNextBlock,
+    position,
+    setPosition,
+    setGameOver,
+    setControlsEnabled,
+    setTimerActive,
+    setGamePaused,
+    level,
+    setLevel,
+    gravityTimerRef,
+    setLinesCleared,
+    clearCompleteLayers,
+    checkIfStackedBlocks,
+    checkVerticalStackLimit,
+    isValidPosition,
+    getRandomBlockPattern,
+    getColorIndex,
+    INITIAL_POSITION,
+    MAX_LEVEL,
+    gamePaused,
+    gameOver,
+    resetPosition,
+    initializeGrid
+  } = props;
+
   // Reset game action
   const { resetGame } = useResetGameAction({
     setGrid,
@@ -92,7 +94,7 @@ export function useGameActions({
   
   // Time up action
   const { handleTimeUp } = useTimeUpAction({
-    gameOver, // Pass gameOver to useTimeUpAction
+    gameOver,
     setGameOver,
     setTimerActive,
     setControlsEnabled,
