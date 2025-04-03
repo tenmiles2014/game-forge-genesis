@@ -49,9 +49,6 @@
 
 .game-board {
   background-color: black;
-  background-image: linear-gradient(rgba(42, 48, 64, 0.5) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(42, 48, 64, 0.5) 1px, transparent 1px);
-  background-size: 30px 30px;
   backdrop-filter: blur(5px);
 }
 

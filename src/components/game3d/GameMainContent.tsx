@@ -28,7 +28,7 @@ const GameMainContent: React.FC<GameMainContentProps> = ({
   gameOver
 }) => {
   return (
-    <div className="relative flex-1 min-h-[500px] md:min-h-[600px] lg:min-h-[700px] w-full rounded-lg overflow-hidden bg-black/20">
+    <div className="relative flex-1 min-h-[500px] md:min-h-[600px] lg:min-h-[700px] w-full rounded-lg overflow-hidden">
       <GameContainer 
         grid={grid}
         currentBlock={currentBlock}
