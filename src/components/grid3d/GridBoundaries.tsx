@@ -5,10 +5,12 @@ import * as THREE from 'three';
 
 interface GridBoundariesProps {
   gridSize: number;
-  verticalStackLimit: number;
 }
 
-const GridBoundaries: React.FC<GridBoundariesProps> = ({ gridSize, verticalStackLimit }) => {
+const GridBoundaries: React.FC<GridBoundariesProps> = ({ gridSize }) => {
+  // Default vertical stack limit if not provided
+  const verticalStackLimit = Math.floor(gridSize * 0.8);
+  
   return (
     <>
       {/* Main grid boundary box */}

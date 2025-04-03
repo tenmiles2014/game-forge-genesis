@@ -6,7 +6,6 @@ import GridBlocks from './grid3d/GridBlocks';
 import GridBoundaries from './grid3d/GridBoundaries';
 import SpawnPointIndicator from './grid3d/SpawnPointIndicator';
 import LandingPreview from './grid3d/LandingPreview';
-import Grid3DLabels from './Grid3DLabels';
 import FlashEffect from './grid3d/FlashEffect';
 import { calculateLandingPosition } from './utils/landingCalculator';
 
@@ -53,16 +52,13 @@ const Grid3D: React.FC<Grid3DProps> = ({
       {/* Landing preview */}
       <LandingPreview 
         currentBlock={currentBlock}
-        landingPosition={landingPosition} 
+        position={position}
+        landingY={landingPosition.y}
       />
-      
-      {/* Grid labels */}
-      <Grid3DLabels gridSize={gridSize} />
       
       {/* Flash effect on line clear */}
       <FlashEffect 
-        linesCleared={linesCleared} 
-        gridSize={gridSize} 
+        active={linesCleared > 0} 
       />
       
       {/* Spawn point indicator */}

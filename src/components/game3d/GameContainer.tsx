@@ -3,8 +3,10 @@ import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import Grid3D from '../Grid3D';
+import Grid3DLabels from '../Grid3DLabels';
 import { BlockPattern } from '../BlockPatterns';
 import { ViewPoint } from '../ViewControls';
+import Gyroscope from '../Gyroscope';
 
 interface GameContainerProps {
   grid: number[][][];
@@ -52,6 +54,12 @@ const GameContainer: React.FC<GameContainerProps> = ({
           target={currentView.target || [4.5, 4.5, 4.5]}
         />
       </Canvas>
+      
+      {/* Grid labels positioned outside the Three.js Canvas */}
+      <Grid3DLabels />
+      
+      {/* Add Gyroscope component outside Canvas, but rendered within the game board */}
+      <Gyroscope size={80} />
     </div>
   );
 };
