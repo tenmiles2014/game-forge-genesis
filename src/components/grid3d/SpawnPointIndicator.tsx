@@ -72,13 +72,10 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({
     };
   }, [shrinking, gridSize, minRadius, maxRadius, isGameActive]);
   
-  // The spawn position is at the center top of the grid
-  const spawnY = gridSize - 2; // Slightly below top for visibility
-  
   return (
     <group>
-      {/* Circular indicator ring at the spawn area */}
-      <mesh position={[gridSize/2 - 0.5, spawnY, gridSize/2 - 0.5]} rotation={[Math.PI / 2, 0, 0]}>
+      {/* Circular indicator ring at the ground level */}
+      <mesh position={[gridSize/2 - 0.5, 0, gridSize/2 - 0.5]} rotation={[Math.PI / 2, 0, 0]}>
         <ringGeometry args={[radius - 0.4, radius, 64]} />
         <meshBasicMaterial 
           color="#4A9BF7" 
@@ -86,18 +83,6 @@ const SpawnPointIndicator: React.FC<SpawnPointIndicatorProps> = ({
           opacity={opacity} 
           side={THREE.DoubleSide}
         />
-      </mesh>
-      
-      {/* Spawn point marker */}
-      <mesh position={[gridSize/2 - 0.5, spawnY + 0.5, gridSize/2 - 0.5]}>
-        <sphereGeometry args={[0.3, 16, 16]} />
-        <meshBasicMaterial color="#4A9BF7" transparent={true} opacity={0.8} />
-      </mesh>
-      
-      {/* Vertical guide lines from spawn point */}
-      <mesh position={[gridSize/2 - 0.5, spawnY/2, gridSize/2 - 0.5]}>
-        <cylinderGeometry args={[0.05, 0.05, spawnY, 6]} />
-        <meshBasicMaterial color="#4A9BF7" transparent={true} opacity={0.3} />
       </mesh>
     </group>
   );
