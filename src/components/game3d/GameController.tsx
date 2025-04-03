@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { useGameState } from '../../hooks/useGameState';
 import { useBlockMovement } from '../../hooks/useBlockMovement';
@@ -7,7 +6,7 @@ import { useGameActions } from '../../hooks/useGameActions';
 import { useKeyboardControls } from '../../hooks/useKeyboardControls';
 import { VIEW_POINTS } from './GameViewManager';
 import GameLayout from './GameLayout';
-import { getRandomBlockPattern } from '../BlockPatterns';
+import { getRandomBlockPattern } from '../../components/BlockPatterns';
 
 const GameController: React.FC = () => {
   const {
