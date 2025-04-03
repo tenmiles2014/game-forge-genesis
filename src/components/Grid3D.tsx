@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { BlockPattern } from './BlockPatterns';
 import * as THREE from 'three';
@@ -249,16 +250,18 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
     return blocks;
   }, [currentBlock, position]);
   
-  // Render the landing position prediction
+  // Render the landing position prediction - strengthened the visual feedback
   const renderLandingPreview = useMemo(() => {
     const blocks = [];
     const landingY = getLandingPosition;
     
     // Only render if the landing position is different from current position
     if (landingY !== position.y) {
+      // Draw a line from current position to landing position for better visualization
       for (let y = 0; y < currentBlock.shape.length; y++) {
         for (let x = 0; x < currentBlock.shape[y].length; x++) {
           if (currentBlock.shape[y][x]) {
+            // Landing preview block
             blocks.push(
               <mesh 
                 key={`landing-${x}-${y}`} 
@@ -268,11 +271,37 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, linesClea
                 <meshStandardMaterial 
                   color={currentBlock.color} 
                   transparent={true} 
-                  opacity={0.4} 
+                  opacity={0.5} // Slightly increased opacity
                   wireframe={false}
                 />
               </mesh>
             );
+            
+            // Add line connecting current position to landing position for each block
+            if (position.y - landingY > 1) { // Only add lines if there's a significant drop
+              const startPos = [position.x + x, position.y, position.z + y];
+              const endPos = [position.x + x, landingY, position.z + y];
+              
+              blocks.push(
+                <line key={`drop-line-${x}-${y}`}>
+                  <bufferGeometry>
+                    <bufferAttribute
+                      attach="attributes-position"
+                      count={2}
+                      array={new Float32Array([...startPos, ...endPos])}
+                      itemSize={3}
+                    />
+                  </bufferGeometry>
+                  <lineBasicMaterial 
+                    color={currentBlock.color} 
+                    transparent={true} 
+                    opacity={0.3} 
+                    linewidth={1} 
+                    dashed={true}
+                  />
+                </line>
+              );
+            }
           }
         }
       }

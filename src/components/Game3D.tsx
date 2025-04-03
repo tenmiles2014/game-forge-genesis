@@ -15,7 +15,7 @@ import Grid3DLabels from './Grid3DLabels';
 import Gyroscope from './Gyroscope';
 
 const GRID_SIZE = 10;
-const INITIAL_POSITION = { x: 4, y: 0, z: 4 }; // Start at the bottom layer (y=0)
+const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top of the grid - CHANGED
 const MAX_LEVEL = 99;
 const BASE_TIME_LIMIT = 180; // 3 minutes in seconds for level 1
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
@@ -201,7 +201,7 @@ const Game3D: React.FC = () => {
     setCurrentBlock(nextBlockPattern);
     setNextBlock(getRandomBlockPattern());
     
-    const newPosition = {...INITIAL_POSITION};
+    const newPosition = {...INITIAL_POSITION}; // Reset to top of the grid - IMPORTANT FOR SPAWN POINT
     
     if (checkIfStackedBlocks(newGrid) || !isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
       setGameOver(true);
