@@ -207,7 +207,6 @@ const Game3D: React.FC = () => {
     
     const layersCleared = clearCompleteLayers(newGrid);
     
-    // Check for blocks at game over level
     for (let y = GAME_OVER_Y_LEVEL; y < GRID_SIZE; y++) {
       const blocksAtY = detectBlocksAtYLevel(newGrid, y);
       if (blocksAtY > 0) {
