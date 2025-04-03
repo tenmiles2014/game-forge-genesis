@@ -74,6 +74,9 @@ const GameLayout: React.FC<GameLayoutProps> = ({
             orbitControlsRef={orbitControlsRef}
             gamePaused={isPaused}
             gameOver={gameOver}
+            score={score}
+            level={level}
+            maxLevel={maxLevel}
           />
         </div>
         

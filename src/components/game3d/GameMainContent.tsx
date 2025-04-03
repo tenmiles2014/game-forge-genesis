@@ -14,6 +14,9 @@ interface GameMainContentProps {
   orbitControlsRef: React.RefObject<any>;
   gamePaused: boolean;
   gameOver: boolean;
+  score?: number;
+  level?: number;
+  maxLevel?: number;
 }
 
 const GameMainContent: React.FC<GameMainContentProps> = ({
@@ -25,7 +28,10 @@ const GameMainContent: React.FC<GameMainContentProps> = ({
   currentView,
   orbitControlsRef,
   gamePaused,
-  gameOver
+  gameOver,
+  score,
+  level,
+  maxLevel
 }) => {
   return (
     <div className="relative flex-1 h-[calc(100vh-160px)] w-full rounded-lg overflow-hidden">
@@ -39,6 +45,9 @@ const GameMainContent: React.FC<GameMainContentProps> = ({
         orbitControlsRef={orbitControlsRef}
         gamePaused={gamePaused}
         gameOver={gameOver}
+        score={score}
+        level={level}
+        maxLevel={maxLevel}
       />
       <GameOverlay />
     </div>

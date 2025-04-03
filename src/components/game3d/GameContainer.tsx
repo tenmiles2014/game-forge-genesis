@@ -18,6 +18,8 @@ interface GameContainerProps {
   gamePaused: boolean;
   gameOver: boolean;
   score?: number;
+  level?: number;
+  maxLevel?: number;
 }
 
 const GameContainer: React.FC<GameContainerProps> = ({
@@ -30,7 +32,9 @@ const GameContainer: React.FC<GameContainerProps> = ({
   orbitControlsRef,
   gamePaused,
   gameOver,
-  score = 0
+  score = 0,
+  level = 1,
+  maxLevel = 99
 }) => {
   const isGameActive = !gamePaused && !gameOver;
 
@@ -51,6 +55,8 @@ const GameContainer: React.FC<GameContainerProps> = ({
           position={position}
           linesCleared={linesCleared}
           isGameActive={isGameActive}
+          level={level}
+          maxLevel={maxLevel}
         />
         
         <OrbitControls 
