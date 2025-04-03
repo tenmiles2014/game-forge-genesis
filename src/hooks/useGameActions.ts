@@ -36,7 +36,7 @@ interface GameActionProps {
   getColorIndex: (color: string) => number;
   INITIAL_POSITION: { x: number; y: number; z: number };
   MAX_LEVEL: number;
-  gamePaused?: boolean; // Make this optional to maintain backward compatibility
+  gamePaused: boolean; // Make this required since we need it
 }
 
 export function useGameActions({
@@ -66,7 +66,7 @@ export function useGameActions({
   getColorIndex,
   INITIAL_POSITION,
   MAX_LEVEL,
-  gamePaused = false // Default value if not provided
+  gamePaused // Require this parameter
 }: GameActionProps) {
   // Import our modularized functions
   const { resetGame } = useResetGameAction({

@@ -95,7 +95,7 @@ const Game3DContainer: React.FC = () => {
     getColorIndex,
     INITIAL_POSITION,
     MAX_LEVEL,
-    gamePaused  // Pass the gamePaused prop
+    gamePaused
   });
 
   const handleViewChange = (viewPoint: ViewPoint) => {

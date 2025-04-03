@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useGameState } from '../../hooks/useGameState';
 import { useBlockMovement } from '../../hooks/useBlockMovement';
@@ -76,7 +75,7 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     getColorIndex,
     INITIAL_POSITION,
     MAX_LEVEL,
-    gamePaused  // Pass the gamePaused prop
+    gamePaused
   });
 
   useKeyboardControls({
@@ -121,7 +120,6 @@ const GameInitializer: React.FC<GameInitializerProps> = ({ children }) => {
     setTimeLimit(newTimeLimit);
   }, [level, setTimeLimit]);
   
-  // Initialize game state
   useEffect(() => {
     setGrid(initializeGrid());
     setScore(0);
