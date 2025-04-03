@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { getRandomBlockPattern } from '../components/BlockPatterns';
@@ -140,25 +139,34 @@ export function useGridOperations(
     }
   };
 
+  // Modified to return true if ANY blocks are stacked (one on top of another)
   const checkIfStackedBlocks = (gridState: number[][][]) => {
-    // Check if blocks are stacked on top of each other
+    console.log("Checking for stacked blocks (any stacking is game over)");
+    
+    // For each column (x,z coordinate)
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
-        let found = false;
+        let blockCount = 0;
+        
+        // Count blocks in this column
         for (let y = 0; y < GRID_SIZE; y++) {
           if (gridState[y][x][z] !== 0) {
-            if (found) {
-              // Found a second block in the same column
+            blockCount++;
+            
+            // If we've found more than one block in this column, blocks are stacked
+            if (blockCount > 1) {
+              console.log(`Found stacked blocks at column x=${x}, z=${z}`);
               return true;
             }
-            found = true;
           }
         }
       }
     }
-    return false;
+    
+    return false; // No stacked blocks found
   };
   
+  // We keep this function for completeness but it's no longer used for game over detection
   const checkVerticalStackLimit = (gridState: number[][][]) => {
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {

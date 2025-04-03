@@ -107,12 +107,12 @@ export function useDropBlockAction({
     // Clear any completed layers
     const layersCleared = clearCompleteLayers(newGrid);
     
-    // Check for game over conditions
+    // Check for game over conditions - NEW LOGIC HERE
+    // Check if there are any stacked blocks - this is now our only game over condition
     const hasStacked = checkIfStackedBlocks(newGrid);
-    const isStackTooHigh = checkVerticalStackLimit(newGrid);
     
-    if (isStackTooHigh) {
-      console.log("🎮 Game over: blocks stacked too high");
+    if (hasStacked) {
+      console.log("🎮 Game over: blocks are stacked");
       
       if (gravityTimerRef.current) {
         clearInterval(gravityTimerRef.current);
@@ -125,7 +125,7 @@ export function useDropBlockAction({
       
       toast({
         title: "Game Over",
-        description: "Blocks stacked too high!",
+        description: "Blocks have stacked!",
         variant: "destructive"
       });
       
