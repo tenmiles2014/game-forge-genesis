@@ -233,25 +233,35 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
               continue;
             }
             
-            // Create line using React Three Fiber's primitive
-            const lineStart = new THREE.Vector3(currentPosX, currentPosY, currentPosZ);
-            const lineEnd = new THREE.Vector3(ghostPosX, ghostPosY, ghostPosZ);
+            // Create line manually using mesh and geometry
+            const lineColor = new THREE.Color(blockColor);
             
-            const points = [lineStart, lineEnd];
-            const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            // Calculate the midpoint and length for the cylinder
+            const start = new THREE.Vector3(currentPosX, currentPosY, currentPosZ);
+            const end = new THREE.Vector3(ghostPosX, ghostPosY, ghostPosZ);
+            const direction = end.clone().sub(start);
+            const length = direction.length();
+            const midpoint = start.clone().add(direction.multiplyScalar(0.5));
+            
+            // Calculate rotation to orient the cylinder
+            const cylinderDirection = new THREE.Vector3(0, 1, 0);
+            const targetDirection = direction.clone().normalize();
+            const quaternion = new THREE.Quaternion();
+            quaternion.setFromUnitVectors(cylinderDirection, targetDirection);
             
             lines.push(
-              <primitive
-                key={`line-${y}-${x}`}
-                object={new THREE.Line(
-                  lineGeometry,
-                  new THREE.LineBasicMaterial({
-                    color: blockColor,
-                    opacity: 0.5,
-                    transparent: true,
-                  })
-                )}
-              />
+              <mesh 
+                key={`line-${y}-${x}`} 
+                position={[midpoint.x, midpoint.y, midpoint.z]} 
+                quaternion={quaternion}
+              >
+                <cylinderGeometry args={[0.03, 0.03, length, 4]} />
+                <meshBasicMaterial 
+                  color={lineColor} 
+                  transparent={true} 
+                  opacity={0.4} 
+                />
+              </mesh>
             );
           }
         }
