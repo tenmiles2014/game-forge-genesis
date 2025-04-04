@@ -178,38 +178,40 @@ const Game3D: React.FC = () => {
     
     setGrid(newGrid);
     
-    const layersCleared = clearCompleteLayers(newGrid);
-    
-    const nextBlockPattern = nextBlock;
-    setCurrentBlock(nextBlockPattern);
-    setNextBlock(getRandomBlockPattern());
-    
-    const newPosition = {...INITIAL_POSITION};
-    
-    if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
-      setGameOver(true);
-      setControlsEnabled(false);
-      setGamePaused(true);
-      toast({
-        title: "Game Over!",
-        description: `No space for new block. Final score: ${score} | Level: ${level}`,
-      });
-      return;
-    }
-    
-    setPosition(newPosition);
-    
-    if (layersCleared > 0 && level < MAX_LEVEL) {
-      const layerThreshold = Math.ceil(level / 5) + 1;
-      if (layersCleared >= layerThreshold) {
-        const newLevel = Math.min(MAX_LEVEL, level + 1);
-        setLevel(newLevel);
+    setTimeout(() => {
+      const layersCleared = clearCompleteLayers(newGrid);
+      
+      const nextBlockPattern = nextBlock;
+      setCurrentBlock(nextBlockPattern);
+      setNextBlock(getRandomBlockPattern());
+      
+      const newPosition = {...INITIAL_POSITION};
+      
+      if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
+        setGameOver(true);
+        setControlsEnabled(false);
+        setGamePaused(true);
         toast({
-          title: `Level Up!`,
-          description: `You are now on level ${newLevel}`,
+          title: "Game Over!",
+          description: `No space for new block. Final score: ${score} | Level: ${level}`,
         });
+        return;
       }
-    }
+      
+      setPosition(newPosition);
+      
+      if (layersCleared > 0 && level < MAX_LEVEL) {
+        const layerThreshold = Math.ceil(level / 5) + 1;
+        if (layersCleared >= layerThreshold) {
+          const newLevel = Math.min(MAX_LEVEL, level + 1);
+          setLevel(newLevel);
+          toast({
+            title: `Level Up!`,
+            description: `You are now on level ${newLevel}`,
+          });
+        }
+      }
+    }, 100);
   };
 
   const getColorIndex = (color: string): number => {
@@ -312,9 +314,10 @@ const Game3D: React.FC = () => {
         title: `${layersCleared} lines cleared!`,
         description: `+${pointsScored} points`,
       });
+      
+      setGrid([...gridCopy]);
     }
     
-    setGrid([...gridCopy]);
     return layersCleared;
   };
 
