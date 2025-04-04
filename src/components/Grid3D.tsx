@@ -1,6 +1,8 @@
-import React, { useMemo } from 'react';
+
+import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
+import { useFrame } from '@react-three/fiber';
 
 interface Grid3DProps {
   grid: number[][][];
@@ -9,6 +11,9 @@ interface Grid3DProps {
 }
 
 const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
+  // For tracking grid changes
+  const gridRef = useRef<string>("");
+  
   // Color mapping
   const getColor = (colorIndex: number) => {
     const colors = {
@@ -71,20 +76,51 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return { x: position.x, y: lowestValidY, z: position.z };
   }, [grid, currentBlock.shape, position]);
 
-  // Render placed blocks from grid with improved rendering logic
-  const renderPlacedBlocks = useMemo(() => {
-    const blocks = [];
-    if (!grid || grid.length === 0) return blocks;
-
-    const gridSize = grid.length;
-    const gridHash = JSON.stringify(grid); // Add this to force re-evaluation when grid changes
+  // Generate a grid fingerprint for change detection
+  const getGridFingerprint = () => {
+    // Create a string that represents the non-empty cells in the grid
+    let fingerprint = "";
+    const gridSize = grid.length || 10;
     
     for (let y = 0; y < gridSize; y++) {
       for (let x = 0; x < gridSize; x++) {
         for (let z = 0; z < gridSize; z++) {
           if (grid[y][x][z] !== 0) {
-            // Use a key that includes position, value, and a timestamp to guarantee uniqueness
-            const uniqueKey = `block-${y}-${x}-${z}-${grid[y][x][z]}-${Date.now()}`;
+            fingerprint += `${y},${x},${z},${grid[y][x][z]};`;
+          }
+        }
+      }
+    }
+    
+    return fingerprint;
+  };
+
+  // Force update check on each frame
+  useFrame(() => {
+    // Check if grid has changed
+    const currentFingerprint = getGridFingerprint();
+    if (currentFingerprint !== gridRef.current) {
+      gridRef.current = currentFingerprint;
+      // This will trigger a re-render when needed
+    }
+  });
+
+  // Render placed blocks from grid with stable keys
+  const renderPlacedBlocks = useMemo(() => {
+    console.log("Rendering placed blocks"); // Debug log
+    
+    const blocks = [];
+    if (!grid || grid.length === 0) return blocks;
+
+    const gridSize = grid.length;
+    const fingerprint = getGridFingerprint(); // Use for dependency
+    
+    for (let y = 0; y < gridSize; y++) {
+      for (let x = 0; x < gridSize; x++) {
+        for (let z = 0; z < gridSize; z++) {
+          if (grid[y][x][z] !== 0) {
+            // Use stable keys based on position
+            const uniqueKey = `block-${y}-${x}-${z}-${grid[y][x][z]}`;
             
             blocks.push(
               <mesh 
@@ -103,7 +139,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
     
     return blocks;
-  }, [grid]); // Ensure we depend only on the grid itself
+  }, [grid, getGridFingerprint()]); // Add the fingerprint as dependency
 
   // Render ghost block (prediction)
   const renderGhostBlock = useMemo(() => {
