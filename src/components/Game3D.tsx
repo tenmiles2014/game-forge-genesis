@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -40,6 +41,10 @@ const Game3D: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
   const gameBoardRef = useRef<HTMLDivElement>(null);
+  // Add a counter to track placed blocks for testing
+  const [blocksPlaced, setBlocksPlaced] = useState(0);
+  // Add a flag for test mode
+  const [testMode, setTestMode] = useState(true);
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 50));
@@ -98,6 +103,7 @@ const Game3D: React.FC = () => {
     setControlsEnabled(true);
     setLevel(1);
     setGamePaused(true);
+    setBlocksPlaced(0);
     
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
@@ -178,7 +184,28 @@ const Game3D: React.FC = () => {
     
     setGrid(newGrid);
     
-    const layersCleared = clearCompleteLayers(newGrid);
+    // Increment the blocks placed counter
+    const newBlocksPlaced = blocksPlaced + 1;
+    setBlocksPlaced(newBlocksPlaced);
+    
+    // If in test mode and 5 blocks have been placed, clear all filled layers
+    if (testMode && newBlocksPlaced >= 5) {
+      toast({
+        title: "Test Mode",
+        description: "5 blocks placed - clearing all filled layers",
+      });
+      setTimeout(() => {
+        const gridCopy = JSON.parse(JSON.stringify(newGrid));
+        const layersCleared = clearCompleteLayers(gridCopy);
+        if (layersCleared === 0) {
+          // If no layers were naturally cleared, force clear the bottom layer for demonstration
+          forceCreateAndClearLayer(gridCopy);
+        }
+        setBlocksPlaced(0);
+      }, 500);
+    } else {
+      const layersCleared = clearCompleteLayers(newGrid);
+    }
     
     const nextBlockPattern = nextBlock;
     setCurrentBlock(nextBlockPattern);
@@ -198,18 +225,41 @@ const Game3D: React.FC = () => {
     }
     
     setPosition(newPosition);
-    
-    if (layersCleared > 0 && level < MAX_LEVEL) {
-      const layerThreshold = Math.ceil(level / 5) + 1;
-      if (layersCleared >= layerThreshold) {
-        const newLevel = Math.min(MAX_LEVEL, level + 1);
-        setLevel(newLevel);
-        toast({
-          title: `Level Up!`,
-          description: `You are now on level ${newLevel}`,
-        });
+  };
+
+  // Function to force create and clear a layer for testing
+  const forceCreateAndClearLayer = (gridCopy: number[][][]) => {
+    // Fill the bottom layer with blocks
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let z = 0; z < GRID_SIZE; z++) {
+        // Random color between 1-5
+        gridCopy[0][x][z] = Math.floor(Math.random() * 5) + 1;
       }
     }
+    
+    // Visual feedback before clearing
+    setGrid([...gridCopy]);
+    
+    // After a short delay, clear the layer and apply gravity
+    setTimeout(() => {
+      for (let x = 0; x < GRID_SIZE; x++) {
+        for (let z = 0; z < GRID_SIZE; z++) {
+          gridCopy[0][x][z] = 0;
+        }
+      }
+      
+      applyGravityToBlocks(gridCopy);
+      setGrid([...gridCopy]);
+      
+      toast({
+        title: "Test Layer Cleared",
+        description: "Bottom layer has been cleared for demonstration",
+      });
+      
+      // Update score
+      const pointsScored = Math.floor(10 * (1 + (level * 0.1)));
+      setScore(prevScore => prevScore + pointsScored);
+    }, 1000);
   };
 
   const getColorIndex = (color: string): number => {
@@ -467,6 +517,18 @@ const Game3D: React.FC = () => {
     }
   };
 
+  // Add a function to toggle test mode
+  const toggleTestMode = () => {
+    const newTestMode = !testMode;
+    setTestMode(newTestMode);
+    toast({
+      title: `Test Mode ${newTestMode ? "Enabled" : "Disabled"}`,
+      description: newTestMode 
+        ? "Layers will clear after 5 blocks are placed" 
+        : "Normal gameplay resumed",
+    });
+  };
+
   const startGame = () => {
     if (!gamePaused) return;
     
@@ -511,6 +573,9 @@ const Game3D: React.FC = () => {
         case 'x':  // Rotate around x-axis
           rotateBlock('x');
           break;
+        case 't':  // Toggle test mode
+          toggleTestMode();
+          break;
         default:
           break;
       }
@@ -521,7 +586,7 @@ const Game3D: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [position, currentBlock, grid, gameOver, controlsEnabled, gamePaused]);
+  }, [position, currentBlock, grid, gameOver, controlsEnabled, gamePaused, testMode]);
 
   const handleViewChange = (viewPoint: ViewPoint) => {
     setCurrentView(viewPoint);
@@ -556,7 +621,10 @@ const Game3D: React.FC = () => {
       
       <div className="game-container rounded-lg overflow-hidden w-full max-w-[1400px] flex flex-col md:flex-row gap-4 bg-black bg-opacity-30">
         <div className="flex-1 min-h-[550px] md:min-h-[650px]">
-          <div className="flex justify-end items-center mb-2 p-2">
+          <div className="flex justify-between items-center mb-2 p-2">
+            <div className={`px-3 py-1 rounded-full text-xs font-medium ${testMode ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
+              {testMode ? 'TEST MODE ON' : 'TEST MODE OFF'} - Press 'T' to toggle
+            </div>
             <ViewControls 
               viewPoints={VIEW_POINTS} 
               onSelectView={handleViewChange}
@@ -600,6 +668,19 @@ const Game3D: React.FC = () => {
                 <BlockPreview block={nextBlock} className="w-24 h-24" />
               </div>
             </div>
+            
+            {testMode && (
+              <div className="p-4 rounded-lg bg-green-900 bg-opacity-30">
+                <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-1">Test Mode</h3>
+                <p className="text-white text-xs">Blocks placed: {blocksPlaced}/5</p>
+                <div className="w-full bg-gray-700 h-2 mt-1 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-green-500 h-full transition-all duration-300" 
+                    style={{ width: `${(blocksPlaced / 5) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
           
           <GameControls3D 
