@@ -1,394 +1,625 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import { toast } from "@/components/ui/use-toast";
+import GameControls3D from './GameControls3D';
+import { BlockPattern, getRandomBlockPattern } from './BlockPatterns';
+import ScoreDisplay from './ScoreDisplay';
 import Grid3D from './Grid3D';
 import BlockPreview from './BlockPreview';
-import GameControls3D from './GameControls3D';
-import ScoreDisplay from './ScoreDisplay';
 import LevelDisplay from './LevelDisplay';
-import { useToast } from "@/hooks/use-toast";
-import { getRandomBlockPattern, BlockPattern } from './BlockPatterns';
+import ViewControls, { ViewPoint } from './ViewControls';
+import GuidelineOverlay from './GuidelineOverlay';
+import Grid3DLabels from './Grid3DLabels';
+import Gyroscope from './Gyroscope';
 
-// Game constants
 const GRID_SIZE = 10;
-const INITIAL_POSITION = { x: 3, y: 0, z: 3 };
-const GAME_SPEED_MS = 1000;
-const MAX_LEVEL = 10;
+const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
+const MAX_LEVEL = 99;
+const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
 
-// Helper function to get a color index from a block color
-const getColorIndex = (color: string): number => {
-  const colorMap: { [key: string]: number } = {
-    'red': 1,
-    'blue': 2,
-    'green': 3,
-    'yellow': 4,
-    'purple': 5,
-    'cyan': 6,
-    'orange': 7,
-  };
-  return colorMap[color] || 0;
-};
+const VIEW_POINTS: ViewPoint[] = [
+  { name: "Default", position: [15, 15, 15] },
+  { name: "Top View", position: [4.5, 25, 4.5], target: [4.5, 0, 4.5] },
+  { name: "Side View", position: [25, 5, 4.5], target: [0, 5, 4.5] },
+  { name: "Front View", position: [4.5, 5, 25], target: [4.5, 5, 0] },
+  { name: "Corner View", position: [20, 10, 20] },
+];
 
 const Game3D: React.FC = () => {
-  // Game state
-  const [grid, setGrid] = useState<number[][][]>(() => {
-    // Initialize a 3D grid with zeros
-    return Array(GRID_SIZE).fill(0).map(() => 
-      Array(GRID_SIZE).fill(0).map(() => 
-        Array(GRID_SIZE).fill(0)
-      )
-    );
-  });
-  
+  const [grid, setGrid] = useState<number[][][]>([]);
+  const [score, setScore] = useState(0);
   const [currentBlock, setCurrentBlock] = useState<BlockPattern>(getRandomBlockPattern());
   const [nextBlock, setNextBlock] = useState<BlockPattern>(getRandomBlockPattern());
-  const [position, setPosition] = useState({ ...INITIAL_POSITION });
+  const [position, setPosition] = useState(INITIAL_POSITION);
   const [gameOver, setGameOver] = useState(false);
-  const [gamePaused, setGamePaused] = useState(true);
   const [controlsEnabled, setControlsEnabled] = useState(true);
-  const [score, setScore] = useState(0);
   const [level, setLevel] = useState(1);
-  
-  const { toast } = useToast();
+  const [gamePaused, setGamePaused] = useState(true);
+  const orbitControlsRef = useRef(null);
+  const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
+  const gravityTimerRef = useRef<number | null>(null);
+  const gameBoardRef = useRef<HTMLDivElement>(null);
 
-  // Check if a position is valid for the current block
-  const isValidPosition = useCallback((shape: number[][], x: number, y: number, z: number) => {
-    for (let shapeY = 0; shapeY < shape.length; shapeY++) {
-      for (let shapeX = 0; shapeX < shape[shapeY].length; shapeX++) {
-        if (shape[shapeY][shapeX]) {
-          const gridX = x + shapeX;
-          const gridY = y;
-          const gridZ = z + shapeY;
+  const getDropSpeed = () => {
+    return Math.max(100, BASE_DROP_SPEED - (level * 50));
+  };
+
+  const initializeGrid = () => {
+    const newGrid: number[][][] = [];
+    for (let y = 0; y < GRID_SIZE; y++) {
+      const layer: number[][] = [];
+      for (let x = 0; x < GRID_SIZE; x++) {
+        const row: number[] = [];
+        for (let z = 0; z < GRID_SIZE; z++) {
+          row.push(0);
+        }
+        layer.push(row);
+      }
+      newGrid.push(layer);
+    }
+    return newGrid;
+  };
+
+  useEffect(() => {
+    resetGame();
+  }, []);
+
+  useEffect(() => {
+    if (gamePaused || gameOver) {
+      if (gravityTimerRef.current) {
+        clearInterval(gravityTimerRef.current);
+        gravityTimerRef.current = null;
+      }
+      return;
+    }
+
+    const dropSpeed = getDropSpeed();
+    
+    gravityTimerRef.current = window.setInterval(() => {
+      moveBlock('down');
+    }, dropSpeed);
+
+    return () => {
+      if (gravityTimerRef.current) {
+        clearInterval(gravityTimerRef.current);
+        gravityTimerRef.current = null;
+      }
+    };
+  }, [gamePaused, gameOver, level, position]);
+
+  const resetGame = () => {
+    setGrid(initializeGrid());
+    setScore(0);
+    setCurrentBlock(getRandomBlockPattern());
+    setNextBlock(getRandomBlockPattern());
+    setPosition({...INITIAL_POSITION});
+    setGameOver(false);
+    setControlsEnabled(true);
+    setLevel(1);
+    setGamePaused(true);
+    
+    if (gravityTimerRef.current) {
+      clearInterval(gravityTimerRef.current);
+      gravityTimerRef.current = null;
+    }
+  };
+
+  const wouldExceedBoundary = (pattern: number[][], newX: number, newY: number, newZ: number) => {
+    for (let y = 0; y < pattern.length; y++) {
+      for (let x = 0; x < pattern[y].length; x++) {
+        if (pattern[y][x]) {
+          const gridX = newX + x;
+          const gridY = newY;
+          const gridZ = newZ + y;
           
-          // Check if out of bounds
           if (
             gridX < 0 || gridX >= GRID_SIZE ||
             gridY < 0 || gridY >= GRID_SIZE ||
             gridZ < 0 || gridZ >= GRID_SIZE
           ) {
-            return false;
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
+  const isValidPosition = (pattern: number[][], newX: number, newY: number, newZ: number) => {
+    if (wouldExceedBoundary(pattern, newX, newY, newZ)) {
+      return false;
+    }
+    
+    for (let y = 0; y < pattern.length; y++) {
+      for (let x = 0; x < pattern[y].length; x++) {
+        if (pattern[y][x]) {
+          const gridX = newX + x;
+          const gridY = newY;
+          const gridZ = newZ + y;
+          
+          if (
+            gridX < 0 || gridX >= GRID_SIZE ||
+            gridY < 0 || gridY >= GRID_SIZE ||
+            gridZ < 0 || gridZ >= GRID_SIZE
+          ) {
+            continue;
           }
           
-          // Check if cell is already occupied
           if (grid[gridY][gridX][gridZ] !== 0) {
             return false;
           }
         }
       }
     }
-    return true;
-  }, [grid]);
-
-  // Clear complete layers in the grid
-  const clearCompleteLayers = useCallback((grid: number[][][]) => {
-    let layersCleared = 0;
     
-    // Check each Y-layer
+    return true;
+  };
+
+  const placeBlock = () => {
+    const newGrid = JSON.parse(JSON.stringify(grid));
+    for (let y = 0; y < currentBlock.shape.length; y++) {
+      for (let x = 0; x < currentBlock.shape[y].length; x++) {
+        if (currentBlock.shape[y][x]) {
+          const gridX = position.x + x;
+          const gridY = position.y;
+          const gridZ = position.z + y;
+          
+          if (
+            gridX >= 0 && gridX < GRID_SIZE &&
+            gridY >= 0 && gridY < GRID_SIZE &&
+            gridZ >= 0 && gridZ < GRID_SIZE
+          ) {
+            newGrid[gridY][gridX][gridZ] = getColorIndex(currentBlock.color);
+          }
+        }
+      }
+    }
+    
+    setGrid(newGrid);
+    
+    const layersCleared = clearCompleteLayers(newGrid);
+    
+    const nextBlockPattern = nextBlock;
+    setCurrentBlock(nextBlockPattern);
+    setNextBlock(getRandomBlockPattern());
+    
+    const newPosition = {...INITIAL_POSITION};
+    
+    if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
+      setGameOver(true);
+      setControlsEnabled(false);
+      setGamePaused(true);
+      toast({
+        title: "Game Over!",
+        description: `No space for new block. Final score: ${score} | Level: ${level}`,
+      });
+      return;
+    }
+    
+    setPosition(newPosition);
+    
+    if (layersCleared > 0 && level < MAX_LEVEL) {
+      const layerThreshold = Math.ceil(level / 5) + 1;
+      if (layersCleared >= layerThreshold) {
+        const newLevel = Math.min(MAX_LEVEL, level + 1);
+        setLevel(newLevel);
+        toast({
+          title: `Level Up!`,
+          description: `You are now on level ${newLevel}`,
+        });
+      }
+    }
+  };
+
+  const getColorIndex = (color: string): number => {
+    const colorMap: Record<string, number> = {
+      'blue': 1,
+      'red': 2,
+      'green': 3,
+      'purple': 4,
+      'yellow': 5
+    };
+    return colorMap[color] || 0;
+  };
+
+  const clearCompleteLayers = (grid: number[][][]) => {
+    let layersCleared = 0;
+    const gridCopy = JSON.parse(JSON.stringify(grid));
+    
     for (let y = 0; y < GRID_SIZE; y++) {
-      let layerComplete = true;
-      
-      // Check if this layer is completely filled
-      for (let x = 0; x < GRID_SIZE; x++) {
-        for (let z = 0; z < GRID_SIZE; z++) {
-          if (grid[y][x][z] === 0) {
-            layerComplete = false;
+      for (let z = 0; z < GRID_SIZE; z++) {
+        let rowFull = true;
+        for (let x = 0; x < GRID_SIZE; x++) {
+          if (gridCopy[y][x][z] === 0) {
+            rowFull = false;
             break;
           }
         }
-        if (!layerComplete) break;
+        
+        if (rowFull) {
+          for (let x = 0; x < GRID_SIZE; x++) {
+            gridCopy[y][x][z] = 0;
+          }
+          layersCleared++;
+        }
       }
       
-      // If layer is complete, clear it
-      if (layerComplete) {
-        layersCleared++;
-        
-        // Clear this layer
-        for (let x = 0; x < GRID_SIZE; x++) {
-          for (let z = 0; z < GRID_SIZE; z++) {
-            grid[y][x][z] = 0;
+      for (let x = 0; x < GRID_SIZE; x++) {
+        let rowFull = true;
+        for (let z = 0; z < GRID_SIZE; z++) {
+          if (gridCopy[y][x][z] === 0) {
+            rowFull = false;
+            break;
           }
+        }
+        
+        if (rowFull) {
+          for (let z = 0; z < GRID_SIZE; z++) {
+            gridCopy[y][x][z] = 0;
+          }
+          layersCleared++;
         }
       }
     }
     
-    return layersCleared;
-  }, []);
-
-  // Apply gravity to blocks after clearing layers
-  const applyGravityToBlocks = useCallback((grid: number[][][]) => {
-    // For each column
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
-        // Collect all blocks in this column
-        const blocks: number[] = [];
+        let columnFull = true;
         for (let y = 0; y < GRID_SIZE; y++) {
-          if (grid[y][x][z] !== 0) {
-            blocks.push(grid[y][x][z]);
-            grid[y][x][z] = 0;
+          if (gridCopy[y][x][z] === 0) {
+            columnFull = false;
+            break;
           }
         }
         
-        // Place blocks from bottom up
-        for (let i = 0; i < blocks.length; i++) {
-          const y = GRID_SIZE - 1 - i;
-          grid[y][x][z] = blocks[blocks.length - 1 - i];
+        if (columnFull) {
+          for (let y = 0; y < GRID_SIZE; y++) {
+            gridCopy[y][x][z] = 0;
+          }
+          layersCleared++;
         }
       }
     }
-  }, []);
-
-  // Place the current block into the grid
-  const placeBlock = useCallback(() => {
-    setGrid(prevGrid => {
-      // Create a deep copy of the current grid
-      const newGrid = JSON.parse(JSON.stringify(prevGrid));
-      
-      // First, place the current block in the grid
-      for (let y = 0; y < currentBlock.shape.length; y++) {
-        for (let x = 0; x < currentBlock.shape[y].length; x++) {
-          if (currentBlock.shape[y][x]) {
-            const gridX = position.x + x;
-            const gridY = position.y;
-            const gridZ = position.z + y;
-            
-            if (
-              gridX >= 0 && gridX < GRID_SIZE &&
-              gridY >= 0 && gridY < GRID_SIZE &&
-              gridZ >= 0 && gridZ < GRID_SIZE
-            ) {
-              newGrid[gridY][gridX][gridZ] = getColorIndex(currentBlock.color);
-            }
+    
+    for (let y = 0; y < GRID_SIZE; y++) {
+      let layerFull = true;
+      for (let x = 0; x < GRID_SIZE && layerFull; x++) {
+        for (let z = 0; z < GRID_SIZE && layerFull; z++) {
+          if (gridCopy[y][x][z] === 0) {
+            layerFull = false;
           }
         }
       }
       
-      // Then clear any completed layers and calculate score
-      const layersCleared = clearCompleteLayers(newGrid);
-      
-      // Finally, apply gravity to ensure blocks fall properly
-      applyGravityToBlocks(newGrid);
-      
-      // Update score if layers were cleared
-      if (layersCleared > 0) {
-        const levelMultiplier = 1 + (level * 0.1);
-        const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
-        setTimeout(() => {
-          setScore(prevScore => prevScore + pointsScored);
-          toast({
-            title: `${layersCleared} lines cleared!`,
-            description: `+${pointsScored} points`,
-          });
+      if (layerFull) {
+        for (let x = 0; x < GRID_SIZE; x++) {
+          for (let z = 0; z < GRID_SIZE; z++) {
+            gridCopy[y][x][z] = 0;
+          }
+        }
+        layersCleared++;
+      }
+    }
+    
+    applyGravityToBlocks(gridCopy);
+    
+    if (layersCleared > 0) {
+      const levelMultiplier = 1 + (level * 0.1);
+      const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
+      setScore(prevScore => prevScore + pointsScored);
+      toast({
+        title: `${layersCleared} lines cleared!`,
+        description: `+${pointsScored} points`,
+      });
+    }
+    
+    setGrid([...gridCopy]);
+    return layersCleared;
+  };
 
-          // Check for level up
-          if (level < MAX_LEVEL) {
-            const layerThreshold = Math.ceil(level / 5) + 1;
-            if (layersCleared >= layerThreshold) {
-              const newLevel = Math.min(MAX_LEVEL, level + 1);
-              setLevel(newLevel);
-              toast({
-                title: `Level Up!`,
-                description: `You are now on level ${newLevel}`,
-              });
+  const applyGravityToBlocks = (grid: number[][][]) => {
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let z = 0; z < GRID_SIZE; z++) {
+        for (let y = 1; y < GRID_SIZE; y++) {
+          if (grid[y][x][z] !== 0) {
+            let newY = y;
+            
+            while (newY > 0 && grid[newY - 1][x][z] === 0) {
+              newY--;
+            }
+            
+            if (newY < y) {
+              grid[newY][x][z] = grid[y][x][z];
+              grid[y][x][z] = 0;
             }
           }
-        }, 200);
+        }
       }
-      
-      return newGrid; // Return the final modified grid
-    });
+    }
+  };
 
-    // Wait a bit longer (500ms) to see the effect of clearing layers
-    setTimeout(() => {
-      // Then set the next block
-      const nextBlockPattern = nextBlock;
-      setCurrentBlock(nextBlockPattern);
-      setNextBlock(getRandomBlockPattern());
-      
-      const newPosition = {...INITIAL_POSITION};
-      
-      if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
-        setGameOver(true);
-        setControlsEnabled(false);
-        setGamePaused(true);
-        toast({
-          title: "Game Over!",
-          description: `No space for new block. Final score: ${score} | Level: ${level}`,
-        });
-        return;
-      }
-      
-      setPosition(newPosition);
-    }, 500); // 500ms delay to see the effect of clearing layers
-  }, [
-    currentBlock, 
-    nextBlock, 
-    position, 
-    isValidPosition, 
-    clearCompleteLayers, 
-    applyGravityToBlocks, 
-    level, 
-    score, 
-    toast
-  ]);
-
-  // Move the current block
-  const moveBlock = useCallback((dx: number, dy: number, dz: number) => {
-    if (!controlsEnabled || gamePaused) return;
+  const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
+    if (gameOver || !controlsEnabled || gamePaused) return;
     
-    const newX = position.x + dx;
-    const newY = position.y + dy;
-    const newZ = position.z + dz;
+    let newX = position.x;
+    let newY = position.y;
+    let newZ = position.z;
+    
+    if (direction === 'left') newX -= 1;
+    if (direction === 'right') newX += 1;
+    if (direction === 'forward') newZ -= 1;
+    if (direction === 'backward') newZ += 1;
+    if (direction === 'down') newY -= 1;
     
     if (isValidPosition(currentBlock.shape, newX, newY, newZ)) {
       setPosition({ x: newX, y: newY, z: newZ });
-      return true;
-    }
-    
-    // If moving down is not possible, place the block
-    if (dy > 0) {
+    } else if (direction === 'down') {
       placeBlock();
     }
+  };
+
+  const rotateBlock = (axis: 'x' | 'y' | 'z') => {
+    if (gameOver || !controlsEnabled || gamePaused) return;
     
-    return false;
-  }, [position, currentBlock, isValidPosition, controlsEnabled, gamePaused, placeBlock]);
-
-  // Reset game state
-  const resetGame = useCallback(() => {
-    setGrid(Array(GRID_SIZE).fill(0).map(() => 
-      Array(GRID_SIZE).fill(0).map(() => 
-        Array(GRID_SIZE).fill(0)
-      )
-    ));
-    setCurrentBlock(getRandomBlockPattern());
-    setNextBlock(getRandomBlockPattern());
-    setPosition({...INITIAL_POSITION});
-    setGameOver(false);
-    setGamePaused(true);
-    setControlsEnabled(true);
-    setScore(0);
-    setLevel(1);
-  }, []);
-
-  // Toggle game pause state
-  const togglePause = useCallback(() => {
-    if (gameOver) return;
-    setGamePaused(prev => !prev);
-  }, [gameOver]);
-
-  // Game loop
-  useEffect(() => {
-    if (gamePaused || gameOver) return;
+    const rotatedPattern = [...currentBlock.shape];
     
-    const gameSpeed = Math.max(100, GAME_SPEED_MS - (level * 50));
-    const timer = setTimeout(() => {
-      moveBlock(0, 1, 0);
-    }, gameSpeed);
-    
-    return () => clearTimeout(timer);
-  }, [gamePaused, gameOver, moveBlock, level]);
-
-  // Keyboard controls
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!controlsEnabled) return;
+    if (axis === 'x' || axis === 'z') {
+      const numRows = rotatedPattern.length;
+      const numCols = rotatedPattern[0].length;
       
-      switch (e.key) {
+      const newPattern: number[][] = Array(numCols).fill(0).map(() => Array(numRows).fill(0));
+      
+      for (let r = 0; r < numRows; r++) {
+        for (let c = 0; c < numCols; c++) {
+          if (axis === 'z') {
+            newPattern[c][numRows - 1 - r] = rotatedPattern[r][c];
+          } else {
+            newPattern[numCols - 1 - c][r] = rotatedPattern[r][c];
+          }
+        }
+      }
+      
+      if (isValidPosition(newPattern, position.x, position.y, position.z)) {
+        setCurrentBlock({
+          ...currentBlock,
+          shape: newPattern
+        });
+      } else {
+        const offsets = [
+          { x: -1, y: 0, z: 0 },
+          { x: 1, y: 0, z: 0 },
+          { x: 0, y: 0, z: -1 },
+          { x: 0, y: 0, z: 1 },
+          { x: -1, y: 0, z: -1 },
+          { x: 1, y: 0, z: -1 },
+          { x: -1, y: 0, z: 1 },
+          { x: 1, y: 0, z: 1 },
+        ];
+        
+        let validPositionFound = false;
+        
+        for (const offset of offsets) {
+          const newX = position.x + offset.x;
+          const newY = position.y;
+          const newZ = position.z + offset.z;
+          
+          if (isValidPosition(newPattern, newX, newY, newZ)) {
+            setCurrentBlock({
+              ...currentBlock,
+              shape: newPattern
+            });
+            setPosition({ x: newX, y: newY, z: newZ });
+            validPositionFound = true;
+            break;
+          }
+        }
+        
+        if (!validPositionFound) {
+          toast({
+            title: "Can't rotate",
+            description: "Not enough space to rotate block",
+          });
+        }
+      }
+    }
+  };
+
+  const dropBlock = () => {
+    if (gameOver || !controlsEnabled || gamePaused) return;
+    
+    let newY = position.y;
+    
+    while (isValidPosition(currentBlock.shape, position.x, newY - 1, position.z)) {
+      newY--;
+    }
+    
+    setPosition({ ...position, y: newY });
+    
+    setTimeout(() => {
+      placeBlock();
+    }, 0);
+  };
+
+  const toggleGamePause = () => {
+    if (gameOver) return;
+    
+    const newPausedState = !gamePaused;
+    setGamePaused(newPausedState);
+    setControlsEnabled(!newPausedState);
+    
+    if (newPausedState) {
+      toast({
+        title: "Game Paused",
+        description: "Take a breather!",
+      });
+    } else {
+      toast({
+        title: "Game Resumed",
+        description: "Let's go!",
+      });
+      
+      if (gameBoardRef.current) {
+        setTimeout(() => {
+          gameBoardRef.current?.focus();
+        }, 0);
+      }
+    }
+  };
+
+  const startGame = () => {
+    if (!gamePaused) return;
+    
+    setGamePaused(false);
+    setControlsEnabled(true);
+    
+    if (gameBoardRef.current) {
+      setTimeout(() => {
+        gameBoardRef.current?.focus();
+      }, 0);
+    }
+    
+    toast({
+      title: "Game Started",
+      description: "Good luck!",
+    });
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!controlsEnabled || gamePaused) return;
+      
+      switch (event.key) {
         case 'ArrowLeft':
-        case 'a':
-          moveBlock(-1, 0, 0);
+          moveBlock('left');
           break;
         case 'ArrowRight':
-        case 'd':
-          moveBlock(1, 0, 0);
+          moveBlock('right');
           break;
         case 'ArrowUp':
-        case 'w':
-          moveBlock(0, 0, -1);
+          moveBlock('forward');
           break;
         case 'ArrowDown':
-        case 's':
-          moveBlock(0, 0, 1);
+          moveBlock('backward');
           break;
-        case ' ':
-          // Drop block to bottom
-          while (moveBlock(0, 1, 0)) {}
+        case ' ':  // Space key - only drop, don't rotate
+          dropBlock();
           break;
-        case 'p':
-          togglePause();
+        case 'z':  // Rotate around z-axis
+          rotateBlock('z');
           break;
-        case 'r':
-          resetGame();
+        case 'x':  // Rotate around x-axis
+          rotateBlock('x');
+          break;
+        default:
           break;
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [moveBlock, controlsEnabled, togglePause, resetGame]);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [position, currentBlock, grid, gameOver, controlsEnabled, gamePaused]);
+
+  const handleViewChange = (viewPoint: ViewPoint) => {
+    setCurrentView(viewPoint);
+    
+    if (orbitControlsRef.current) {
+      const controls = orbitControlsRef.current as any;
+      
+      if (controls.object) {
+        controls.object.position.set(...viewPoint.position);
+        
+        if (viewPoint.target) {
+          controls.target.set(...viewPoint.target);
+        } else {
+          controls.target.set(4.5, 4.5, 4.5);
+        }
+        
+        controls.update();
+      }
+    }
+    
+    toast({
+      title: `View Changed`,
+      description: `Now viewing from ${viewPoint.name}`,
+    });
+  };
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-screen bg-gray-900 text-white">
-      {/* Game canvas */}
-      <div className="flex-grow relative">
-        <Canvas camera={{ position: [15, 15, 15], fov: 50 }}>
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} />
-          <Grid3D 
-            grid={grid} 
-            currentBlock={currentBlock} 
-            position={position} 
-          />
-          <OrbitControls enablePan={false} />
-          <gridHelper args={[GRID_SIZE, GRID_SIZE]} />
-          <axesHelper args={[5]} />
-        </Canvas>
-        
-        {/* Game status overlay */}
-        <div className="absolute top-4 left-4 flex flex-col gap-4">
-          <ScoreDisplay score={score} />
-          <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
-        </div>
-      </div>
+    <div className="flex flex-col justify-center items-center min-h-screen p-2 md:p-4">
+      <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white text-center">
+        3D Block Busters
+      </h1>
       
-      {/* Game controls sidebar */}
-      <div className="w-full md:w-64 p-4 bg-gray-800 flex flex-col gap-6">
-        <h2 className="text-xl font-bold text-center mb-4">3D Tetris</h2>
-        
-        {/* Next block preview */}
-        <div className="bg-gray-700 p-4 rounded-lg">
-          <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Next Block</h3>
-          <div className="h-32 relative">
-            <Canvas>
+      <div className="game-container rounded-lg overflow-hidden w-full max-w-[1400px] flex flex-col md:flex-row gap-4 bg-black bg-opacity-30">
+        <div className="flex-1 min-h-[550px] md:min-h-[650px]">
+          <div className="flex justify-end items-center mb-2 p-2">
+            <ViewControls 
+              viewPoints={VIEW_POINTS} 
+              onSelectView={handleViewChange}
+            />
+          </div>
+          
+          <div 
+            className="game-board rounded-lg overflow-hidden h-[500px] md:h-[600px] relative"
+            ref={gameBoardRef}
+            tabIndex={0}
+          >
+            <Canvas camera={{ position: currentView.position, fov: 50 }}>
               <ambientLight intensity={0.5} />
               <pointLight position={[10, 10, 10]} />
-              <BlockPreview block={nextBlock} />
-              <OrbitControls enableZoom={false} enablePan={false} />
+              <Grid3D 
+                grid={grid} 
+                currentBlock={currentBlock} 
+                position={position}
+              />
+              <OrbitControls 
+                ref={orbitControlsRef} 
+                enabled={controlsEnabled}
+                minDistance={10}
+                maxDistance={30}
+                target={currentView.target || [4.5, 4.5, 4.5]}
+              />
             </Canvas>
+            <Grid3DLabels />
           </div>
         </div>
         
-        {/* Game controls */}
-        <GameControls3D 
-          onReset={resetGame}
-          onStartPause={togglePause}
-          isPaused={gamePaused}
-          gameOver={gameOver}
-        />
-        
-        {/* Game instructions */}
-        <div className="mt-auto">
-          <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Controls</h3>
-          <ul className="text-xs text-gray-400">
-            <li>WASD / Arrows: Move block</li>
-            <li>Space: Drop block</li>
-            <li>P: Pause game</li>
-            <li>R: Reset game</li>
-          </ul>
+        <div className="flex flex-col justify-between gap-4 w-full md:w-64 p-4">
+          <div className="space-y-4">
+            <ScoreDisplay score={score} />
+            
+            <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
+            
+            <div className="p-4 rounded-lg bg-black bg-opacity-30">
+              <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-4">Next Block</h3>
+              <div className="flex justify-center">
+                <BlockPreview block={nextBlock} className="w-24 h-24" />
+              </div>
+            </div>
+          </div>
+          
+          <GameControls3D 
+            onReset={resetGame}
+            onStartPause={gamePaused ? startGame : toggleGamePause}
+            isPaused={gamePaused}
+            gameOver={gameOver}
+          />
         </div>
       </div>
+      
+      {gameOver && (
+        <div className="mt-6 animate-scale-in">
+          <p className="text-xl text-white mb-3">Game Over! Final Score: {score} | Level: {level}</p>
+        </div>
+      )}
+      
+      <GuidelineOverlay />
     </div>
   );
 };
 
-export default Game3D; // Add the default export
+export default Game3D;
