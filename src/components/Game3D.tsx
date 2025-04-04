@@ -17,6 +17,7 @@ const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
 const MAX_LEVEL = 99;
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
+const LAYER_HIGHLIGHT_DELAY = 500; // 0.5 second delay
 
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
@@ -28,6 +29,7 @@ const VIEW_POINTS: ViewPoint[] = [
 
 const Game3D: React.FC = () => {
   const [grid, setGrid] = useState<number[][][]>([]);
+  const [highlightedLayers, setHighlightedLayers] = useState<{y: number, type: string}[]>([]);
   const [score, setScore] = useState(0);
   const [currentBlock, setCurrentBlock] = useState<BlockPattern>(getRandomBlockPattern());
   const [nextBlock, setNextBlock] = useState<BlockPattern>(getRandomBlockPattern());
@@ -36,6 +38,7 @@ const Game3D: React.FC = () => {
   const [controlsEnabled, setControlsEnabled] = useState(true);
   const [level, setLevel] = useState(1);
   const [gamePaused, setGamePaused] = useState(true);
+  const [processingLayers, setProcessingLayers] = useState(false);
   const orbitControlsRef = useRef(null);
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
@@ -66,7 +69,7 @@ const Game3D: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (gamePaused || gameOver) {
+    if (gamePaused || gameOver || processingLayers) {
       if (gravityTimerRef.current) {
         clearInterval(gravityTimerRef.current);
         gravityTimerRef.current = null;
@@ -86,7 +89,7 @@ const Game3D: React.FC = () => {
         gravityTimerRef.current = null;
       }
     };
-  }, [gamePaused, gameOver, level, position]);
+  }, [gamePaused, gameOver, level, position, processingLayers]);
 
   const resetGame = () => {
     setGrid(initializeGrid());
@@ -98,6 +101,8 @@ const Game3D: React.FC = () => {
     setControlsEnabled(true);
     setLevel(1);
     setGamePaused(true);
+    setHighlightedLayers([]);
+    setProcessingLayers(false);
     
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
@@ -177,9 +182,184 @@ const Game3D: React.FC = () => {
     }
     
     setGrid(newGrid);
+    setProcessingLayers(true);
     
-    const layersCleared = clearCompleteLayers(newGrid);
+    // Find layers to clear and process them with delay
+    processLayerClearing(newGrid);
+  };
+
+  const getColorIndex = (color: string): number => {
+    const colorMap: Record<string, number> = {
+      'blue': 1,
+      'red': 2,
+      'green': 3,
+      'purple': 4,
+      'yellow': 5
+    };
+    return colorMap[color] || 0;
+  };
+
+  const processLayerClearing = async (gridState: number[][][]) => {
+    const layersToHighlight = findLayersToClear(gridState);
     
+    if (layersToHighlight.length > 0) {
+      // Highlight and clear layers sequentially with delay
+      setHighlightedLayers(layersToHighlight);
+      
+      // After allowing time for visualization, start clearing each layer
+      setTimeout(() => {
+        clearLayersSequentially(gridState, layersToHighlight);
+      }, LAYER_HIGHLIGHT_DELAY);
+    } else {
+      // No layers to clear, proceed to next block
+      setProcessingLayers(false);
+      spawnNextBlock();
+    }
+  };
+
+  const clearLayersSequentially = (gridState: number[][][], layersInfo: {y: number, type: string}[], currentIndex = 0) => {
+    if (currentIndex >= layersInfo.length) {
+      // All layers processed, apply gravity and spawn next block
+      const finalGrid = JSON.parse(JSON.stringify(gridState));
+      applyGravityToBlocks(finalGrid);
+      setGrid(finalGrid);
+      setHighlightedLayers([]);
+      setProcessingLayers(false);
+      
+      // Calculate score based on number of layers cleared
+      const levelMultiplier = 1 + (level * 0.1);
+      const pointsScored = Math.floor(layersInfo.length * 10 * levelMultiplier);
+      setScore(prevScore => prevScore + pointsScored);
+      
+      // Check for level up
+      if (layersInfo.length > 0 && level < MAX_LEVEL) {
+        const layerThreshold = Math.ceil(level / 5) + 1;
+        if (layersInfo.length >= layerThreshold) {
+          const newLevel = Math.min(MAX_LEVEL, level + 1);
+          setLevel(newLevel);
+          toast({
+            title: `Level Up!`,
+            description: `You are now on level ${newLevel}`,
+          });
+        }
+      }
+      
+      // Show score toast
+      if (layersInfo.length > 0) {
+        toast({
+          title: `${layersInfo.length} layers cleared!`,
+          description: `+${pointsScored} points`,
+        });
+      }
+      
+      spawnNextBlock();
+      return;
+    }
+    
+    // Process current layer
+    const { y, type } = layersInfo[currentIndex];
+    const updatedGrid = JSON.parse(JSON.stringify(gridState));
+    
+    // Clear the highlighted layer
+    if (type === 'horizontal-x') {
+      for (let x = 0; x < GRID_SIZE; x++) {
+        for (let z = 0; z < GRID_SIZE; z++) {
+          updatedGrid[y][x][z] = 0;
+        }
+      }
+    } else if (type === 'horizontal-z') {
+      const z = parseInt(type.split('-')[2]);
+      for (let x = 0; x < GRID_SIZE; x++) {
+        for (let y = 0; y < GRID_SIZE; y++) {
+          updatedGrid[y][x][z] = 0;
+        }
+      }
+    } else if (type.startsWith('row-')) {
+      const [_, x, z] = type.split('-').map(Number);
+      for (let y = 0; y < GRID_SIZE; y++) {
+        updatedGrid[y][x][z] = 0;
+      }
+    } else if (type.startsWith('column-x')) {
+      const x = parseInt(type.split('-')[1]);
+      for (let z = 0; z < GRID_SIZE; z++) {
+        updatedGrid[y][x][z] = 0;
+      }
+    } else if (type.startsWith('column-z')) {
+      const z = parseInt(type.split('-')[1]);
+      for (let x = 0; x < GRID_SIZE; x++) {
+        updatedGrid[y][x][z] = 0;
+      }
+    }
+    
+    setGrid(updatedGrid);
+    
+    // Update highlighted layers to show only the next layer
+    setHighlightedLayers(layersInfo.slice(currentIndex + 1));
+    
+    // Process next layer after delay
+    setTimeout(() => {
+      clearLayersSequentially(updatedGrid, layersInfo, currentIndex + 1);
+    }, LAYER_HIGHLIGHT_DELAY);
+  };
+
+  const findLayersToClear = (grid: number[][][]): {y: number, type: string}[] => {
+    const layersToHighlight: {y: number, type: string}[] = [];
+    
+    // Check horizontal layers (y-constant)
+    for (let y = 0; y < GRID_SIZE; y++) {
+      let filledCount = 0;
+      for (let x = 0; x < GRID_SIZE; x++) {
+        for (let z = 0; z < GRID_SIZE; z++) {
+          if (grid[y][x][z] !== 0) {
+            filledCount++;
+          }
+        }
+      }
+      
+      // If at least 5 blocks in this layer, mark it for highlighting
+      if (filledCount >= 5) {
+        layersToHighlight.push({ y, type: 'horizontal-x' });
+      }
+    }
+    
+    // Check rows (x-constant, z-constant)
+    for (let y = 0; y < GRID_SIZE; y++) {
+      for (let x = 0; x < GRID_SIZE; x++) {
+        let rowFull = true;
+        let blockCount = 0;
+        for (let z = 0; z < GRID_SIZE; z++) {
+          if (grid[y][x][z] !== 0) {
+            blockCount++;
+          }
+        }
+        
+        if (blockCount >= 5) {
+          layersToHighlight.push({ y, type: `column-x-${x}` });
+        }
+      }
+    }
+    
+    // Check columns (z-constant, x-constant)
+    for (let y = 0; y < GRID_SIZE; y++) {
+      for (let z = 0; z < GRID_SIZE; z++) {
+        let columnFull = true;
+        let blockCount = 0;
+        for (let x = 0; x < GRID_SIZE; x++) {
+          if (grid[y][x][z] !== 0) {
+            blockCount++;
+          }
+        }
+        
+        if (blockCount >= 5) {
+          layersToHighlight.push({ y, type: `column-z-${z}` });
+        }
+      }
+    }
+    
+    return layersToHighlight;
+  };
+
+  const spawnNextBlock = () => {
     const nextBlockPattern = nextBlock;
     setCurrentBlock(nextBlockPattern);
     setNextBlock(getRandomBlockPattern());
@@ -198,124 +378,6 @@ const Game3D: React.FC = () => {
     }
     
     setPosition(newPosition);
-    
-    if (layersCleared > 0 && level < MAX_LEVEL) {
-      const layerThreshold = Math.ceil(level / 5) + 1;
-      if (layersCleared >= layerThreshold) {
-        const newLevel = Math.min(MAX_LEVEL, level + 1);
-        setLevel(newLevel);
-        toast({
-          title: `Level Up!`,
-          description: `You are now on level ${newLevel}`,
-        });
-      }
-    }
-  };
-
-  const getColorIndex = (color: string): number => {
-    const colorMap: Record<string, number> = {
-      'blue': 1,
-      'red': 2,
-      'green': 3,
-      'purple': 4,
-      'yellow': 5
-    };
-    return colorMap[color] || 0;
-  };
-
-  const clearCompleteLayers = (grid: number[][][]) => {
-    let layersCleared = 0;
-    const gridCopy = JSON.parse(JSON.stringify(grid));
-    
-    for (let y = 0; y < GRID_SIZE; y++) {
-      for (let z = 0; z < GRID_SIZE; z++) {
-        let rowFull = true;
-        for (let x = 0; x < GRID_SIZE; x++) {
-          if (gridCopy[y][x][z] === 0) {
-            rowFull = false;
-            break;
-          }
-        }
-        
-        if (rowFull) {
-          for (let x = 0; x < GRID_SIZE; x++) {
-            gridCopy[y][x][z] = 0;
-          }
-          layersCleared++;
-        }
-      }
-      
-      for (let x = 0; x < GRID_SIZE; x++) {
-        let rowFull = true;
-        for (let z = 0; z < GRID_SIZE; z++) {
-          if (gridCopy[y][x][z] === 0) {
-            rowFull = false;
-            break;
-          }
-        }
-        
-        if (rowFull) {
-          for (let z = 0; z < GRID_SIZE; z++) {
-            gridCopy[y][x][z] = 0;
-          }
-          layersCleared++;
-        }
-      }
-    }
-    
-    for (let x = 0; x < GRID_SIZE; x++) {
-      for (let z = 0; z < GRID_SIZE; z++) {
-        let columnFull = true;
-        for (let y = 0; y < GRID_SIZE; y++) {
-          if (gridCopy[y][x][z] === 0) {
-            columnFull = false;
-            break;
-          }
-        }
-        
-        if (columnFull) {
-          for (let y = 0; y < GRID_SIZE; y++) {
-            gridCopy[y][x][z] = 0;
-          }
-          layersCleared++;
-        }
-      }
-    }
-    
-    for (let y = 0; y < GRID_SIZE; y++) {
-      let layerFull = true;
-      for (let x = 0; x < GRID_SIZE && layerFull; x++) {
-        for (let z = 0; z < GRID_SIZE && layerFull; z++) {
-          if (gridCopy[y][x][z] === 0) {
-            layerFull = false;
-          }
-        }
-      }
-      
-      if (layerFull) {
-        for (let x = 0; x < GRID_SIZE; x++) {
-          for (let z = 0; z < GRID_SIZE; z++) {
-            gridCopy[y][x][z] = 0;
-          }
-        }
-        layersCleared++;
-      }
-    }
-    
-    applyGravityToBlocks(gridCopy);
-    
-    if (layersCleared > 0) {
-      const levelMultiplier = 1 + (level * 0.1);
-      const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
-      setScore(prevScore => prevScore + pointsScored);
-      toast({
-        title: `${layersCleared} lines cleared!`,
-        description: `+${pointsScored} points`,
-      });
-    }
-    
-    setGrid([...gridCopy]);
-    return layersCleared;
   };
 
   const applyGravityToBlocks = (grid: number[][][]) => {
@@ -340,7 +402,7 @@ const Game3D: React.FC = () => {
   };
 
   const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
-    if (gameOver || !controlsEnabled || gamePaused) return;
+    if (gameOver || !controlsEnabled || gamePaused || processingLayers) return;
     
     let newX = position.x;
     let newY = position.y;
@@ -360,7 +422,7 @@ const Game3D: React.FC = () => {
   };
 
   const rotateBlock = (axis: 'x' | 'y' | 'z') => {
-    if (gameOver || !controlsEnabled || gamePaused) return;
+    if (gameOver || !controlsEnabled || gamePaused || processingLayers) return;
     
     const rotatedPattern = [...currentBlock.shape];
     
@@ -426,7 +488,7 @@ const Game3D: React.FC = () => {
   };
 
   const dropBlock = () => {
-    if (gameOver || !controlsEnabled || gamePaused) return;
+    if (gameOver || !controlsEnabled || gamePaused || processingLayers) return;
     
     let newY = position.y;
     
@@ -521,7 +583,7 @@ const Game3D: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [position, currentBlock, grid, gameOver, controlsEnabled, gamePaused]);
+  }, [position, currentBlock, grid, gameOver, controlsEnabled, gamePaused, processingLayers]);
 
   const handleViewChange = (viewPoint: ViewPoint) => {
     setCurrentView(viewPoint);
@@ -575,6 +637,7 @@ const Game3D: React.FC = () => {
                 grid={grid} 
                 currentBlock={currentBlock} 
                 position={position}
+                highlightedLayers={highlightedLayers}
               />
               <OrbitControls 
                 ref={orbitControlsRef} 

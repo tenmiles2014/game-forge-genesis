@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
@@ -6,9 +7,10 @@ interface Grid3DProps {
   grid: number[][][];
   currentBlock: BlockPattern;
   position: { x: number; y: number; z: number };
+  highlightedLayers?: {y: number, type: string}[];
 }
 
-const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
+const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, highlightedLayers = [] }) => {
   // Color mapping
   const getColor = (colorIndex: number) => {
     const colors = {
@@ -71,6 +73,27 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return { x: position.x, y: lowestValidY, z: position.z };
   }, [grid, currentBlock.shape, position]);
 
+  // Check if a block should be highlighted
+  const isBlockHighlighted = (x: number, y: number, z: number) => {
+    if (!highlightedLayers || highlightedLayers.length === 0) return false;
+    
+    return highlightedLayers.some(layer => {
+      if (layer.y !== y) return false;
+      
+      if (layer.type === 'horizontal-x') {
+        return true; // All blocks at this y level are highlighted
+      } else if (layer.type.startsWith('column-x-')) {
+        const layerX = parseInt(layer.type.split('-')[2]);
+        return x === layerX;
+      } else if (layer.type.startsWith('column-z-')) {
+        const layerZ = parseInt(layer.type.split('-')[2]);
+        return z === layerZ;
+      }
+      
+      return false;
+    });
+  };
+
   // Render placed blocks from grid
   const renderPlacedBlocks = useMemo(() => {
     const blocks = [];
@@ -82,6 +105,8 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
       for (let x = 0; x < gridSize; x++) {
         for (let z = 0; z < gridSize; z++) {
           if (grid[y][x][z] !== 0) {
+            const isHighlighted = isBlockHighlighted(x, y, z);
+            
             blocks.push(
               <mesh 
                 key={`${x}-${y}-${z}`} 
@@ -90,7 +115,13 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
                 receiveShadow
               >
                 <boxGeometry args={[0.95, 0.95, 0.95]} />
-                <meshStandardMaterial color={getColor(grid[y][x][z])} />
+                <meshStandardMaterial 
+                  color={isHighlighted ? new THREE.Color('#FF5733') : getColor(grid[y][x][z])}
+                  emissive={isHighlighted ? new THREE.Color('#FF5733') : new THREE.Color('#000000')}
+                  emissiveIntensity={isHighlighted ? 0.5 : 0}
+                  transparent={isHighlighted}
+                  opacity={isHighlighted ? 0.9 : 1}
+                />
               </mesh>
             );
           }
@@ -99,7 +130,39 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
     
     return blocks;
-  }, [grid]);
+  }, [grid, highlightedLayers]);
+
+  // Render highlight effects for layers to be cleared
+  const renderHighlightEffects = useMemo(() => {
+    const highlights = [];
+    const gridSize = grid.length || 10;
+    
+    if (!highlightedLayers || highlightedLayers.length === 0) return highlights;
+    
+    for (const layer of highlightedLayers) {
+      if (layer.type === 'horizontal-x') {
+        // Highlight entire y-layer
+        highlights.push(
+          <mesh 
+            key={`highlight-layer-${layer.y}`}
+            position={[gridSize/2 - 0.5, layer.y, gridSize/2 - 0.5]}
+          >
+            <boxGeometry args={[gridSize, 0.1, gridSize]} />
+            <meshStandardMaterial
+              color="#FF5733"
+              transparent={true}
+              opacity={0.3}
+              emissive="#FF5733"
+              emissiveIntensity={0.5}
+            />
+          </mesh>
+        );
+      }
+      // Add more highlight effects for other layer types if needed
+    }
+    
+    return highlights;
+  }, [highlightedLayers, grid.length]);
 
   // Render ghost block (prediction)
   const renderGhostBlock = useMemo(() => {
@@ -274,6 +337,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
   return (
     <group>
       {renderPlacedBlocks}
+      {renderHighlightEffects}
       {renderCurrentBlock}
       {renderGhostBlock}
       {renderPredictionLines}
