@@ -17,6 +17,7 @@ const GameBlock: React.FC<GameBlockProps> = ({ color, className, isPreview = fal
     green: "bg-game-green",
     purple: "bg-game-purple",
     yellow: "bg-game-yellow",
+    highlight: "bg-white animate-pulse" // Add highlight animation for rows being cleared
   };
   
   const blockColor = colorMap[color] || "bg-gray-400";
