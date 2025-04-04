@@ -1,35 +1,46 @@
 
 import React from 'react';
-import GameBlock from './GameBlock';
 import { BlockPattern } from './BlockPatterns';
+import * as THREE from 'three';
 
 interface BlockPreviewProps {
   block: BlockPattern;
-  className?: string;
 }
 
-const BlockPreview: React.FC<BlockPreviewProps> = ({ block, className }) => {
-  const maxRows = Math.max(block.shape.length, 4);
-  const maxCols = Math.max(...block.shape.map(row => row.length), 4);
-  
+const BlockPreview: React.FC<BlockPreviewProps> = ({ block }) => {
+  // Get color as THREE.Color
+  const getBlockColor = () => {
+    const colorMap: Record<string, THREE.Color> = {
+      'blue': new THREE.Color('#3b82f6'),
+      'red': new THREE.Color('#ef4444'),
+      'green': new THREE.Color('#22c55e'),
+      'purple': new THREE.Color('#a855f7'),
+      'yellow': new THREE.Color('#eab308'),
+      'cyan': new THREE.Color('#06b6d4'),
+      'orange': new THREE.Color('#f97316'),
+    };
+    return colorMap[block.color] || new THREE.Color('gray');
+  };
+
   return (
-    <div className={`grid gap-1 ${className}`}
-         style={{ 
-           gridTemplateRows: `repeat(${maxRows}, 1fr)`,
-           gridTemplateColumns: `repeat(${maxCols}, 1fr)`
-         }}>
-      {Array.from({ length: maxRows }).map((_, rowIndex) => (
-        Array.from({ length: maxCols }).map((_, colIndex) => (
-          <div key={`${rowIndex}-${colIndex}`} className="aspect-square">
-            {rowIndex < block.shape.length && 
-             colIndex < block.shape[rowIndex].length && 
-             block.shape[rowIndex][colIndex] === 1 && (
-              <GameBlock color={block.color} isPreview={true} />
-            )}
-          </div>
+    <group position={[0, 0, 0]}>
+      {/* Create a cube for each cell in the block pattern */}
+      {block.shape.map((row, rowIndex) => (
+        row.map((cell, colIndex) => (
+          cell === 1 && (
+            <mesh 
+              key={`${rowIndex}-${colIndex}`} 
+              position={[colIndex - (row.length / 2) + 0.5, 0, rowIndex - (block.shape.length / 2) + 0.5]}
+            >
+              <boxGeometry args={[0.9, 0.9, 0.9]} />
+              <meshStandardMaterial color={getBlockColor()} />
+            </mesh>
+          )
         ))
       ))}
-    </div>
+      {/* Add some lights */}
+      <directionalLight position={[5, 5, 5]} intensity={0.5} />
+    </group>
   );
 };
 
