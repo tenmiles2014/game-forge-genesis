@@ -157,59 +157,85 @@ const Game3D: React.FC = () => {
   };
 
   const placeBlock = () => {
-    const newGrid = JSON.parse(JSON.stringify(grid));
-    for (let y = 0; y < currentBlock.shape.length; y++) {
-      for (let x = 0; x < currentBlock.shape[y].length; x++) {
-        if (currentBlock.shape[y][x]) {
-          const gridX = position.x + x;
-          const gridY = position.y;
-          const gridZ = position.z + y;
-          
-          if (
-            gridX >= 0 && gridX < GRID_SIZE &&
-            gridY >= 0 && gridY < GRID_SIZE &&
-            gridZ >= 0 && gridZ < GRID_SIZE
-          ) {
-            newGrid[gridY][gridX][gridZ] = getColorIndex(currentBlock.color);
+    setGrid(prevGrid => {
+      // Create a deep copy of the current grid
+      const newGrid = JSON.parse(JSON.stringify(prevGrid));
+      
+      // First, place the current block in the grid
+      for (let y = 0; y < currentBlock.shape.length; y++) {
+        for (let x = 0; x < currentBlock.shape[y].length; x++) {
+          if (currentBlock.shape[y][x]) {
+            const gridX = position.x + x;
+            const gridY = position.y;
+            const gridZ = position.z + y;
+            
+            if (
+              gridX >= 0 && gridX < GRID_SIZE &&
+              gridY >= 0 && gridY < GRID_SIZE &&
+              gridZ >= 0 && gridZ < GRID_SIZE
+            ) {
+              newGrid[gridY][gridX][gridZ] = getColorIndex(currentBlock.color);
+            }
           }
         }
       }
-    }
-    
-    setGrid(newGrid);
-    
-    const layersCleared = clearCompleteLayers(newGrid);
-    
-    const nextBlockPattern = nextBlock;
-    setCurrentBlock(nextBlockPattern);
-    setNextBlock(getRandomBlockPattern());
-    
-    const newPosition = {...INITIAL_POSITION};
-    
-    if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
-      setGameOver(true);
-      setControlsEnabled(false);
-      setGamePaused(true);
-      toast({
-        title: "Game Over!",
-        description: `No space for new block. Final score: ${score} | Level: ${level}`,
-      });
-      return;
-    }
-    
-    setPosition(newPosition);
-    
-    if (layersCleared > 0 && level < MAX_LEVEL) {
-      const layerThreshold = Math.ceil(level / 5) + 1;
-      if (layersCleared >= layerThreshold) {
-        const newLevel = Math.min(MAX_LEVEL, level + 1);
-        setLevel(newLevel);
-        toast({
-          title: `Level Up!`,
-          description: `You are now on level ${newLevel}`,
-        });
+      
+      // Then clear any completed layers and calculate score
+      const layersCleared = clearCompleteLayers(newGrid);
+      
+      // Finally, apply gravity to ensure blocks fall properly
+      applyGravityToBlocks(newGrid);
+      
+      // Update score if layers were cleared
+      if (layersCleared > 0) {
+        const levelMultiplier = 1 + (level * 0.1);
+        const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
+        setTimeout(() => {
+          setScore(prevScore => prevScore + pointsScored);
+          toast({
+            title: `${layersCleared} lines cleared!`,
+            description: `+${pointsScored} points`,
+          });
+
+          // Check for level up
+          if (level < MAX_LEVEL) {
+            const layerThreshold = Math.ceil(level / 5) + 1;
+            if (layersCleared >= layerThreshold) {
+              const newLevel = Math.min(MAX_LEVEL, level + 1);
+              setLevel(newLevel);
+              toast({
+                title: `Level Up!`,
+                description: `You are now on level ${newLevel}`,
+              });
+            }
+          }
+        }, 200); // Small delay for visual feedback
       }
-    }
+      
+      return newGrid; // Return the final modified grid
+    });
+
+    // Set the next block and position with a small delay to allow visual feedback
+    setTimeout(() => {
+      const nextBlockPattern = nextBlock;
+      setCurrentBlock(nextBlockPattern);
+      setNextBlock(getRandomBlockPattern());
+      
+      const newPosition = {...INITIAL_POSITION};
+      
+      if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
+        setGameOver(true);
+        setControlsEnabled(false);
+        setGamePaused(true);
+        toast({
+          title: "Game Over!",
+          description: `No space for new block. Final score: ${score} | Level: ${level}`,
+        });
+        return;
+      }
+      
+      setPosition(newPosition);
+    }, 300); // Delay for visual effect
   };
 
   const getColorIndex = (color: string): number => {
@@ -225,13 +251,13 @@ const Game3D: React.FC = () => {
 
   const clearCompleteLayers = (grid: number[][][]) => {
     let layersCleared = 0;
-    const gridCopy = JSON.parse(JSON.stringify(grid));
     
+    // Check and clear horizontal rows (X-Z plane)
     for (let y = 0; y < GRID_SIZE; y++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         let rowFull = true;
         for (let x = 0; x < GRID_SIZE; x++) {
-          if (gridCopy[y][x][z] === 0) {
+          if (grid[y][x][z] === 0) {
             rowFull = false;
             break;
           }
@@ -239,16 +265,17 @@ const Game3D: React.FC = () => {
         
         if (rowFull) {
           for (let x = 0; x < GRID_SIZE; x++) {
-            gridCopy[y][x][z] = 0;
+            grid[y][x][z] = 0;
           }
           layersCleared++;
         }
       }
       
+      // Check and clear horizontal rows (X-Z plane, other direction)
       for (let x = 0; x < GRID_SIZE; x++) {
         let rowFull = true;
         for (let z = 0; z < GRID_SIZE; z++) {
-          if (gridCopy[y][x][z] === 0) {
+          if (grid[y][x][z] === 0) {
             rowFull = false;
             break;
           }
@@ -256,18 +283,19 @@ const Game3D: React.FC = () => {
         
         if (rowFull) {
           for (let z = 0; z < GRID_SIZE; z++) {
-            gridCopy[y][x][z] = 0;
+            grid[y][x][z] = 0;
           }
           layersCleared++;
         }
       }
     }
     
+    // Check and clear vertical columns
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         let columnFull = true;
         for (let y = 0; y < GRID_SIZE; y++) {
-          if (gridCopy[y][x][z] === 0) {
+          if (grid[y][x][z] === 0) {
             columnFull = false;
             break;
           }
@@ -275,18 +303,19 @@ const Game3D: React.FC = () => {
         
         if (columnFull) {
           for (let y = 0; y < GRID_SIZE; y++) {
-            gridCopy[y][x][z] = 0;
+            grid[y][x][z] = 0;
           }
           layersCleared++;
         }
       }
     }
     
+    // Check and clear entire horizontal layers
     for (let y = 0; y < GRID_SIZE; y++) {
       let layerFull = true;
       for (let x = 0; x < GRID_SIZE && layerFull; x++) {
         for (let z = 0; z < GRID_SIZE && layerFull; z++) {
-          if (gridCopy[y][x][z] === 0) {
+          if (grid[y][x][z] === 0) {
             layerFull = false;
           }
         }
@@ -295,46 +324,35 @@ const Game3D: React.FC = () => {
       if (layerFull) {
         for (let x = 0; x < GRID_SIZE; x++) {
           for (let z = 0; z < GRID_SIZE; z++) {
-            gridCopy[y][x][z] = 0;
+            grid[y][x][z] = 0;
           }
         }
         layersCleared++;
       }
     }
     
-    applyGravityToBlocks(gridCopy);
-    
-    if (layersCleared > 0) {
-      const levelMultiplier = 1 + (level * 0.1);
-      const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
-      setScore(prevScore => prevScore + pointsScored);
-      toast({
-        title: `${layersCleared} lines cleared!`,
-        description: `+${pointsScored} points`,
-      });
-    }
-    
-    setGrid([...gridCopy]);
     return layersCleared;
   };
 
   const applyGravityToBlocks = (grid: number[][][]) => {
+    // For each column in the grid
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
-        for (let y = 1; y < GRID_SIZE; y++) {
+        // Collect all blocks in this column
+        const blocks: number[] = [];
+        for (let y = 0; y < GRID_SIZE; y++) {
           if (grid[y][x][z] !== 0) {
-            let newY = y;
-            
-            while (newY > 0 && grid[newY - 1][x][z] === 0) {
-              newY--;
-            }
-            
-            if (newY < y) {
-              grid[newY][x][z] = grid[y][x][z];
-              grid[y][x][z] = 0;
-            }
+            blocks.push(grid[y][x][z]);
+            grid[y][x][z] = 0; // Remove the block from its original position
           }
         }
+        
+        // Place blocks from bottom up
+        let y = 0;
+        blocks.forEach(blockValue => {
+          grid[y][x][z] = blockValue;
+          y++;
+        });
       }
     }
   };
