@@ -5,7 +5,6 @@ import GameBlock from './GameBlock';
 export interface GridCellState {
   filled: boolean;
   color: string;
-  isClearing?: boolean;
 }
 
 interface GameGridProps {
@@ -23,12 +22,7 @@ const GameGrid: React.FC<GameGridProps> = ({ grid, className }) => {
       {grid.map((row, rowIndex) => 
         row.map((cell, colIndex) => (
           <div key={`${rowIndex}-${colIndex}`} className="aspect-square">
-            {cell.filled && (
-              <GameBlock 
-                color={cell.color} 
-                isClearing={cell.isClearing}
-              />
-            )}
+            {cell.filled && <GameBlock color={cell.color} />}
           </div>
         ))
       )}
