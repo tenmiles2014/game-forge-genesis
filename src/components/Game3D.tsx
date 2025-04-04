@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -18,6 +17,7 @@ const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
 const MAX_LEVEL = 99;
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
+const MIN_CONNECTED_BLOCKS = 5; // Minimum number of connected blocks to clear a layer
 
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
@@ -26,6 +26,13 @@ const VIEW_POINTS: ViewPoint[] = [
   { name: "Front View", position: [4.5, 5, 25], target: [4.5, 5, 0] },
   { name: "Corner View", position: [20, 10, 20] },
 ];
+
+// Game state enum
+enum GameAnimationState {
+  IDLE,
+  HIGHLIGHTING,
+  CLEARING,
+}
 
 const Game3D: React.FC = () => {
   const [grid, setGrid] = useState<number[][][]>([]);
@@ -41,10 +48,13 @@ const Game3D: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
   const gameBoardRef = useRef<HTMLDivElement>(null);
-  // Add a counter to track placed blocks for testing
   const [blocksPlaced, setBlocksPlaced] = useState(0);
-  // Add a flag for test mode
   const [testMode, setTestMode] = useState(true);
+  
+  // Animation state
+  const [animationState, setAnimationState] = useState<GameAnimationState>(GameAnimationState.IDLE);
+  const [highlightedLayers, setHighlightedLayers] = useState<{y: number, type: string, index: number}[]>([]);
+  const animationQueueRef = useRef<{y: number, type: string, index: number}[]>([]);
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 50));
@@ -71,7 +81,7 @@ const Game3D: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (gamePaused || gameOver) {
+    if (gamePaused || gameOver || animationState !== GameAnimationState.IDLE) {
       if (gravityTimerRef.current) {
         clearInterval(gravityTimerRef.current);
         gravityTimerRef.current = null;
@@ -91,7 +101,106 @@ const Game3D: React.FC = () => {
         gravityTimerRef.current = null;
       }
     };
-  }, [gamePaused, gameOver, level, position]);
+  }, [gamePaused, gameOver, level, position, animationState]);
+
+  // Handle animation sequence
+  useEffect(() => {
+    if (animationState === GameAnimationState.HIGHLIGHTING && highlightedLayers.length > 0) {
+      // Process the first layer in the queue
+      const currentLayer = highlightedLayers[0];
+      
+      // After highlight duration, process the next step
+      const timer = setTimeout(() => {
+        // Remove the current layer from the queue
+        setHighlightedLayers(prev => prev.slice(1));
+        
+        if (highlightedLayers.length <= 1) {
+          // If this was the last layer, move to clearing state
+          setAnimationState(GameAnimationState.CLEARING);
+          
+          // Process the clearing with a short delay
+          setTimeout(() => {
+            const gridCopy = JSON.parse(JSON.stringify(grid));
+            // Apply all the clearing operations in sequence
+            animationQueueRef.current.forEach(layer => {
+              if (layer.type === 'horizontalRow') {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                  gridCopy[layer.y][x][layer.index] = 0;
+                }
+              } else if (layer.type === 'horizontalColumn') {
+                for (let z = 0; z < GRID_SIZE; z++) {
+                  gridCopy[layer.y][layer.index][z] = 0;
+                }
+              } else if (layer.type === 'verticalColumn') {
+                for (let y = 0; y < GRID_SIZE; y++) {
+                  gridCopy[y][layer.index][layer.y] = 0;
+                }
+              } else if (layer.type === 'fullLayer') {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                  for (let z = 0; z < GRID_SIZE; z++) {
+                    gridCopy[layer.y][x][z] = 0;
+                  }
+                }
+              }
+            });
+            
+            // Apply gravity after clearing
+            applyGravityToBlocks(gridCopy);
+            setGrid(gridCopy);
+            
+            // Calculate score based on how many layers were cleared
+            const layersCleared = animationQueueRef.current.length;
+            const levelMultiplier = 1 + (level * 0.1);
+            const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
+            
+            setScore(prev => prev + pointsScored);
+            
+            if (layersCleared > 0) {
+              toast({
+                title: `${layersCleared} layers cleared!`,
+                description: `+${pointsScored} points`,
+              });
+            }
+            
+            // Reset the animation state and clear the queue
+            animationQueueRef.current = [];
+            setAnimationState(GameAnimationState.IDLE);
+            
+            // Spawn the next block
+            spawnNextBlock();
+          }, 500); // Delay before applying clearing effect
+        }
+      }, 800); // Highlight duration for each layer
+      
+      return () => clearTimeout(timer);
+    }
+    
+    if (animationState === GameAnimationState.CLEARING && highlightedLayers.length === 0) {
+      // This state is handled in the effect above
+    }
+  }, [animationState, highlightedLayers, grid]);
+
+  // Spawn the next block after animations
+  const spawnNextBlock = () => {
+    const nextBlockPattern = nextBlock;
+    setCurrentBlock(nextBlockPattern);
+    setNextBlock(getRandomBlockPattern());
+    
+    const newPosition = {...INITIAL_POSITION};
+    
+    if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
+      setGameOver(true);
+      setControlsEnabled(false);
+      setGamePaused(true);
+      toast({
+        title: "Game Over!",
+        description: `No space for new block. Final score: ${score} | Level: ${level}`,
+      });
+      return;
+    }
+    
+    setPosition(newPosition);
+  };
 
   const resetGame = () => {
     setGrid(initializeGrid());
@@ -104,6 +213,9 @@ const Game3D: React.FC = () => {
     setLevel(1);
     setGamePaused(true);
     setBlocksPlaced(0);
+    setAnimationState(GameAnimationState.IDLE);
+    setHighlightedLayers([]);
+    animationQueueRef.current = [];
     
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
@@ -162,6 +274,35 @@ const Game3D: React.FC = () => {
     return true;
   };
 
+  const countConnectedBlocks = (
+    gridCopy: number[][][],
+    x: number,
+    y: number,
+    z: number,
+    color: number,
+    visited: boolean[][][]
+  ): number => {
+    if (
+      x < 0 || x >= GRID_SIZE ||
+      y < 0 || y >= GRID_SIZE ||
+      z < 0 || z >= GRID_SIZE ||
+      visited[y][x][z] ||
+      gridCopy[y][x][z] !== color
+    ) {
+      return 0;
+    }
+    
+    visited[y][x][z] = true;
+    
+    return 1 + 
+           countConnectedBlocks(gridCopy, x+1, y, z, color, visited) +
+           countConnectedBlocks(gridCopy, x-1, y, z, color, visited) +
+           countConnectedBlocks(gridCopy, x, y+1, z, color, visited) +
+           countConnectedBlocks(gridCopy, x, y-1, z, color, visited) +
+           countConnectedBlocks(gridCopy, x, y, z+1, color, visited) +
+           countConnectedBlocks(gridCopy, x, y, z-1, color, visited);
+  };
+
   const placeBlock = () => {
     const newGrid = JSON.parse(JSON.stringify(grid));
     for (let y = 0; y < currentBlock.shape.length; y++) {
@@ -183,83 +324,93 @@ const Game3D: React.FC = () => {
     }
     
     setGrid(newGrid);
+    setBlocksPlaced(prev => prev + 1);
     
-    // Increment the blocks placed counter
-    const newBlocksPlaced = blocksPlaced + 1;
-    setBlocksPlaced(newBlocksPlaced);
+    const layersToHighlight = findLayersToClear(newGrid);
     
-    // If in test mode and 5 blocks have been placed, clear all filled layers
-    if (testMode && newBlocksPlaced >= 5) {
-      toast({
-        title: "Test Mode",
-        description: "5 blocks placed - clearing all filled layers",
-      });
-      setTimeout(() => {
-        const gridCopy = JSON.parse(JSON.stringify(newGrid));
-        const layersCleared = clearCompleteLayers(gridCopy);
-        if (layersCleared === 0) {
-          // If no layers were naturally cleared, force clear the bottom layer for demonstration
-          forceCreateAndClearLayer(gridCopy);
-        }
-        setBlocksPlaced(0);
-      }, 500);
+    if (layersToHighlight.length > 0) {
+      animationQueueRef.current = layersToHighlight;
+      setHighlightedLayers(layersToHighlight);
+      setAnimationState(GameAnimationState.HIGHLIGHTING);
     } else {
-      const layersCleared = clearCompleteLayers(newGrid);
+      spawnNextBlock();
     }
-    
-    const nextBlockPattern = nextBlock;
-    setCurrentBlock(nextBlockPattern);
-    setNextBlock(getRandomBlockPattern());
-    
-    const newPosition = {...INITIAL_POSITION};
-    
-    if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
-      setGameOver(true);
-      setControlsEnabled(false);
-      setGamePaused(true);
-      toast({
-        title: "Game Over!",
-        description: `No space for new block. Final score: ${score} | Level: ${level}`,
-      });
-      return;
-    }
-    
-    setPosition(newPosition);
   };
 
-  // Function to force create and clear a layer for testing
-  const forceCreateAndClearLayer = (gridCopy: number[][][]) => {
-    // Fill the bottom layer with blocks
-    for (let x = 0; x < GRID_SIZE; x++) {
-      for (let z = 0; z < GRID_SIZE; z++) {
-        // Random color between 1-5
-        gridCopy[0][x][z] = Math.floor(Math.random() * 5) + 1;
+  const findLayersToClear = (gridCopy: number[][][]) => {
+    const layersToClear: {y: number, type: string, index: number}[] = [];
+    const visited: boolean[][][] = Array(GRID_SIZE).fill(0).map(() => 
+      Array(GRID_SIZE).fill(0).map(() => 
+        Array(GRID_SIZE).fill(false)
+      )
+    );
+    
+    for (let y = 0; y < GRID_SIZE; y++) {
+      for (let x = 0; x < GRID_SIZE; x++) {
+        for (let z = 0; z < GRID_SIZE; z++) {
+          if (!visited[y][x][z] && gridCopy[y][x][z] !== 0) {
+            const color = gridCopy[y][x][z];
+            const connectedBlocks = countConnectedBlocks(gridCopy, x, y, z, color, visited);
+            
+            if (connectedBlocks >= MIN_CONNECTED_BLOCKS) {
+              let isHorizontalRow = true;
+              for (let i = 0; i < GRID_SIZE; i++) {
+                if (gridCopy[y][x][i] === 0) {
+                  isHorizontalRow = false;
+                  break;
+                }
+              }
+              
+              if (isHorizontalRow) {
+                layersToClear.push({ y, type: 'horizontalRow', index: x });
+                continue;
+              }
+              
+              let isHorizontalColumn = true;
+              for (let i = 0; i < GRID_SIZE; i++) {
+                if (gridCopy[y][i][z] === 0) {
+                  isHorizontalColumn = false;
+                  break;
+                }
+              }
+              
+              if (isHorizontalColumn) {
+                layersToClear.push({ y, type: 'horizontalColumn', index: z });
+                continue;
+              }
+              
+              let isVerticalColumn = true;
+              for (let i = 0; i < GRID_SIZE; i++) {
+                if (gridCopy[i][x][z] === 0) {
+                  isVerticalColumn = false;
+                  break;
+                }
+              }
+              
+              if (isVerticalColumn) {
+                layersToClear.push({ y: z, type: 'verticalColumn', index: x });
+                continue;
+              }
+              
+              let isFullLayer = true;
+              for (let i = 0; i < GRID_SIZE && isFullLayer; i++) {
+                for (let j = 0; j < GRID_SIZE && isFullLayer; j++) {
+                  if (gridCopy[y][i][j] === 0) {
+                    isFullLayer = false;
+                  }
+                }
+              }
+              
+              if (isFullLayer) {
+                layersToClear.push({ y, type: 'fullLayer', index: -1 });
+              }
+            }
+          }
+        }
       }
     }
     
-    // Visual feedback before clearing
-    setGrid([...gridCopy]);
-    
-    // After a short delay, clear the layer and apply gravity
-    setTimeout(() => {
-      for (let x = 0; x < GRID_SIZE; x++) {
-        for (let z = 0; z < GRID_SIZE; z++) {
-          gridCopy[0][x][z] = 0;
-        }
-      }
-      
-      applyGravityToBlocks(gridCopy);
-      setGrid([...gridCopy]);
-      
-      toast({
-        title: "Test Layer Cleared",
-        description: "Bottom layer has been cleared for demonstration",
-      });
-      
-      // Update score
-      const pointsScored = Math.floor(10 * (1 + (level * 0.1)));
-      setScore(prevScore => prevScore + pointsScored);
-    }, 1000);
+    return layersToClear;
   };
 
   const getColorIndex = (color: string): number => {
@@ -271,101 +422,6 @@ const Game3D: React.FC = () => {
       'yellow': 5
     };
     return colorMap[color] || 0;
-  };
-
-  const clearCompleteLayers = (grid: number[][][]) => {
-    let layersCleared = 0;
-    const gridCopy = JSON.parse(JSON.stringify(grid));
-    
-    for (let y = 0; y < GRID_SIZE; y++) {
-      for (let z = 0; z < GRID_SIZE; z++) {
-        let rowFull = true;
-        for (let x = 0; x < GRID_SIZE; x++) {
-          if (gridCopy[y][x][z] === 0) {
-            rowFull = false;
-            break;
-          }
-        }
-        
-        if (rowFull) {
-          for (let x = 0; x < GRID_SIZE; x++) {
-            gridCopy[y][x][z] = 0;
-          }
-          layersCleared++;
-        }
-      }
-      
-      for (let x = 0; x < GRID_SIZE; x++) {
-        let rowFull = true;
-        for (let z = 0; z < GRID_SIZE; z++) {
-          if (gridCopy[y][x][z] === 0) {
-            rowFull = false;
-            break;
-          }
-        }
-        
-        if (rowFull) {
-          for (let z = 0; z < GRID_SIZE; z++) {
-            gridCopy[y][x][z] = 0;
-          }
-          layersCleared++;
-        }
-      }
-    }
-    
-    for (let x = 0; x < GRID_SIZE; x++) {
-      for (let z = 0; z < GRID_SIZE; z++) {
-        let columnFull = true;
-        for (let y = 0; y < GRID_SIZE; y++) {
-          if (gridCopy[y][x][z] === 0) {
-            columnFull = false;
-            break;
-          }
-        }
-        
-        if (columnFull) {
-          for (let y = 0; y < GRID_SIZE; y++) {
-            gridCopy[y][x][z] = 0;
-          }
-          layersCleared++;
-        }
-      }
-    }
-    
-    for (let y = 0; y < GRID_SIZE; y++) {
-      let layerFull = true;
-      for (let x = 0; x < GRID_SIZE && layerFull; x++) {
-        for (let z = 0; z < GRID_SIZE && layerFull; z++) {
-          if (gridCopy[y][x][z] === 0) {
-            layerFull = false;
-          }
-        }
-      }
-      
-      if (layerFull) {
-        for (let x = 0; x < GRID_SIZE; x++) {
-          for (let z = 0; z < GRID_SIZE; z++) {
-            gridCopy[y][x][z] = 0;
-          }
-        }
-        layersCleared++;
-      }
-    }
-    
-    applyGravityToBlocks(gridCopy);
-    
-    if (layersCleared > 0) {
-      const levelMultiplier = 1 + (level * 0.1);
-      const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
-      setScore(prevScore => prevScore + pointsScored);
-      toast({
-        title: `${layersCleared} lines cleared!`,
-        description: `+${pointsScored} points`,
-      });
-    }
-    
-    setGrid([...gridCopy]);
-    return layersCleared;
   };
 
   const applyGravityToBlocks = (grid: number[][][]) => {
@@ -390,7 +446,7 @@ const Game3D: React.FC = () => {
   };
 
   const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
-    if (gameOver || !controlsEnabled || gamePaused) return;
+    if (gameOver || !controlsEnabled || gamePaused || animationState !== GameAnimationState.IDLE) return;
     
     let newX = position.x;
     let newY = position.y;
@@ -410,7 +466,7 @@ const Game3D: React.FC = () => {
   };
 
   const rotateBlock = (axis: 'x' | 'y' | 'z') => {
-    if (gameOver || !controlsEnabled || gamePaused) return;
+    if (gameOver || !controlsEnabled || gamePaused || animationState !== GameAnimationState.IDLE) return;
     
     const rotatedPattern = [...currentBlock.shape];
     
@@ -476,7 +532,7 @@ const Game3D: React.FC = () => {
   };
 
   const dropBlock = () => {
-    if (gameOver || !controlsEnabled || gamePaused) return;
+    if (gameOver || !controlsEnabled || gamePaused || animationState !== GameAnimationState.IDLE) return;
     
     let newY = position.y;
     
@@ -517,7 +573,6 @@ const Game3D: React.FC = () => {
     }
   };
 
-  // Add a function to toggle test mode
   const toggleTestMode = () => {
     const newTestMode = !testMode;
     setTestMode(newTestMode);
@@ -586,7 +641,7 @@ const Game3D: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [position, currentBlock, grid, gameOver, controlsEnabled, gamePaused, testMode]);
+  }, [position, currentBlock, grid, gameOver, controlsEnabled, gamePaused, testMode, animationState]);
 
   const handleViewChange = (viewPoint: ViewPoint) => {
     setCurrentView(viewPoint);
@@ -643,6 +698,7 @@ const Game3D: React.FC = () => {
                 grid={grid} 
                 currentBlock={currentBlock} 
                 position={position}
+                highlightedLayers={animationState === GameAnimationState.HIGHLIGHTING ? highlightedLayers : []}
               />
               <OrbitControls 
                 ref={orbitControlsRef} 
@@ -653,6 +709,12 @@ const Game3D: React.FC = () => {
               />
             </Canvas>
             <Grid3DLabels />
+            
+            {animationState !== GameAnimationState.IDLE && (
+              <div className="absolute bottom-4 right-4 bg-black bg-opacity-70 px-3 py-1 rounded-full text-white text-sm">
+                {animationState === GameAnimationState.HIGHLIGHTING ? 'Highlighting' : 'Clearing'} Layers...
+              </div>
+            )}
           </div>
         </div>
         
@@ -677,6 +739,28 @@ const Game3D: React.FC = () => {
                   <div 
                     className="bg-green-500 h-full transition-all duration-300" 
                     style={{ width: `${(blocksPlaced / 5) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {animationState !== GameAnimationState.IDLE && (
+              <div className="p-4 rounded-lg bg-blue-900 bg-opacity-30">
+                <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-1">Layer Action</h3>
+                <p className="text-white text-xs">
+                  {animationState === GameAnimationState.HIGHLIGHTING
+                    ? `Highlighting ${highlightedLayers.length} layers...`
+                    : 'Clearing layers...'
+                  }
+                </p>
+                <div className="w-full bg-gray-700 h-2 mt-1 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-blue-500 h-full transition-all duration-300" 
+                    style={{ 
+                      width: animationState === GameAnimationState.HIGHLIGHTING 
+                        ? `${((animationQueueRef.current.length - highlightedLayers.length) / Math.max(1, animationQueueRef.current.length)) * 100}%` 
+                        : '100%' 
+                    }}
                   />
                 </div>
               </div>
