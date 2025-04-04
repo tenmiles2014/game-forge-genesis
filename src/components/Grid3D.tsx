@@ -6,10 +6,9 @@ interface Grid3DProps {
   grid: number[][][];
   currentBlock: BlockPattern;
   position: { x: number; y: number; z: number };
-  highlightedLayers?: {y: number, type: string, index: number}[];
 }
 
-const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, highlightedLayers = [] }) => {
+const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
   // Color mapping
   const getColor = (colorIndex: number) => {
     const colors = {
@@ -72,22 +71,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, highlight
     return { x: position.x, y: lowestValidY, z: position.z };
   }, [grid, currentBlock.shape, position]);
 
-  // Check if a position is within a highlighted layer
-  const isInHighlightedLayer = (x: number, y: number, z: number) => {
-    for (const layer of highlightedLayers) {
-      if (layer.type === 'horizontalRow' && y === layer.y && z === layer.index) {
-        return true;
-      } else if (layer.type === 'horizontalColumn' && y === layer.y && x === layer.index) {
-        return true;
-      } else if (layer.type === 'verticalColumn' && x === layer.index && z === layer.y) {
-        return true;
-      } else if (layer.type === 'fullLayer' && y === layer.y) {
-        return true;
-      }
-    }
-    return false;
-  };
-
   // Render placed blocks from grid
   const renderPlacedBlocks = useMemo(() => {
     const blocks = [];
@@ -99,9 +82,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, highlight
       for (let x = 0; x < gridSize; x++) {
         for (let z = 0; z < gridSize; z++) {
           if (grid[y][x][z] !== 0) {
-            const isHighlighted = isInHighlightedLayer(x, y, z);
-            const blockColor = getColor(grid[y][x][z]);
-            
             blocks.push(
               <mesh 
                 key={`${x}-${y}-${z}`} 
@@ -110,24 +90,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, highlight
                 receiveShadow
               >
                 <boxGeometry args={[0.95, 0.95, 0.95]} />
-                <meshStandardMaterial 
-                  color={isHighlighted ? 'white' : blockColor} 
-                  emissive={isHighlighted ? blockColor : undefined}
-                  emissiveIntensity={isHighlighted ? 0.6 : 0}
-                  transparent={isHighlighted}
-                  opacity={isHighlighted ? 0.9 : 1}
-                />
-                {isHighlighted && (
-                  <mesh>
-                    <boxGeometry args={[1.05, 1.05, 1.05]} />
-                    <meshBasicMaterial 
-                      color="white" 
-                      transparent={true} 
-                      opacity={0.3} 
-                      wireframe={true}
-                    />
-                  </mesh>
-                )}
+                <meshStandardMaterial color={getColor(grid[y][x][z])} />
               </mesh>
             );
           }
@@ -136,7 +99,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, highlight
     }
     
     return blocks;
-  }, [grid, highlightedLayers]);
+  }, [grid]);
 
   // Render ghost block (prediction)
   const renderGhostBlock = useMemo(() => {
@@ -308,74 +271,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, highlight
     return lines;
   }, [currentBlock.shape, position, ghostPosition, blockColor, grid.length]);
 
-  // Render highlighted layer visualizations
-  const renderHighlightedLayers = useMemo(() => {
-    const highlights = [];
-    const gridSize = grid.length || 10;
-    
-    for (const layer of highlightedLayers) {
-      if (layer.type === 'fullLayer') {
-        highlights.push(
-          <mesh 
-            key={`highlight-layer-${layer.y}`} 
-            position={[gridSize/2 - 0.5, layer.y, gridSize/2 - 0.5]}
-          >
-            <boxGeometry args={[gridSize, 0.1, gridSize]} />
-            <meshBasicMaterial 
-              color="white" 
-              transparent={true} 
-              opacity={0.2} 
-            />
-          </mesh>
-        );
-      } else if (layer.type === 'horizontalRow') {
-        highlights.push(
-          <mesh 
-            key={`highlight-row-${layer.y}-${layer.index}`} 
-            position={[layer.index, layer.y, gridSize/2 - 0.5]}
-          >
-            <boxGeometry args={[0.1, 0.1, gridSize]} />
-            <meshBasicMaterial 
-              color="white" 
-              transparent={true} 
-              opacity={0.2} 
-            />
-          </mesh>
-        );
-      } else if (layer.type === 'horizontalColumn') {
-        highlights.push(
-          <mesh 
-            key={`highlight-col-${layer.y}-${layer.index}`} 
-            position={[gridSize/2 - 0.5, layer.y, layer.index]}
-          >
-            <boxGeometry args={[gridSize, 0.1, 0.1]} />
-            <meshBasicMaterial 
-              color="white" 
-              transparent={true} 
-              opacity={0.2} 
-            />
-          </mesh>
-        );
-      } else if (layer.type === 'verticalColumn') {
-        highlights.push(
-          <mesh 
-            key={`highlight-vcol-${layer.y}-${layer.index}`} 
-            position={[layer.index, gridSize/2 - 0.5, layer.y]}
-          >
-            <boxGeometry args={[0.1, gridSize, 0.1]} />
-            <meshBasicMaterial 
-              color="white" 
-              transparent={true} 
-              opacity={0.2} 
-            />
-          </mesh>
-        );
-      }
-    }
-    
-    return highlights;
-  }, [highlightedLayers, grid.length]);
-
   return (
     <group>
       {renderPlacedBlocks}
@@ -383,7 +278,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, highlight
       {renderGhostBlock}
       {renderPredictionLines}
       {renderGridBoundaries}
-      {renderHighlightedLayers}
       <gridHelper args={[10, 10]} position={[4.5, -0.5, 4.5]} />
     </group>
   );
