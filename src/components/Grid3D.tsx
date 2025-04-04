@@ -71,7 +71,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return { x: position.x, y: lowestValidY, z: position.z };
   }, [grid, currentBlock.shape, position]);
 
-  // Render placed blocks from grid
+  // Render placed blocks from grid with a more robust key generation
   const renderPlacedBlocks = useMemo(() => {
     const blocks = [];
     if (!grid || grid.length === 0) return blocks;
@@ -82,9 +82,12 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
       for (let x = 0; x < gridSize; x++) {
         for (let z = 0; z < gridSize; z++) {
           if (grid[y][x][z] !== 0) {
+            // Generate a unique key that includes the cell's value and position
+            const uniqueKey = `block-${y}-${x}-${z}-${grid[y][x][z]}`;
+            
             blocks.push(
               <mesh 
-                key={`${x}-${y}-${z}`} 
+                key={uniqueKey} 
                 position={[x, y, z]} 
                 castShadow
                 receiveShadow
