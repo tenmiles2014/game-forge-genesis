@@ -17,7 +17,7 @@ const GameBlock: React.FC<GameBlockProps> = ({ color, className, isPreview = fal
     green: "bg-game-green",
     purple: "bg-game-purple",
     yellow: "bg-game-yellow",
-    highlight: "bg-white animate-pulse opacity-80 scale-[1.05] shadow-lg shadow-white/50" // Enhanced highlight animation
+    highlight: "bg-white animate-pulse opacity-90 scale-[1.05] shadow-xl shadow-white/60 z-10" // Further enhanced highlight animation
   };
   
   const blockColor = colorMap[color] || "bg-gray-400";

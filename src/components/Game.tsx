@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import GameGrid, { GridCellState } from './GameGrid';
 import { BlockPattern, getRandomBlockPattern, rotateBlockPattern } from './BlockPatterns';
@@ -10,7 +10,8 @@ import GameControls from './GameControls';
 const GRID_ROWS = 10;
 const GRID_COLS = 10;
 const INITIAL_BLOCK_POSITION = { row: 0, col: Math.floor(GRID_COLS / 2) - 1 };
-const ROW_CLEAR_DELAY = 3000; // 3 seconds delay
+const ROW_CLEAR_DELAY = 600; // Reduced delay for quicker feedback
+const HIGHLIGHT_DELAY = 400; // Time to show highlighted rows
 
 const Game: React.FC = () => {
   // Game state
@@ -23,7 +24,12 @@ const Game: React.FC = () => {
   const [gamePaused, setGamePaused] = useState(true);
   const [isClearing, setIsClearing] = useState(false); 
   const [rowsBeingCleared, setRowsBeingCleared] = useState<number[]>([]);
-
+  const [pendingClearedGrid, setPendingClearedGrid] = useState<GridCellState[][] | null>(null);
+  const [scoredPoints, setScoredPoints] = useState(0);
+  
+  // Refs to manage animation timing
+  const animationStageRef = useRef<'idle' | 'highlighting' | 'clearing'>('idle');
+  
   // Initialize game grid
   const initializeGrid = useCallback(() => {
     const newGrid: GridCellState[][] = [];
@@ -51,6 +57,9 @@ const Game: React.FC = () => {
     setGameOver(false);
     setGamePaused(true);
     setIsClearing(false);
+    setRowsBeingCleared([]);
+    setPendingClearedGrid(null);
+    setScoredPoints(0);
   };
 
   // Check if the position is valid
@@ -81,6 +90,56 @@ const Game: React.FC = () => {
     return true;
   };
 
+  // Manage animation states with useEffect
+  useEffect(() => {
+    // Skip if not in highlighting stage or no rows are marked for clearing
+    if (!isClearing || rowsBeingCleared.length === 0 || animationStageRef.current !== 'highlighting') {
+      return;
+    }
+
+    // After highlighting time, apply clearing
+    const highlightTimer = setTimeout(() => {
+      if (pendingClearedGrid) {
+        animationStageRef.current = 'clearing';
+        setGrid(pendingClearedGrid);
+        
+        // Show toast for points
+        if (scoredPoints > 0) {
+          toast({
+            title: `${rowsBeingCleared.length} rows cleared!`,
+            description: `+${scoredPoints} points`,
+          });
+        }
+        
+        // After clearing animation, proceed to next block
+        const clearingTimer = setTimeout(() => {
+          animationStageRef.current = 'idle';
+          setIsClearing(false);
+          setRowsBeingCleared([]);
+          
+          // Set the next block
+          setCurrentBlock(nextBlock);
+          setNextBlock(getRandomBlockPattern());
+          setPosition(INITIAL_BLOCK_POSITION);
+          
+          // Check if game is over
+          if (!isValidPosition(nextBlock.shape, INITIAL_BLOCK_POSITION.row, INITIAL_BLOCK_POSITION.col)) {
+            setGameOver(true);
+            setGamePaused(true);
+            toast({
+              title: "Game Over!",
+              description: `Final score: ${score}`,
+            });
+          }
+        }, ROW_CLEAR_DELAY - HIGHLIGHT_DELAY);
+        
+        return () => clearTimeout(clearingTimer);
+      }
+    }, HIGHLIGHT_DELAY);
+    
+    return () => clearTimeout(highlightTimer);
+  }, [isClearing, rowsBeingCleared, pendingClearedGrid, scoredPoints]);
+
   // Place the current block on the grid
   const placeBlock = () => {
     const newGrid = [...grid.map(row => [...row])];
@@ -102,51 +161,29 @@ const Game: React.FC = () => {
       }
     }
     
+    // Always update the grid with the placed block first
     setGrid(newGrid);
     
     // Find which rows need to be cleared
     const { rowsToClear, updatedGrid } = findRowsToClear(newGrid);
     
-    // If rows were cleared, highlight them first, then clear after delay
+    // If rows were cleared, start the animation sequence
     if (rowsToClear.length > 0) {
+      // Calculate score first
+      const rowsCleared = rowsToClear.length;
+      const pointsScored = rowsCleared * rowsCleared * 100;
+      
+      // Update score immediately
+      setScore(prevScore => prevScore + pointsScored);
+      setScoredPoints(pointsScored);
+      
+      // Highlight the rows to be cleared
       setIsClearing(true);
       setRowsBeingCleared(rowsToClear);
+      animationStageRef.current = 'highlighting';
       
-      // Step 1: Show highlighted rows for half the delay time
-      setTimeout(() => {
-        // Step 2: Apply clearing - THIS IS THE KEY CHANGE - we clear the rows BEFORE setting the next block
-        setGrid(updatedGrid);
-        
-        // Update score
-        const rowsCleared = rowsToClear.length;
-        const pointsScored = rowsCleared * rowsCleared * 100;
-        setScore(prevScore => prevScore + pointsScored);
-        
-        toast({
-          title: `${rowsCleared} rows cleared!`,
-          description: `+${pointsScored} points`,
-        });
-        
-        // Step 3: Wait for the remaining delay before adding the next block
-        setTimeout(() => {
-          // Set the next block
-          setCurrentBlock(nextBlock);
-          setNextBlock(getRandomBlockPattern());
-          setPosition(INITIAL_BLOCK_POSITION);
-          setIsClearing(false);
-          setRowsBeingCleared([]);
-          
-          // Check if game is over
-          if (!isValidPosition(nextBlock.shape, INITIAL_BLOCK_POSITION.row, INITIAL_BLOCK_POSITION.col)) {
-            setGameOver(true);
-            setGamePaused(true);
-            toast({
-              title: "Game Over!",
-              description: `Final score: ${score}`,
-            });
-          }
-        }, ROW_CLEAR_DELAY / 2); // Second half of the delay
-      }, ROW_CLEAR_DELAY / 2); // First half of the delay
+      // Store the cleared grid for later application
+      setPendingClearedGrid(updatedGrid);
     } else {
       // If no rows were cleared, set the next block immediately
       setCurrentBlock(nextBlock);
@@ -192,7 +229,7 @@ const Game: React.FC = () => {
 
   // Game controls
   const moveBlock = (direction: 'left' | 'right' | 'down') => {
-    if (gameOver || gamePaused) return;
+    if (gameOver || gamePaused || isClearing) return;
     
     let newRow = position.row;
     let newCol = position.col;
@@ -204,13 +241,12 @@ const Game: React.FC = () => {
     if (isValidPosition(currentBlock.shape, newRow, newCol)) {
       setPosition({ row: newRow, col: newCol });
     } else if (direction === 'down') {
-      // If we can't move down, place the block
       placeBlock();
     }
   };
   
   const rotateBlock = () => {
-    if (gameOver || gamePaused) return;
+    if (gameOver || gamePaused || isClearing) return;
     
     const rotatedShape = rotateBlockPattern(currentBlock.shape);
     
@@ -223,7 +259,7 @@ const Game: React.FC = () => {
   };
   
   const dropBlock = () => {
-    if (gameOver || gamePaused) return;
+    if (gameOver || gamePaused || isClearing) return;
     
     let newRow = position.row;
     
@@ -245,7 +281,7 @@ const Game: React.FC = () => {
   // Handle keyboard controls
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (gameOver || gamePaused) return;
+      if (gameOver || gamePaused || isClearing) return;
       
       switch (event.key) {
         case 'ArrowLeft':
@@ -273,7 +309,7 @@ const Game: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [position, currentBlock, grid, gameOver, gamePaused]);
+  }, [position, currentBlock, grid, gameOver, gamePaused, isClearing]);
 
   // Render the current block on top of the grid
   const renderGridWithCurrentBlock = () => {
