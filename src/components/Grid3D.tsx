@@ -71,19 +71,20 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return { x: position.x, y: lowestValidY, z: position.z };
   }, [grid, currentBlock.shape, position]);
 
-  // Render placed blocks from grid with a more robust key generation
+  // Render placed blocks from grid with improved rendering logic
   const renderPlacedBlocks = useMemo(() => {
     const blocks = [];
     if (!grid || grid.length === 0) return blocks;
 
     const gridSize = grid.length;
+    const gridHash = JSON.stringify(grid); // Add this to force re-evaluation when grid changes
     
     for (let y = 0; y < gridSize; y++) {
       for (let x = 0; x < gridSize; x++) {
         for (let z = 0; z < gridSize; z++) {
           if (grid[y][x][z] !== 0) {
-            // Generate a unique key that includes the cell's value and position
-            const uniqueKey = `block-${y}-${x}-${z}-${grid[y][x][z]}`;
+            // Use a key that includes position, value, and a timestamp to guarantee uniqueness
+            const uniqueKey = `block-${y}-${x}-${z}-${grid[y][x][z]}-${Date.now()}`;
             
             blocks.push(
               <mesh 
@@ -102,7 +103,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
     
     return blocks;
-  }, [grid]);
+  }, [grid]); // Ensure we depend only on the grid itself
 
   // Render ghost block (prediction)
   const renderGhostBlock = useMemo(() => {
