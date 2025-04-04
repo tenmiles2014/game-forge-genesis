@@ -10,6 +10,7 @@ import GameControls from './GameControls';
 const GRID_ROWS = 10;
 const GRID_COLS = 10;
 const INITIAL_BLOCK_POSITION = { row: 0, col: Math.floor(GRID_COLS / 2) - 1 };
+const ROW_CLEAR_DELAY = 1000; // 1 second delay
 
 const Game: React.FC = () => {
   // Game state
@@ -20,6 +21,7 @@ const Game: React.FC = () => {
   const [position, setPosition] = useState(INITIAL_BLOCK_POSITION);
   const [gameOver, setGameOver] = useState(false);
   const [gamePaused, setGamePaused] = useState(true);
+  const [isClearing, setIsClearing] = useState(false); // New state to track clearing animation
   
   // Initialize game grid
   const initializeGrid = useCallback(() => {
@@ -47,6 +49,7 @@ const Game: React.FC = () => {
     setPosition(INITIAL_BLOCK_POSITION);
     setGameOver(false);
     setGamePaused(true);
+    setIsClearing(false);
   };
 
   // Check if the position is valid
@@ -101,25 +104,48 @@ const Game: React.FC = () => {
     setGrid(newGrid);
     
     // Check for completed rows
-    clearRows(newGrid);
+    const rowsCleared = clearRows(newGrid);
     
-    // Get next block
-    setCurrentBlock(nextBlock);
-    setNextBlock(getRandomBlockPattern());
-    setPosition(INITIAL_BLOCK_POSITION);
-    
-    // Check if game is over
-    if (!isValidPosition(nextBlock.shape, INITIAL_BLOCK_POSITION.row, INITIAL_BLOCK_POSITION.col)) {
-      setGameOver(true);
-      setGamePaused(true);
-      toast({
-        title: "Game Over!",
-        description: `Final score: ${score}`,
-      });
+    // If rows were cleared, add a delay before setting the next block
+    if (rowsCleared > 0) {
+      setIsClearing(true);
+      
+      setTimeout(() => {
+        // After delay, set the next block
+        setCurrentBlock(nextBlock);
+        setNextBlock(getRandomBlockPattern());
+        setPosition(INITIAL_BLOCK_POSITION);
+        setIsClearing(false);
+        
+        // Check if game is over
+        if (!isValidPosition(nextBlock.shape, INITIAL_BLOCK_POSITION.row, INITIAL_BLOCK_POSITION.col)) {
+          setGameOver(true);
+          setGamePaused(true);
+          toast({
+            title: "Game Over!",
+            description: `Final score: ${score}`,
+          });
+        }
+      }, ROW_CLEAR_DELAY);
+    } else {
+      // If no rows were cleared, set the next block immediately
+      setCurrentBlock(nextBlock);
+      setNextBlock(getRandomBlockPattern());
+      setPosition(INITIAL_BLOCK_POSITION);
+      
+      // Check if game is over
+      if (!isValidPosition(nextBlock.shape, INITIAL_BLOCK_POSITION.row, INITIAL_BLOCK_POSITION.col)) {
+        setGameOver(true);
+        setGamePaused(true);
+        toast({
+          title: "Game Over!",
+          description: `Final score: ${score}`,
+        });
+      }
     }
   };
 
-  // Clear completed rows
+  // Clear completed rows and return number of rows cleared
   const clearRows = (newGrid: GridCellState[][]) => {
     let rowsCleared = 0;
     
@@ -146,6 +172,7 @@ const Game: React.FC = () => {
     }
     
     setGrid(newGrid);
+    return rowsCleared;
   };
 
   // Game controls
@@ -243,24 +270,26 @@ const Game: React.FC = () => {
     // Create a deep copy of the grid
     const displayGrid = grid.map(row => [...row]);
     
-    // Add current block to the display grid at its current position
-    for (let r = 0; r < currentBlock.shape.length; r++) {
-      for (let c = 0; c < currentBlock.shape[r].length; c++) {
-        if (currentBlock.shape[r][c]) {
-          const gridRow = position.row + r;
-          const gridCol = position.col + c;
-          
-          // Check if the position is within grid bounds before setting
-          if (
-            gridRow >= 0 && 
-            gridRow < GRID_ROWS && 
-            gridCol >= 0 && 
-            gridCol < GRID_COLS
-          ) {
-            displayGrid[gridRow][gridCol] = {
-              filled: true,
-              color: currentBlock.color
-            };
+    // Only add current block to display grid if not in clearing animation
+    if (!isClearing) {
+      for (let r = 0; r < currentBlock.shape.length; r++) {
+        for (let c = 0; c < currentBlock.shape[r].length; c++) {
+          if (currentBlock.shape[r][c]) {
+            const gridRow = position.row + r;
+            const gridCol = position.col + c;
+            
+            // Check if the position is within grid bounds before setting
+            if (
+              gridRow >= 0 && 
+              gridRow < GRID_ROWS && 
+              gridCol >= 0 && 
+              gridCol < GRID_COLS
+            ) {
+              displayGrid[gridRow][gridCol] = {
+                filled: true,
+                color: currentBlock.color
+              };
+            }
           }
         }
       }
