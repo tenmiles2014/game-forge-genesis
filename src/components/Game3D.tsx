@@ -158,6 +158,7 @@ const Game3D: React.FC = () => {
 
   const placeBlock = () => {
     const newGrid = JSON.parse(JSON.stringify(grid));
+    
     for (let y = 0; y < currentBlock.shape.length; y++) {
       for (let x = 0; x < currentBlock.shape[y].length; x++) {
         if (currentBlock.shape[y][x]) {
@@ -322,22 +323,21 @@ const Game3D: React.FC = () => {
   };
 
   const applyGravityToBlocks = (grid: number[][][]) => {
-    let blocksMovedInPass = true;
-    
-    while (blocksMovedInPass) {
-      blocksMovedInPass = false;
-      
-      for (let x = 0; x < GRID_SIZE; x++) {
-        for (let z = 0; z < GRID_SIZE; z++) {
-          for (let y = 1; y < GRID_SIZE; y++) {
-            if (grid[y][x][z] !== 0) {
-              if (y > 0 && grid[y-1][x][z] === 0) {
-                grid[y-1][x][z] = grid[y][x][z];
-                grid[y][x][z] = 0;
-                blocksMovedInPass = true;
-              }
-            }
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let z = 0; z < GRID_SIZE; z++) {
+        const stack: number[] = [];
+        
+        for (let y = 0; y < GRID_SIZE; y++) {
+          if (grid[y][x][z] !== 0) {
+            stack.push(grid[y][x][z]);
+            grid[y][x][z] = 0;
           }
+        }
+        
+        let y = 0;
+        while (stack.length > 0) {
+          grid[y][x][z] = stack.shift()!;
+          y++;
         }
       }
     }
