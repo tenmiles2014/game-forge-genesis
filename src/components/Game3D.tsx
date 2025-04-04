@@ -198,7 +198,7 @@ const Game3D: React.FC = () => {
       return newGrid; // Return the final modified grid
     });
 
-    // Wait for a moment to see the effect of clearing layers
+    // Wait a bit longer (500ms) to see the effect of clearing layers
     setTimeout(() => {
       // Then set the next block
       const nextBlockPattern = nextBlock;
@@ -362,7 +362,7 @@ const Game3D: React.FC = () => {
             <Canvas>
               <ambientLight intensity={0.5} />
               <pointLight position={[10, 10, 10]} />
-              <BlockPreview blockPattern={nextBlock} />
+              <BlockPreview block={nextBlock} />
               <OrbitControls enableZoom={false} enablePan={false} />
             </Canvas>
           </div>
@@ -391,4 +391,4 @@ const Game3D: React.FC = () => {
   );
 };
 
-export default Game3D;
+export default Game3D; // Add the default export
