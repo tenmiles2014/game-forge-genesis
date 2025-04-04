@@ -39,6 +39,7 @@ const Game3D: React.FC = () => {
   const orbitControlsRef = useRef(null);
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
+  const gameBoardRef = useRef<HTMLDivElement>(null);
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 50));
@@ -457,6 +458,12 @@ const Game3D: React.FC = () => {
         title: "Game Resumed",
         description: "Let's go!",
       });
+      
+      if (gameBoardRef.current) {
+        setTimeout(() => {
+          gameBoardRef.current?.focus();
+        }, 0);
+      }
     }
   };
 
@@ -465,6 +472,12 @@ const Game3D: React.FC = () => {
     
     setGamePaused(false);
     setControlsEnabled(true);
+    
+    if (gameBoardRef.current) {
+      setTimeout(() => {
+        gameBoardRef.current?.focus();
+      }, 0);
+    }
     
     toast({
       title: "Game Started",
@@ -550,7 +563,11 @@ const Game3D: React.FC = () => {
             />
           </div>
           
-          <div className="game-board rounded-lg overflow-hidden h-[500px] md:h-[600px] relative">
+          <div 
+            className="game-board rounded-lg overflow-hidden h-[500px] md:h-[600px] relative"
+            ref={gameBoardRef}
+            tabIndex={0}
+          >
             <Canvas camera={{ position: currentView.position, fov: 50 }}>
               <ambientLight intensity={0.5} />
               <pointLight position={[10, 10, 10]} />
@@ -587,7 +604,7 @@ const Game3D: React.FC = () => {
           
           <GameControls3D 
             onReset={resetGame}
-            onStartPause={toggleGamePause}
+            onStartPause={gamePaused ? startGame : toggleGamePause}
             isPaused={gamePaused}
             gameOver={gameOver}
           />

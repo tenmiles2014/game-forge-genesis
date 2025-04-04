@@ -25,6 +25,7 @@ const GameControls3D: React.FC<GameControls3DProps> = ({
         className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300 w-full"
         onClick={onStartPause}
         disabled={gameOver}
+        autoFocus={false}
       >
         {isPaused ? (
           <>
