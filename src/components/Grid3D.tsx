@@ -108,7 +108,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     const pattern = currentBlock.shape;
     const gridSize = grid.length || 10;
     
-    // Enhanced ghost block rendering
+    // Only render if the ghost is lower than the current position
     if (ghostPosition.y < position.y) {
       for (let y = 0; y < pattern.length; y++) {
         for (let x = 0; x < pattern[y].length; x++) {
@@ -130,11 +130,10 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
               >
                 <boxGeometry args={[0.95, 0.95, 0.95]} />
                 <meshStandardMaterial 
-                  color="#F97316"  // Bright Orange for high visibility
+                  color={blockColor} 
                   transparent={true} 
-                  opacity={0.5}    // More visible opacity
-                  wireframe={true}
-                  wireframeLinewidth={4}  // Even thicker wireframe
+                  opacity={0.2} 
+                  wireframe={true} 
                 />
               </mesh>
             );
@@ -144,7 +143,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
     
     return blocks;
-  }, [currentBlock.shape, ghostPosition, position.y, grid.length]);
+  }, [currentBlock.shape, ghostPosition, position.y, blockColor, grid.length]);
 
   // Render current falling block
   const renderCurrentBlock = useMemo(() => {
@@ -285,4 +284,3 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
 };
 
 export default Grid3D;
-

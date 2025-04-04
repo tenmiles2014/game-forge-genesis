@@ -39,7 +39,6 @@ const Game3D: React.FC = () => {
   const orbitControlsRef = useRef(null);
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
-  const gameBoardRef = useRef<HTMLDivElement>(null);
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 50));
@@ -158,7 +157,6 @@ const Game3D: React.FC = () => {
 
   const placeBlock = () => {
     const newGrid = JSON.parse(JSON.stringify(grid));
-    
     for (let y = 0; y < currentBlock.shape.length; y++) {
       for (let x = 0; x < currentBlock.shape[y].length; x++) {
         if (currentBlock.shape[y][x]) {
@@ -179,40 +177,38 @@ const Game3D: React.FC = () => {
     
     setGrid(newGrid);
     
-    setTimeout(() => {
-      const layersCleared = clearCompleteLayers(newGrid);
-      
-      const nextBlockPattern = nextBlock;
-      setCurrentBlock(nextBlockPattern);
-      setNextBlock(getRandomBlockPattern());
-      
-      const newPosition = {...INITIAL_POSITION};
-      
-      if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
-        setGameOver(true);
-        setControlsEnabled(false);
-        setGamePaused(true);
+    const layersCleared = clearCompleteLayers(newGrid);
+    
+    const nextBlockPattern = nextBlock;
+    setCurrentBlock(nextBlockPattern);
+    setNextBlock(getRandomBlockPattern());
+    
+    const newPosition = {...INITIAL_POSITION};
+    
+    if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
+      setGameOver(true);
+      setControlsEnabled(false);
+      setGamePaused(true);
+      toast({
+        title: "Game Over!",
+        description: `No space for new block. Final score: ${score} | Level: ${level}`,
+      });
+      return;
+    }
+    
+    setPosition(newPosition);
+    
+    if (layersCleared > 0 && level < MAX_LEVEL) {
+      const layerThreshold = Math.ceil(level / 5) + 1;
+      if (layersCleared >= layerThreshold) {
+        const newLevel = Math.min(MAX_LEVEL, level + 1);
+        setLevel(newLevel);
         toast({
-          title: "Game Over!",
-          description: `No space for new block. Final score: ${score} | Level: ${level}`,
+          title: `Level Up!`,
+          description: `You are now on level ${newLevel}`,
         });
-        return;
       }
-      
-      setPosition(newPosition);
-      
-      if (layersCleared > 0 && level < MAX_LEVEL) {
-        const layerThreshold = Math.ceil(level / 5) + 1;
-        if (layersCleared >= layerThreshold) {
-          const newLevel = Math.min(MAX_LEVEL, level + 1);
-          setLevel(newLevel);
-          toast({
-            title: `Level Up!`,
-            description: `You are now on level ${newLevel}`,
-          });
-        }
-      }
-    }, 100);
+    }
   };
 
   const getColorIndex = (color: string): number => {
@@ -315,29 +311,28 @@ const Game3D: React.FC = () => {
         title: `${layersCleared} lines cleared!`,
         description: `+${pointsScored} points`,
       });
-      
-      setGrid([...gridCopy]);
     }
     
+    setGrid([...gridCopy]);
     return layersCleared;
   };
 
   const applyGravityToBlocks = (grid: number[][][]) => {
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
-        const stack: number[] = [];
-        
-        for (let y = 0; y < GRID_SIZE; y++) {
+        for (let y = 1; y < GRID_SIZE; y++) {
           if (grid[y][x][z] !== 0) {
-            stack.push(grid[y][x][z]);
-            grid[y][x][z] = 0;
+            let newY = y;
+            
+            while (newY > 0 && grid[newY - 1][x][z] === 0) {
+              newY--;
+            }
+            
+            if (newY < y) {
+              grid[newY][x][z] = grid[y][x][z];
+              grid[y][x][z] = 0;
+            }
           }
-        }
-        
-        let y = 0;
-        while (stack.length > 0) {
-          grid[y][x][z] = stack.shift()!;
-          y++;
         }
       }
     }
@@ -462,12 +457,6 @@ const Game3D: React.FC = () => {
         title: "Game Resumed",
         description: "Let's go!",
       });
-      
-      if (gameBoardRef.current) {
-        setTimeout(() => {
-          gameBoardRef.current?.focus();
-        }, 0);
-      }
     }
   };
 
@@ -476,12 +465,6 @@ const Game3D: React.FC = () => {
     
     setGamePaused(false);
     setControlsEnabled(true);
-    
-    if (gameBoardRef.current) {
-      setTimeout(() => {
-        gameBoardRef.current?.focus();
-      }, 0);
-    }
     
     toast({
       title: "Game Started",
@@ -567,11 +550,7 @@ const Game3D: React.FC = () => {
             />
           </div>
           
-          <div 
-            className="game-board rounded-lg overflow-hidden h-[500px] md:h-[600px] relative"
-            ref={gameBoardRef}
-            tabIndex={0}
-          >
+          <div className="game-board rounded-lg overflow-hidden h-[500px] md:h-[600px] relative">
             <Canvas camera={{ position: currentView.position, fov: 50 }}>
               <ambientLight intensity={0.5} />
               <pointLight position={[10, 10, 10]} />
@@ -608,7 +587,7 @@ const Game3D: React.FC = () => {
           
           <GameControls3D 
             onReset={resetGame}
-            onStartPause={gamePaused ? startGame : toggleGamePause}
+            onStartPause={toggleGamePause}
             isPaused={gamePaused}
             gameOver={gameOver}
           />
