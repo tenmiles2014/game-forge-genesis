@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
@@ -131,9 +132,9 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
                 <meshStandardMaterial 
                   color="#F97316"  // Bright Orange for high visibility
                   transparent={true} 
-                  opacity={0.3}    // Slightly more transparent
+                  opacity={0.5}    // More visible opacity
                   wireframe={true}
-                  wireframeLinewidth={2}  // Increased line thickness
+                  wireframeLinewidth={4}  // Even thicker wireframe
                 />
               </mesh>
             );
@@ -284,3 +285,4 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
 };
 
 export default Grid3D;
+
