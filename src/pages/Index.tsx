@@ -1,9 +1,9 @@
 
 import React from 'react';
-import Game3D from "@/components/Game3D";
+import Game from "@/components/Game";
 
 const Index = () => {
-  return <Game3D />;
+  return <Game />;
 };
 
 export default Index;
