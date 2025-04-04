@@ -1,7 +1,8 @@
-import React, { useMemo, useRef } from 'react';
+
+import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 
 interface Grid3DProps {
   grid: number[][][];
@@ -13,6 +14,8 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
   // For tracking grid changes and forcing re-renders
   const gridRef = useRef<string>("");
   const forceUpdateRef = useRef<number>(0);
+  const meshRefs = useRef<Map<string, THREE.Mesh>>(new Map());
+  const { scene } = useThree();
   
   // Color mapping
   const getColor = (colorIndex: number) => {
@@ -94,21 +97,71 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return fingerprint;
   };
 
+  // Effect to clean up old meshes when grid changes
+  useEffect(() => {
+    return () => {
+      // Clean up all meshes on component unmount
+      meshRefs.current.forEach(mesh => {
+        if (mesh.geometry) mesh.geometry.dispose();
+        if (mesh.material) {
+          if (Array.isArray(mesh.material)) {
+            mesh.material.forEach(mat => mat.dispose());
+          } else {
+            mesh.material.dispose();
+          }
+        }
+      });
+      meshRefs.current.clear();
+    };
+  }, []);
+  
   // Force update every frame to check for grid changes
   useFrame(() => {
     const currentFingerprint = getGridFingerprint();
     if (currentFingerprint !== gridRef.current) {
       gridRef.current = currentFingerprint;
-      forceUpdateRef.current += 1; // Increment to force re-render
+      forceUpdateRef.current += 1;
+      
+      // Clean up old meshes that are no longer needed
+      const newKeys = new Set<string>();
+      const gridSize = grid.length || 10;
+      
+      // Collect keys for current blocks
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          for (let z = 0; z < gridSize; z++) {
+            if (grid[y][x][z] !== 0) {
+              newKeys.add(`${y}-${x}-${z}`);
+            }
+          }
+        }
+      }
+      
+      // Remove meshes that are no longer in the grid
+      meshRefs.current.forEach((mesh, key) => {
+        if (!newKeys.has(key)) {
+          if (mesh.parent) mesh.parent.remove(mesh);
+          if (mesh.geometry) mesh.geometry.dispose();
+          if (mesh.material) {
+            if (Array.isArray(mesh.material)) {
+              mesh.material.forEach(mat => mat.dispose());
+            } else {
+              mesh.material.dispose();
+            }
+          }
+          meshRefs.current.delete(key);
+        }
+      });
     }
   });
 
-  // Render placed blocks using individual instances for better Three.js management
+  // Render placed blocks using individual instances with explicit cleanup
   const renderPlacedBlocks = useMemo(() => {
     console.log("Rendering placed blocks with force update:", forceUpdateRef.current);
     
     const blocks: JSX.Element[] = [];
     const gridSize = grid.length || 10;
+    const timestamp = Date.now(); // Add timestamp to ensure uniqueness
     
     // Generate new block meshes every time grid changes
     for (let y = 0; y < gridSize; y++) {
@@ -116,12 +169,20 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
         for (let z = 0; z < gridSize; z++) {
           const cellValue = grid[y][x][z];
           if (cellValue !== 0) {
+            const posKey = `${y}-${x}-${z}`;
+            const uniqueKey = `block-${posKey}-${cellValue}-${timestamp}-${forceUpdateRef.current}`;
+            
             blocks.push(
               <mesh 
-                key={`block-${y}-${x}-${z}-${cellValue}-${forceUpdateRef.current}`} 
+                key={uniqueKey}
                 position={[x, y, z]} 
                 castShadow
                 receiveShadow
+                ref={(mesh: THREE.Mesh) => {
+                  if (mesh) {
+                    meshRefs.current.set(posKey, mesh);
+                  }
+                }}
               >
                 <boxGeometry args={[0.95, 0.95, 0.95]} />
                 <meshStandardMaterial color={getColor(cellValue)} />
@@ -133,7 +194,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
     
     return blocks;
-  }, [grid, forceUpdateRef.current]); // Now depends on forceUpdateRef to ensure re-render
+  }, [grid, forceUpdateRef.current]);
 
   // Render ghost block (prediction)
   const renderGhostBlock = useMemo(() => {
@@ -307,7 +368,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
 
   // Use a group component with a key to force full replacement
   return (
-    <group key={`full-grid-${forceUpdateRef.current}`}>
+    <group key={`full-grid-${forceUpdateRef.current}-${Date.now()}`}>
       {renderPlacedBlocks}
       {renderCurrentBlock}
       {renderGhostBlock}
