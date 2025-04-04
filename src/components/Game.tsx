@@ -10,7 +10,7 @@ import GameControls from './GameControls';
 const GRID_ROWS = 10;
 const GRID_COLS = 10;
 const INITIAL_BLOCK_POSITION = { row: 0, col: Math.floor(GRID_COLS / 2) - 1 };
-const ROW_CLEAR_DELAY = 1000; // 1 second delay
+const ROW_CLEAR_DELAY = 3000; // 3 seconds delay
 
 const Game: React.FC = () => {
   // Game state
