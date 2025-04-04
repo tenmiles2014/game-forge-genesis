@@ -112,9 +112,9 @@ const Game: React.FC = () => {
       setIsClearing(true);
       setRowsBeingCleared(rowsToClear);
       
-      // Wait to show the highlighted rows, then clear them
+      // Step 1: Show highlighted rows for half the delay time
       setTimeout(() => {
-        // Apply clearing
+        // Step 2: Apply clearing - THIS IS THE KEY CHANGE - we clear the rows BEFORE setting the next block
         setGrid(updatedGrid);
         
         // Update score
@@ -127,7 +127,7 @@ const Game: React.FC = () => {
           description: `+${pointsScored} points`,
         });
         
-        // After another short delay, set the next block
+        // Step 3: Wait for the remaining delay before adding the next block
         setTimeout(() => {
           // Set the next block
           setCurrentBlock(nextBlock);
@@ -145,8 +145,8 @@ const Game: React.FC = () => {
               description: `Final score: ${score}`,
             });
           }
-        }, ROW_CLEAR_DELAY / 2);
-      }, ROW_CLEAR_DELAY / 2);
+        }, ROW_CLEAR_DELAY / 2); // Second half of the delay
+      }, ROW_CLEAR_DELAY / 2); // First half of the delay
     } else {
       // If no rows were cleared, set the next block immediately
       setCurrentBlock(nextBlock);
