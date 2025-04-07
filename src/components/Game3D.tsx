@@ -163,13 +163,17 @@ const Game3D: React.FC = () => {
 
   const placeBlock = () => {
     console.log("----------- placeBlock STARTED -----------");
-    console.log(`Current block type: ${currentBlock.color}, position: (${position.x},${position.y},${position.z})`);
-    console.log(`Creating new grid from existing grid (${grid.length}x${grid[0]?.length}x${grid[0]?.[0]?.length})`);
+    console.log(`Current block details:
+    - Type: ${currentBlock.color}
+    - Shape: ${JSON.stringify(currentBlock.shape)}
+    - Position: (${position.x},${position.y},${position.z})`);
     
     const newGrid = JSON.parse(JSON.stringify(grid));
     const blockPositions: {x: number, y: number, z: number}[] = [];
     
+    console.group('Block Placement Details');
     console.log("Transforming block pattern to absolute grid positions:");
+    
     for (let y = 0; y < currentBlock.shape.length; y++) {
       for (let x = 0; x < currentBlock.shape[y].length; x++) {
         if (currentBlock.shape[y][x]) {
@@ -177,7 +181,9 @@ const Game3D: React.FC = () => {
           const gridY = position.y;
           const gridZ = position.z + y;
           
-          console.log(`  - Block part at relative (${x},0,${y}) => absolute (${gridX},${gridY},${gridZ})`);
+          console.log(`Block part placement:
+            - Relative coords: (${x},0,${y})
+            - Absolute grid coords: (${gridX},${gridY},${gridZ})`);
           
           if (
             gridX >= 0 && gridX < GRID_SIZE &&
@@ -185,66 +191,67 @@ const Game3D: React.FC = () => {
             gridZ >= 0 && gridZ < GRID_SIZE
           ) {
             const colorIndex = getColorIndex(currentBlock.color);
-            console.log(`  - Setting grid[${gridY}][${gridX}][${gridZ}] = ${colorIndex} (${currentBlock.color})`);
+            console.log(`Setting grid[${gridY}][${gridX}][${gridZ}] = ${colorIndex} (${currentBlock.color})`);
             newGrid[gridY][gridX][gridZ] = colorIndex;
             blockPositions.push({x: gridX, y: gridY, z: gridZ});
           } else {
-            console.warn(`  - Position out of bounds (${gridX},${gridY},${gridZ}), skipping`);
+            console.warn(`Position out of bounds: (${gridX},${gridY},${gridZ}), skipping`);
           }
         }
       }
     }
+    console.groupEnd();
+
+    console.group('Block Placement Summary');
+    console.log(`Total block parts placed: ${blockPositions.length}`);
+    console.log(`Block placements: [${blockPositions.map(p => `(${p.x},${p.y},${p.z})`).join(', ')}]`);
+    console.groupEnd();
     
-    console.log(`Updating grid with ${blockPositions.length} new block positions`);
     setGrid(newGrid);
     
-    console.log(`Block placed: ${currentBlock.color} at positions [${blockPositions.map(p => `(${p.x},${p.y},${p.z})`).join(', ')}]`);
-    
-    console.log("Checking for complete layers to clear...");
+    console.group('Layer Clearing Process');
     const layersCleared = clearCompleteLayers(newGrid);
-    console.log(`clearCompleteLayers returned: ${layersCleared} layers cleared`);
+    console.log(`Layers cleared: ${layersCleared}`);
+    console.groupEnd();
     
-    console.log("Preparing next block...");
+    console.group('Next Block Preparation');
+    console.log(`Preparing next block`);
     const nextBlockPattern = nextBlock;
-    console.log(`Current nextBlock is ${nextBlock.color}, setting as new currentBlock`);
     setCurrentBlock(nextBlockPattern);
     
-    console.log("Generating new nextBlock...");
     const newNextBlock = getRandomBlockPattern();
-    console.log(`Generated new nextBlock: ${newNextBlock.color}`);
+    console.log(`New next block: ${newNextBlock.color}`);
     setNextBlock(newNextBlock);
     
     const newPosition = {...INITIAL_POSITION};
-    console.log(`Setting new position to INITIAL_POSITION: (${newPosition.x},${newPosition.y},${newPosition.z})`);
+    console.log(`Next block initial position: (${newPosition.x},${newPosition.y},${newPosition.z})`);
     
-    console.log("Checking if next block can be placed at initial position...");
+    console.group('Game Over Check');
     if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
       console.warn("GAME OVER: No valid position for next block");
       setGameOver(true);
       setControlsEnabled(false);
       setGamePaused(true);
-      console.log(`Game Over! Final score: ${score} | Level: ${level}`);
       toast({
         title: "Game Over!",
         description: `No space for new block. Final score: ${score} | Level: ${level}`,
       });
-      console.log("----------- placeBlock COMPLETED (GAME OVER) -----------");
+      console.groupEnd();
+      console.groupEnd();
       return;
     }
+    console.groupEnd();
     
-    console.log(`Next block can be placed, setting position to (${newPosition.x},${newPosition.y},${newPosition.z})`);
     setPosition(newPosition);
     
-    console.log(`Checking for level up: current level ${level}, layers cleared ${layersCleared}`);
+    console.group('Level Up Check');
     if (layersCleared > 0 && level < MAX_LEVEL) {
       const layerThreshold = Math.ceil(level / 5) + 1;
-      console.log(`Level up threshold: ${layerThreshold} layers`);
       
       if (layersCleared >= layerThreshold) {
         const newLevel = Math.min(MAX_LEVEL, level + 1);
         console.log(`LEVEL UP! ${level} -> ${newLevel}`);
         setLevel(newLevel);
-        console.log(`New drop speed: ${getDropSpeed()} ms`);
         toast({
           title: `Level Up!`,
           description: `You are now on level ${newLevel}`,
@@ -253,6 +260,7 @@ const Game3D: React.FC = () => {
         console.log(`Not enough layers cleared for level up (need ${layerThreshold}, got ${layersCleared})`);
       }
     }
+    console.groupEnd();
     
     console.log("----------- placeBlock COMPLETED -----------");
   };
