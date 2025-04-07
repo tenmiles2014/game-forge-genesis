@@ -79,12 +79,12 @@ const Game3D: React.FC = () => {
     }
     
     console.log(`Level ${currentLevel}: Blocks per layer: `, 
-      layerBlockCounts.map((count, idx) => `Layer ${idx}: ${count}`).join(', '));
+      layerBlockCounts.map((count, idx) => `Layer ${idx + 1}: ${count}`).join(', '));
     
     // Update the layer block counts state
     setLayerBlockCounts({
-      layer1: layerBlockCounts[0],
-      layer2: layerBlockCounts[1]
+      layer1: layerBlockCounts[1],
+      layer2: layerBlockCounts[2]
     });
       
     return layerBlockCounts;
@@ -93,17 +93,18 @@ const Game3D: React.FC = () => {
   const checkGameOverRules = (grid: number[][][]) => {
     const layerCounts = countBlocksByLayers(grid, level);
     
-    const tooManyInLayer1 = layerCounts[0] > 10;
-    const tooManyInLayer2 = layerCounts[1] > 5;
-    const blocksInUpperLayers = layerCounts.slice(2).some(count => count > 0);
+    // No limitation on layer 1 (index 0)
+    const tooManyInLayer2 = layerCounts[1] > 10; // Layer 2 (index 1) max 10 blocks
+    const tooManyInLayer3 = layerCounts[2] > 5;  // Layer 3 (index 2) max 5 blocks
+    const blocksInUpperLayers = layerCounts.slice(3).some(count => count > 0); // No blocks above layer 3
     
-    const isGameOverDueToRules = tooManyInLayer1 || tooManyInLayer2 || blocksInUpperLayers;
+    const isGameOverDueToRules = tooManyInLayer2 || tooManyInLayer3 || blocksInUpperLayers;
     
     if (isGameOverDueToRules) {
       let reason = '';
-      if (tooManyInLayer1) reason = `Too many blocks in layer 1 (${layerCounts[0]}/10)`;
-      else if (tooManyInLayer2) reason = `Too many blocks in layer 2 (${layerCounts[1]}/5)`;
-      else if (blocksInUpperLayers) reason = 'Blocks detected above layer 2';
+      if (tooManyInLayer2) reason = `Too many blocks in layer 2 (${layerCounts[1]}/10)`;
+      else if (tooManyInLayer3) reason = `Too many blocks in layer 3 (${layerCounts[2]}/5)`;
+      else if (blocksInUpperLayers) reason = 'Blocks detected above layer 3';
       
       console.log(`Game over due to rule violation: ${reason}`);
       return { isGameOver: true, reason };
