@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 
 interface LogEntry {
@@ -14,6 +15,7 @@ const DebugConsole: React.FC<DebugConsoleProps> = ({ maxEntries = 15 }) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const consoleRef = useRef<HTMLDivElement>(null);
   const pendingLogsRef = useRef<LogEntry[]>([]);
+  const animationFrameId = useRef<number>();
 
   useEffect(() => {
     // Scroll to bottom when logs update
@@ -61,9 +63,10 @@ const DebugConsole: React.FC<DebugConsoleProps> = ({ maxEntries = 15 }) => {
       animationFrameId.current = requestAnimationFrame(processPendingLogs);
     };
     
-    const animationFrameId = useRef<number>();
+    // Start the animation frame loop
     animationFrameId.current = requestAnimationFrame(processPendingLogs);
     
+    // Clean up on unmount
     return () => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
