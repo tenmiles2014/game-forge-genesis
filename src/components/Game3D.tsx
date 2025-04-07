@@ -779,6 +779,13 @@ const Game3D: React.FC = () => {
         
         <div className="flex flex-col justify-between gap-4 w-full md:w-64 p-4">
           <div className="space-y-4">
+            <GameControls3D 
+              onReset={resetGame}
+              onStartPause={gamePaused ? startGame : toggleGamePause}
+              isPaused={gamePaused}
+              gameOver={gameOver}
+            />
+            
             <ScoreDisplay score={score} linesCleared={linesCleared} />
             
             <LevelDisplay level={level} maxLevel={MAX_LEVEL} layersCleared={linesCleared} />
@@ -808,13 +815,6 @@ const Game3D: React.FC = () => {
               </div>
             </div>
           </div>
-          
-          <GameControls3D 
-            onReset={resetGame}
-            onStartPause={gamePaused ? startGame : toggleGamePause}
-            isPaused={gamePaused}
-            gameOver={gameOver}
-          />
         </div>
       </div>
       
