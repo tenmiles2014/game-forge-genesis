@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { InfoIcon, Layers } from 'lucide-react';
 
 interface LevelDisplayProps {
   level: number;
@@ -29,9 +31,23 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
         />
       </div>
       
-      {/* Next level info */}
-      <div className="mt-2 text-xs text-gray-300">
-        <span className="font-medium">{remainingLayers}</span> layers to simultaneously clear for next level
+      {/* Next level info with tooltip */}
+      <div className="mt-2 text-xs text-gray-300 flex items-center gap-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="inline-flex items-center">
+                <Layers className="h-4 w-4 mr-1 text-blue-400" />
+                <span className="font-medium">{layerThreshold}</span> layers simultaneously
+                <InfoIcon className="h-3 w-3 ml-1 text-gray-400" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs bg-gray-800 border-gray-700 text-gray-200">
+              <p>You need to clear <strong>{layerThreshold}</strong> layers at the same time to level up. 
+              This can be rows, columns, or complete layers that are cleared in a single move.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
       <div className="mt-1 text-xs text-emerald-400">
         Next level bonus: +<span className="font-medium">{nextLevelBonus}</span> points
