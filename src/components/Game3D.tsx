@@ -447,6 +447,8 @@ const Game3D: React.FC = () => {
     
     console.log('Function sequence: clearCompleteLayers() completed');
     
+    countBlocksByLayers(gridCopy, level);
+    
     setGrid([...gridCopy]);
     return layersCleared;
   };
