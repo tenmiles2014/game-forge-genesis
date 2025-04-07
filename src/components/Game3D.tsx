@@ -329,6 +329,9 @@ const Game3D: React.FC = () => {
     if (layersCleared > 0) {
       const levelMultiplier = 1 + (level * 0.1);
       const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
+      
+      console.log(`Score increased by ${pointsScored} points (${layersCleared} layers × 10 × ${levelMultiplier.toFixed(1)} multiplier)`);
+      
       setScore(prevScore => prevScore + pointsScored);
       toast({
         title: `${layersCleared} lines cleared!`,
