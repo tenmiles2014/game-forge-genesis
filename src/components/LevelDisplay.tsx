@@ -75,7 +75,7 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
                 <p>To advance to level {level + 1}, you need to clear <strong>{maxSimultaneousLayers}</strong> layers simultaneously in a single move.</p>
               ) : (
                 <>
-                  <p>To advance to level {level + 1}, you need to clear <strong>{tierLayersRemaining}</strong> more layers in tier {tier}.</p>
+                  <p>To advance to level {level + 1}, you need to clear <strong>{tierLayersRemaining}</strong> more total layers in tier {tier}.</p>
                   <div className="mt-1 h-2 bg-gray-700 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-gradient-to-r from-green-500 to-emerald-500"
@@ -122,7 +122,7 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
                 <h4 className="font-medium text-white mb-1">Rules Change at Level 5</h4>
                 <p className="text-xs">
                   Levels 1-4: Clear increasingly more layers simultaneously.<br/>
-                  Levels 5+: Clear 20 total layers per tier, with maximum simultaneous requirement capped at 5.
+                  Levels 5+: Clear a total of 20 layers per tier. No simultaneous requirement.
                 </p>
               </div>
             </div>
@@ -139,7 +139,7 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
                 {!isHighTier ? (
                   <span><span className="font-medium">{maxSimultaneousLayers}</span> layers simultaneously</span>
                 ) : (
-                  <span><span className="font-medium">{tierLayersRemaining}</span> more layers in tier {tier}</span>
+                  <span><span className="font-medium">{tierLayersRemaining}</span> more total layers in tier {tier}</span>
                 )}
               </div>
             </TooltipTrigger>
@@ -148,7 +148,7 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
                 <p>You need to clear <strong>{maxSimultaneousLayers}</strong> layers simultaneously in a single move.</p>
               ) : (
                 <>
-                  <p>You need to clear <strong>{tierLayersRemaining}</strong> more layers to complete tier {tier}.</p>
+                  <p>You need to clear <strong>{tierLayersRemaining}</strong> more total layers to complete tier {tier}.</p>
                   <p className="text-xs text-gray-400 mt-1">Progress: {tierLayersCleared}/{tierLayerTarget} layers</p>
                 </>
               )}
