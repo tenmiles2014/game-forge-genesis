@@ -1,13 +1,6 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { CameraIcon } from 'lucide-react';
 
 export interface ViewPoint {
@@ -23,25 +16,19 @@ interface ViewControlsProps {
 
 const ViewControls: React.FC<ViewControlsProps> = ({ viewPoints, onSelectView }) => {
   return (
-    <div className="flex gap-2 items-center">
-      <Select onValueChange={(value) => {
-        const selectedView = viewPoints.find(v => v.name === value);
-        if (selectedView) {
-          onSelectView(selectedView);
-        }
-      }}>
-        <SelectTrigger className="w-[180px] bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300">
+    <div className="flex flex-wrap gap-2 items-center">
+      {viewPoints.map((viewPoint) => (
+        <Button
+          key={viewPoint.name}
+          variant="outline"
+          size="sm"
+          className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300"
+          onClick={() => onSelectView(viewPoint)}
+        >
           <CameraIcon className="h-4 w-4 mr-2" />
-          <SelectValue placeholder="Select view" />
-        </SelectTrigger>
-        <SelectContent>
-          {viewPoints.map((viewPoint) => (
-            <SelectItem key={viewPoint.name} value={viewPoint.name}>
-              {viewPoint.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+          {viewPoint.name}
+        </Button>
+      ))}
     </div>
   );
 };
