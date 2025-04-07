@@ -13,6 +13,7 @@ interface DebugConsoleProps {
 const DebugConsole: React.FC<DebugConsoleProps> = ({ maxEntries = 15 }) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const consoleRef = useRef<HTMLDivElement>(null);
+  const pendingLogsRef = useRef<LogEntry[]>([]);
 
   useEffect(() => {
     // Scroll to bottom when logs update
@@ -21,16 +22,14 @@ const DebugConsole: React.FC<DebugConsoleProps> = ({ maxEntries = 15 }) => {
     }
   }, [logs]);
 
+  // Process pending logs in batches with useEffect
   useEffect(() => {
-    // Create a function to intercept console logs
-    const addLog = (message: string, type: 'info' | 'warning' | 'error' = 'info') => {
-      const timestamp = new Date().toISOString().substr(11, 8); // HH:MM:SS format
+    if (pendingLogsRef.current.length > 0) {
+      const logsToAdd = [...pendingLogsRef.current];
+      pendingLogsRef.current = [];
       
       setLogs(prevLogs => {
-        const newLogs = [
-          ...prevLogs,
-          { message, timestamp, type }
-        ];
+        const newLogs = [...prevLogs, ...logsToAdd];
         
         // Keep only the last maxEntries logs
         if (newLogs.length > maxEntries) {
@@ -39,6 +38,44 @@ const DebugConsole: React.FC<DebugConsoleProps> = ({ maxEntries = 15 }) => {
         
         return newLogs;
       });
+    }
+    
+    // Use requestAnimationFrame to batch log updates
+    const processPendingLogs = () => {
+      if (pendingLogsRef.current.length > 0) {
+        const logsToAdd = [...pendingLogsRef.current];
+        pendingLogsRef.current = [];
+        
+        setLogs(prevLogs => {
+          const newLogs = [...prevLogs, ...logsToAdd];
+          
+          // Keep only the last maxEntries logs
+          if (newLogs.length > maxEntries) {
+            return newLogs.slice(newLogs.length - maxEntries);
+          }
+          
+          return newLogs;
+        });
+      }
+      
+      animationFrameId.current = requestAnimationFrame(processPendingLogs);
+    };
+    
+    const animationFrameId = useRef<number>();
+    animationFrameId.current = requestAnimationFrame(processPendingLogs);
+    
+    return () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, [maxEntries]);
+
+  useEffect(() => {
+    // Create a function to queue console logs instead of updating state directly
+    const queueLog = (message: string, type: 'info' | 'warning' | 'error' = 'info') => {
+      const timestamp = new Date().toISOString().substr(11, 8); // HH:MM:SS format
+      pendingLogsRef.current.push({ message, timestamp, type });
     };
 
     // Create a proxy for the original console methods
@@ -49,21 +86,21 @@ const DebugConsole: React.FC<DebugConsoleProps> = ({ maxEntries = 15 }) => {
     // Override console methods
     console.log = (...args) => {
       originalConsoleLog.apply(console, args);
-      addLog(args.map(arg => 
+      queueLog(args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : arg
       ).join(' '), 'info');
     };
 
     console.warn = (...args) => {
       originalConsoleWarn.apply(console, args);
-      addLog(args.map(arg => 
+      queueLog(args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : arg
       ).join(' '), 'warning');
     };
 
     console.error = (...args) => {
       originalConsoleError.apply(console, args);
-      addLog(args.map(arg => 
+      queueLog(args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : arg
       ).join(' '), 'error');
     };
