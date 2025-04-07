@@ -62,6 +62,24 @@ const Game3D: React.FC = () => {
     return newGrid;
   };
 
+  const countBlocksByLevel = (grid: number[][][], currentLevel: number) => {
+    if (currentLevel !== 1 && currentLevel !== 2) return;
+    
+    let blockCount = 0;
+    
+    for (let y = 0; y < GRID_SIZE; y++) {
+      for (let x = 0; x < GRID_SIZE; x++) {
+        for (let z = 0; z < GRID_SIZE; z++) {
+          if (grid[y][x][z] !== 0) {
+            blockCount++;
+          }
+        }
+      }
+    }
+    
+    console.log(`Level ${currentLevel}: Currently ${blockCount} blocks on the grid`);
+  };
+
   useEffect(() => {
     resetGame();
   }, []);
@@ -166,12 +184,10 @@ const Game3D: React.FC = () => {
     });
     console.log('Current Position:', position);
 
-    // Log function sequence entry point
     console.log('Function sequence: placeBlock() started');
 
     const newGrid = JSON.parse(JSON.stringify(grid));
     
-    // Log function sequence - grid copy created
     console.log('Function sequence: Creating new grid copy');
     
     for (let y = 0; y < currentBlock.shape.length; y++) {
@@ -180,8 +196,6 @@ const Game3D: React.FC = () => {
           const gridX = position.x + x;
           const gridY = position.y;
           const gridZ = position.z + y;
-          
-          // Removed the logs for "Attempting to place block" and "Placing block with color index"
           
           if (
             gridX >= 0 && gridX < GRID_SIZE &&
@@ -197,15 +211,14 @@ const Game3D: React.FC = () => {
       }
     }
     
-    // Log function sequence - setting grid
     console.log('Function sequence: Setting updated grid state');
     setGrid(newGrid);
     
-    // Log function sequence - clearing layers
+    countBlocksByLevel(newGrid, level);
+    
     console.log('Function sequence: Calling clearCompleteLayers()');
     const layersCleared = clearCompleteLayers(newGrid);
     
-    // Log function sequence - preparing next block
     console.log('Function sequence: Setting up next block');
     const nextBlockPattern = nextBlock;
     setCurrentBlock(nextBlockPattern);
@@ -218,12 +231,10 @@ const Game3D: React.FC = () => {
       color: nextBlockPattern.color
     });
     
-    // Log function sequence - checking game over condition
     console.log('Function sequence: Checking if new block can be placed');
     if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
       console.error('Game Over: No space for new block');
       
-      // Log function sequence - game over
       console.log('Function sequence: Game over condition triggered');
       setGameOver(true);
       setControlsEnabled(false);
@@ -235,25 +246,19 @@ const Game3D: React.FC = () => {
       return;
     }
     
-    // Log function sequence - setting new position
     console.log('Function sequence: Setting new position');
     setPosition(newPosition);
     
-    // Log function sequence - checking level up condition
     console.log('Function sequence: Checking for level up condition');
     if (layersCleared > 0 && level < MAX_LEVEL) {
-      // New tier-based level up system
       if (level < 5) {
-        // Tiers 1-4: Need to clear [level+1] layers simultaneously
         const layerThreshold = level + 1;
         if (layersCleared >= layerThreshold) {
           const newLevel = Math.min(MAX_LEVEL, level + 1);
           
-          // Add level up bonus points
           const levelUpBonus = newLevel * 100;
           setScore(prevScore => prevScore + levelUpBonus);
           
-          // Log function sequence - level up
           console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
           setLevel(newLevel);
           toast({
@@ -262,22 +267,17 @@ const Game3D: React.FC = () => {
           });
         }
       } else {
-        // Tiers 5+: Need to clear 20 total layers per tier
         const tier = Math.ceil(level / 2);
         const tierLayerTarget = 20;
         
-        // Add the current layers cleared to the total
         setLinesCleared(prev => {
           const newTotal = prev + layersCleared;
-          // Check if we've cleared enough layers for this tier
           if (Math.floor(prev / tierLayerTarget) < Math.floor(newTotal / tierLayerTarget)) {
             const newLevel = Math.min(MAX_LEVEL, level + 1);
             
-            // Add level up bonus points
             const levelUpBonus = newLevel * 100;
             setScore(prevScore => prevScore + levelUpBonus);
             
-            // Log function sequence - level up
             console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
             setLevel(newLevel);
             toast({
@@ -305,23 +305,19 @@ const Game3D: React.FC = () => {
   };
 
   const clearCompleteLayers = (grid: number[][][]) => {
-    // Log function sequence - start of clearCompleteLayers
-    console.log('Function sequence: clearCompleteLayers() started');
-    
     let layersCleared = 0;
     const gridCopy = JSON.parse(JSON.stringify(grid));
     
-    // Debug logs for layer clearing process
+    console.log('Function sequence: clearCompleteLayers() started');
+    
     console.log('Initial grid copy created:', {
       gridSize: gridCopy.length,
       dimensions: gridCopy.map(layer => layer.length)
     });
     
-    // Log function sequence - applying gravity first time
     console.log('Function sequence: Applying gravity to blocks FIRST TIME (before clearing)');
     applyGravityToBlocks(gridCopy);
     
-    // Log grid state after first gravity application
     console.log('Grid state after first gravity application:', {
       gridCopy: gridCopy.map(layer => 
         layer.map(row => row.some(cell => cell !== 0))
@@ -403,7 +399,6 @@ const Game3D: React.FC = () => {
       }
     }
     
-    // Log detailed information about cleared layers
     console.log('Layers cleared details:', {
       totalLayersCleared: layersCleared,
       clearDetails: {
@@ -413,18 +408,15 @@ const Game3D: React.FC = () => {
       }
     });
     
-    // Log grid state before second gravity application
     console.log('Grid state before second gravity application:', {
       gridCopy: gridCopy.map(layer => 
         layer.map(row => row.some(cell => cell !== 0))
       )
     });
     
-    // Log function sequence - applying gravity second time
     console.log('Function sequence: Applying gravity to blocks SECOND TIME (after clearing)');
     applyGravityToBlocks(gridCopy);
     
-    // Log grid state after second gravity application
     console.log('Grid state after second gravity application:', {
       gridCopy: gridCopy.map(layer => 
         layer.map(row => row.some(cell => cell !== 0))
@@ -435,7 +427,6 @@ const Game3D: React.FC = () => {
       const levelMultiplier = 1 + (level * 0.1);
       const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
       
-      // Log scoring details
       console.log('Scoring details:', {
         layersCleared,
         basePoints: layersCleared * 10,
@@ -443,20 +434,16 @@ const Game3D: React.FC = () => {
         totalPointsScored: pointsScored
       });
       
-      // Update score state
       setScore(prevScore => prevScore + pointsScored);
       
-      // Update total lines cleared
       setLinesCleared(prev => prev + layersCleared);
       
-      // Show toast notification
       toast({
         title: `${layersCleared} lines cleared!`,
         description: `+${pointsScored} points`,
       });
     }
     
-    // Log function sequence - end of clearCompleteLayers
     console.log('Function sequence: clearCompleteLayers() completed');
     
     setGrid([...gridCopy]);
