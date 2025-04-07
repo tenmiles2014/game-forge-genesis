@@ -157,7 +157,15 @@ const Game3D: React.FC = () => {
   };
 
   const placeBlock = () => {
+    console.log('--- placeBlock START ---');
+    console.log('Current Block:', {
+      shape: currentBlock.shape,
+      color: currentBlock.color
+    });
+    console.log('Current Position:', position);
+
     const newGrid = JSON.parse(JSON.stringify(grid));
+    
     for (let y = 0; y < currentBlock.shape.length; y++) {
       for (let x = 0; x < currentBlock.shape[y].length; x++) {
         if (currentBlock.shape[y][x]) {
@@ -165,12 +173,18 @@ const Game3D: React.FC = () => {
           const gridY = position.y;
           const gridZ = position.z + y;
           
+          console.log(`Attempting to place block at (${gridX},${gridY},${gridZ})`);
+          
           if (
             gridX >= 0 && gridX < GRID_SIZE &&
             gridY >= 0 && gridY < GRID_SIZE &&
             gridZ >= 0 && gridZ < GRID_SIZE
           ) {
-            newGrid[gridY][gridX][gridZ] = getColorIndex(currentBlock.color);
+            const colorIndex = getColorIndex(currentBlock.color);
+            console.log(`Placing block with color index: ${colorIndex}`);
+            newGrid[gridY][gridX][gridZ] = colorIndex;
+          } else {
+            console.warn(`Block placement out of bounds: (${gridX},${gridY},${gridZ})`);
           }
         }
       }
@@ -186,7 +200,13 @@ const Game3D: React.FC = () => {
     
     const newPosition = {...INITIAL_POSITION};
     
+    console.log('Next Block:', {
+      shape: nextBlockPattern.shape,
+      color: nextBlockPattern.color
+    });
+    
     if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
+      console.error('Game Over: No space for new block');
       setGameOver(true);
       setControlsEnabled(false);
       setGamePaused(true);
@@ -210,6 +230,8 @@ const Game3D: React.FC = () => {
         });
       }
     }
+
+    console.log('--- placeBlock END ---');
   };
 
   const getColorIndex = (color: string): number => {
