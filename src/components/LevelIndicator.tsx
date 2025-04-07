@@ -28,12 +28,15 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ level, gridSize }) => {
       // Clear any existing children
       while (circleRef.current.children.length) {
         const child = circleRef.current.children[0];
-        if (child.geometry) child.geometry.dispose();
-        if (child.material) {
-          if (Array.isArray(child.material)) {
-            child.material.forEach((m: THREE.Material) => m.dispose());
+        // Type assertion to handle Line or Mesh objects
+        if ((child as THREE.Line).geometry) {
+          (child as THREE.Line).geometry.dispose();
+        }
+        if ((child as THREE.Line).material) {
+          if (Array.isArray((child as THREE.Line).material)) {
+            ((child as THREE.Line).material as THREE.Material[]).forEach(m => m.dispose());
           } else {
-            child.material.dispose();
+            ((child as THREE.Line).material as THREE.Material).dispose();
           }
         }
         circleRef.current.remove(child);
