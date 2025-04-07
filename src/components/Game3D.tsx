@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -42,7 +41,6 @@ const Game3D: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
   const gameBoardRef = useRef<HTMLDivElement>(null);
-  const [showDebugConsole, setShowDebugConsole] = useState(true);
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 50));
@@ -609,48 +607,6 @@ const Game3D: React.FC = () => {
     });
   };
 
-  const toggleDebugConsole = () => {
-    setShowDebugConsole(prev => !prev);
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (!controlsEnabled || gamePaused) return;
-      
-      switch (event.key) {
-        case 'ArrowLeft':
-          moveBlock('left');
-          break;
-        case 'ArrowRight':
-          moveBlock('right');
-          break;
-        case 'ArrowUp':
-          moveBlock('forward');
-          break;
-        case 'ArrowDown':
-          moveBlock('backward');
-          break;
-        case ' ':  // Space key - only drop, don't rotate
-          dropBlock();
-          break;
-        case 'z':  // Rotate around z-axis
-          rotateBlock('z');
-          break;
-        case 'x':  // Rotate around x-axis
-          rotateBlock('x');
-          break;
-        default:
-          break;
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [position, currentBlock, grid, gameOver, controlsEnabled, gamePaused]);
-
   const handleViewChange = (viewPoint: ViewPoint) => {
     setCurrentView(viewPoint);
     
@@ -686,12 +642,7 @@ const Game3D: React.FC = () => {
       <div className="game-container rounded-lg overflow-hidden w-full max-w-[1400px] flex flex-col md:flex-row gap-4 bg-black bg-opacity-30">
         <div className="flex-1 min-h-[550px] md:min-h-[650px]">
           <div className="flex justify-between items-center mb-2 p-2">
-            <button
-              onClick={toggleDebugConsole}
-              className="text-xs text-gray-400 hover:text-white bg-black bg-opacity-50 px-2 py-1 rounded"
-            >
-              {showDebugConsole ? "Hide Debug" : "Show Debug"}
-            </button>
+            <div></div>
             <ViewControls 
               viewPoints={VIEW_POINTS} 
               onSelectView={handleViewChange}
@@ -722,11 +673,7 @@ const Game3D: React.FC = () => {
             <Grid3DLabels />
           </div>
           
-          {showDebugConsole && (
-            <div className="mt-2">
-              <DebugConsole maxEntries={20} />
-            </div>
-          )}
+          <DebugConsole maxEntries={20} />
         </div>
         
         <div className="flex flex-col justify-between gap-4 w-full md:w-64 p-4">
@@ -764,4 +711,3 @@ const Game3D: React.FC = () => {
 };
 
 export default Game3D;
-
