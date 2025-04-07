@@ -772,7 +772,6 @@ const Game3D: React.FC = () => {
                 grid={grid} 
                 currentBlock={currentBlock} 
                 position={position}
-                level={level}
               />
               <OrbitControls 
                 ref={orbitControlsRef} 
