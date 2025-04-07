@@ -10,6 +10,7 @@ interface LevelDisplayProps {
 const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersCleared = 0 }) => {
   const layerThreshold = Math.ceil(level / 5) + 1;
   const remainingLayers = Math.max(0, layerThreshold - (layersCleared % layerThreshold));
+  const nextLevelBonus = (level + 1) * 100;
   
   return (
     <div className="p-4 rounded-lg bg-black bg-opacity-30">
@@ -30,6 +31,9 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
       {/* Next level info */}
       <div className="mt-2 text-xs text-gray-300">
         <span className="font-medium">{remainingLayers}</span> more layers to level up
+      </div>
+      <div className="mt-1 text-xs text-emerald-400">
+        Next level bonus: +<span className="font-medium">{nextLevelBonus}</span> points
       </div>
     </div>
   );

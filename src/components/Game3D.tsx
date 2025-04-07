@@ -246,12 +246,16 @@ const Game3D: React.FC = () => {
       if (layersCleared >= layerThreshold) {
         const newLevel = Math.min(MAX_LEVEL, level + 1);
         
+        // Add level up bonus points
+        const levelUpBonus = newLevel * 100;
+        setScore(prevScore => prevScore + levelUpBonus);
+        
         // Log function sequence - level up
         console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
         setLevel(newLevel);
         toast({
           title: `Level Up!`,
-          description: `You are now on level ${newLevel}`,
+          description: `You are now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
         });
       }
     }
