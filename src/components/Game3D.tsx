@@ -12,6 +12,7 @@ import ViewControls, { ViewPoint } from './ViewControls';
 import GuidelineOverlay from './GuidelineOverlay';
 import Grid3DLabels from './Grid3DLabels';
 import Gyroscope from './Gyroscope';
+import DebugConsole from './DebugConsole';
 
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
@@ -40,6 +41,7 @@ const Game3D: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
   const gameBoardRef = useRef<HTMLDivElement>(null);
+  const [showDebugConsole, setShowDebugConsole] = useState(true);
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 50));
@@ -63,6 +65,7 @@ const Game3D: React.FC = () => {
 
   useEffect(() => {
     resetGame();
+    console.log("Game initialized");
   }, []);
 
   useEffect(() => {
@@ -103,6 +106,8 @@ const Game3D: React.FC = () => {
       clearInterval(gravityTimerRef.current);
       gravityTimerRef.current = null;
     }
+    
+    console.log("Game reset");
   };
 
   const wouldExceedBoundary = (pattern: number[][], newX: number, newY: number, newZ: number) => {
@@ -158,6 +163,8 @@ const Game3D: React.FC = () => {
 
   const placeBlock = () => {
     const newGrid = JSON.parse(JSON.stringify(grid));
+    const blockPositions: {x: number, y: number, z: number}[] = [];
+    
     for (let y = 0; y < currentBlock.shape.length; y++) {
       for (let x = 0; x < currentBlock.shape[y].length; x++) {
         if (currentBlock.shape[y][x]) {
@@ -171,12 +178,15 @@ const Game3D: React.FC = () => {
             gridZ >= 0 && gridZ < GRID_SIZE
           ) {
             newGrid[gridY][gridX][gridZ] = getColorIndex(currentBlock.color);
+            blockPositions.push({x: gridX, y: gridY, z: gridZ});
           }
         }
       }
     }
     
     setGrid(newGrid);
+    
+    console.log(`Block placed: ${currentBlock.color} at positions [${blockPositions.map(p => `(${p.x},${p.y},${p.z})`).join(', ')}]`);
     
     const layersCleared = clearCompleteLayers(newGrid);
     
@@ -190,6 +200,7 @@ const Game3D: React.FC = () => {
       setGameOver(true);
       setControlsEnabled(false);
       setGamePaused(true);
+      console.log(`Game Over! Final score: ${score} | Level: ${level}`);
       toast({
         title: "Game Over!",
         description: `No space for new block. Final score: ${score} | Level: ${level}`,
@@ -204,6 +215,7 @@ const Game3D: React.FC = () => {
       if (layersCleared >= layerThreshold) {
         const newLevel = Math.min(MAX_LEVEL, level + 1);
         setLevel(newLevel);
+        console.log(`Level Up! Now on level ${newLevel}`);
         toast({
           title: `Level Up!`,
           description: `You are now on level ${newLevel}`,
@@ -226,6 +238,7 @@ const Game3D: React.FC = () => {
   const clearCompleteLayers = (grid: number[][][]) => {
     let layersCleared = 0;
     const gridCopy = JSON.parse(JSON.stringify(grid));
+    const clearedPositions: string[] = [];
     
     for (let y = 0; y < GRID_SIZE; y++) {
       for (let z = 0; z < GRID_SIZE; z++) {
@@ -240,8 +253,10 @@ const Game3D: React.FC = () => {
         if (rowFull) {
           for (let x = 0; x < GRID_SIZE; x++) {
             gridCopy[y][x][z] = 0;
+            clearedPositions.push(`(${x},${y},${z})`);
           }
           layersCleared++;
+          console.log(`Z-row cleared at y=${y}, z=${z}`);
         }
       }
       
@@ -257,8 +272,10 @@ const Game3D: React.FC = () => {
         if (rowFull) {
           for (let z = 0; z < GRID_SIZE; z++) {
             gridCopy[y][x][z] = 0;
+            clearedPositions.push(`(${x},${y},${z})`);
           }
           layersCleared++;
+          console.log(`X-row cleared at y=${y}, x=${x}`);
         }
       }
     }
@@ -276,8 +293,10 @@ const Game3D: React.FC = () => {
         if (columnFull) {
           for (let y = 0; y < GRID_SIZE; y++) {
             gridCopy[y][x][z] = 0;
+            clearedPositions.push(`(${x},${y},${z})`);
           }
           layersCleared++;
+          console.log(`Column cleared at x=${x}, z=${z}`);
         }
       }
     }
@@ -296,18 +315,26 @@ const Game3D: React.FC = () => {
         for (let x = 0; x < GRID_SIZE; x++) {
           for (let z = 0; z < GRID_SIZE; z++) {
             gridCopy[y][x][z] = 0;
+            clearedPositions.push(`(${x},${y},${z})`);
           }
         }
         layersCleared++;
+        console.log(`Full layer cleared at y=${y}`);
       }
     }
     
+    if (clearedPositions.length > 0) {
+      console.log(`Cleared blocks at positions: [${clearedPositions.join(', ')}]`);
+    }
+    
+    console.log(`Applying gravity to remaining blocks...`);
     applyGravityToBlocks(gridCopy);
     
     if (layersCleared > 0) {
       const levelMultiplier = 1 + (level * 0.1);
       const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
       setScore(prevScore => prevScore + pointsScored);
+      console.log(`${layersCleared} layers cleared! +${pointsScored} points (level multiplier: ${levelMultiplier.toFixed(1)}x)`);
       toast({
         title: `${layersCleared} lines cleared!`,
         description: `+${pointsScored} points`,
@@ -319,6 +346,8 @@ const Game3D: React.FC = () => {
   };
 
   const applyGravityToBlocks = (grid: number[][][]) => {
+    let blocksMoved = 0;
+    
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         for (let y = 1; y < GRID_SIZE; y++) {
@@ -332,10 +361,16 @@ const Game3D: React.FC = () => {
             if (newY < y) {
               grid[newY][x][z] = grid[y][x][z];
               grid[y][x][z] = 0;
+              blocksMoved++;
+              console.log(`Block moved from (${x},${y},${z}) to (${x},${newY},${z})`);
             }
           }
         }
       }
+    }
+    
+    if (blocksMoved > 0) {
+      console.log(`Gravity applied: ${blocksMoved} blocks moved down`);
     }
   };
 
@@ -354,6 +389,9 @@ const Game3D: React.FC = () => {
     
     if (isValidPosition(currentBlock.shape, newX, newY, newZ)) {
       setPosition({ x: newX, y: newY, z: newZ });
+      if (direction !== 'down') { // Don't log automatic gravity drops
+        console.log(`Block moved ${direction} to position (${newX},${newY},${newZ})`);
+      }
     } else if (direction === 'down') {
       placeBlock();
     }
@@ -385,6 +423,7 @@ const Game3D: React.FC = () => {
           ...currentBlock,
           shape: newPattern
         });
+        console.log(`Block rotated around ${axis}-axis`);
       } else {
         const offsets = [
           { x: -1, y: 0, z: 0 },
@@ -410,12 +449,14 @@ const Game3D: React.FC = () => {
               shape: newPattern
             });
             setPosition({ x: newX, y: newY, z: newZ });
+            console.log(`Block rotated around ${axis}-axis with wall kick to (${newX},${newY},${newZ})`);
             validPositionFound = true;
             break;
           }
         }
         
         if (!validPositionFound) {
+          console.log(`Cannot rotate block around ${axis}-axis - not enough space`);
           toast({
             title: "Can't rotate",
             description: "Not enough space to rotate block",
@@ -435,6 +476,7 @@ const Game3D: React.FC = () => {
     }
     
     setPosition({ ...position, y: newY });
+    console.log(`Block hard-dropped to position (${position.x},${newY},${position.z})`);
     
     setTimeout(() => {
       placeBlock();
@@ -449,11 +491,13 @@ const Game3D: React.FC = () => {
     setControlsEnabled(!newPausedState);
     
     if (newPausedState) {
+      console.log("Game paused");
       toast({
         title: "Game Paused",
         description: "Take a breather!",
       });
     } else {
+      console.log("Game resumed");
       toast({
         title: "Game Resumed",
         description: "Let's go!",
@@ -479,10 +523,15 @@ const Game3D: React.FC = () => {
       }, 0);
     }
     
+    console.log("Game started");
     toast({
       title: "Game Started",
       description: "Good luck!",
     });
+  };
+
+  const toggleDebugConsole = () => {
+    setShowDebugConsole(prev => !prev);
   };
 
   useEffect(() => {
@@ -542,6 +591,7 @@ const Game3D: React.FC = () => {
       }
     }
     
+    console.log(`View changed to ${viewPoint.name}`);
     toast({
       title: `View Changed`,
       description: `Now viewing from ${viewPoint.name}`,
@@ -556,7 +606,13 @@ const Game3D: React.FC = () => {
       
       <div className="game-container rounded-lg overflow-hidden w-full max-w-[1400px] flex flex-col md:flex-row gap-4 bg-black bg-opacity-30">
         <div className="flex-1 min-h-[550px] md:min-h-[650px]">
-          <div className="flex justify-end items-center mb-2 p-2">
+          <div className="flex justify-between items-center mb-2 p-2">
+            <button
+              onClick={toggleDebugConsole}
+              className="text-xs text-gray-400 hover:text-white bg-black bg-opacity-50 px-2 py-1 rounded"
+            >
+              {showDebugConsole ? "Hide Debug" : "Show Debug"}
+            </button>
             <ViewControls 
               viewPoints={VIEW_POINTS} 
               onSelectView={handleViewChange}
@@ -586,6 +642,12 @@ const Game3D: React.FC = () => {
             </Canvas>
             <Grid3DLabels />
           </div>
+          
+          {showDebugConsole && (
+            <div className="mt-2">
+              <DebugConsole maxEntries={20} />
+            </div>
+          )}
         </div>
         
         <div className="flex flex-col justify-between gap-4 w-full md:w-64 p-4">
