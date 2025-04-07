@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -419,7 +420,8 @@ const Game3D: React.FC = () => {
       for (let z = 0; z < GRID_SIZE; z++) {
         for (let y = 1; y < GRID_SIZE; y++) {
           if (grid[y][x][z] !== 0) {
-            const blockColor = getColorIndex(grid[y][x][z]);
+            // Fix: Convert the numeric color index to a string for logging
+            const blockColor = grid[y][x][z].toString();
             console.log(`Found block (color: ${blockColor}) at position (${x},${y},${z})`);
             
             let newY = y;
@@ -762,3 +764,4 @@ const Game3D: React.FC = () => {
 };
 
 export default Game3D;
+
