@@ -1,8 +1,10 @@
+
 import * as React from "react"
 import * as MenubarPrimitive from "@radix-ui/react-menubar"
 import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import GameGuidelines from "../GameGuidelines"
 
 const MenubarMenu = MenubarPrimitive.Menu
 
@@ -214,6 +216,11 @@ const MenubarShortcut = ({
 }
 MenubarShortcut.displayname = "MenubarShortcut"
 
+// GameGuidelinesItem component
+const GameGuidelinesItem = () => {
+  return <GameGuidelines />
+}
+
 export {
   Menubar,
   MenubarMenu,
@@ -231,4 +238,5 @@ export {
   MenubarGroup,
   MenubarSub,
   MenubarShortcut,
+  GameGuidelinesItem,
 }
