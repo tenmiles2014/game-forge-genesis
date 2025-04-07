@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { InfoIcon, Layers } from 'lucide-react';
+import { InfoIcon, Layers, SquareCheck, SquareDot } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface LevelDisplayProps {
   level: number;
@@ -31,24 +32,60 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
         />
       </div>
       
-      {/* Next level info with tooltip */}
-      <div className="mt-2 text-xs text-gray-300 flex items-center gap-2">
+      {/* Level upgrade criteria with tooltips */}
+      <div className="mt-2 text-xs text-gray-300">
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="inline-flex items-center gap-1 px-2 py-1 rounded-md hover:bg-black hover:bg-opacity-30">
+              <Layers className="h-4 w-4 text-blue-400" />
+              <span className="font-medium">Level Up Criteria</span>
+              <InfoIcon className="h-3 w-3 text-gray-400" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 bg-gray-800 border-gray-700 text-gray-200">
+            <div className="space-y-3">
+              <h4 className="font-medium text-white">Level {level} Requirements</h4>
+              <p>To advance to level {level + 1}, you need to clear <strong>{layerThreshold}</strong> layers simultaneously in a single move.</p>
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <SquareCheck className="h-4 w-4 text-green-400" />
+                  <span>Complete rows (all blocks in a row)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <SquareCheck className="h-4 w-4 text-green-400" />
+                  <span>Complete columns (all blocks in a column)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <SquareCheck className="h-4 w-4 text-green-400" />
+                  <span>Complete layers (all blocks in a horizontal layer)</span>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <SquareDot className="h-4 w-4 text-blue-400" />
+                  <span>Current level multiplier: x{(1 + (level * 0.1)).toFixed(1)}</span>
+                </div>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+      
+      <div className="mt-3 flex items-center gap-2">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="inline-flex items-center">
+              <div className="inline-flex items-center text-xs">
                 <Layers className="h-4 w-4 mr-1 text-blue-400" />
-                <span className="font-medium">{layerThreshold}</span> layers simultaneously
-                <InfoIcon className="h-3 w-3 ml-1 text-gray-400" />
-              </button>
+                <span className="font-medium">{layerThreshold}</span> layers needed
+              </div>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs bg-gray-800 border-gray-700 text-gray-200">
-              <p>You need to clear <strong>{layerThreshold}</strong> layers at the same time to level up. 
-              This can be rows, columns, or complete layers that are cleared in a single move.</p>
+              <p>You need to clear <strong>{layerThreshold}</strong> layers simultaneously in a single move.</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>
+      
       <div className="mt-1 text-xs text-emerald-400">
         Next level bonus: +<span className="font-medium">{nextLevelBonus}</span> points
       </div>
