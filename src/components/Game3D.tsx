@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -80,6 +81,12 @@ const Game3D: React.FC = () => {
     
     console.log(`Level ${currentLevel}: Blocks per layer: `, 
       layerBlockCounts.map((count, idx) => `Layer ${idx}: ${count}`).join(', '));
+    
+    // Update the layer block counts state
+    setLayerBlockCounts({
+      layer1: layerBlockCounts[0],
+      layer2: layerBlockCounts[1]
+    });
       
     return layerBlockCounts;
   };
@@ -92,11 +99,6 @@ const Game3D: React.FC = () => {
     const blocksInUpperLayers = layerCounts.slice(2).some(count => count > 0);
     
     const isGameOverDueToRules = tooManyInLayer1 || tooManyInLayer2 || blocksInUpperLayers;
-    
-    setLayerBlockCounts({
-      layer1: layerCounts[0],
-      layer2: layerCounts[1]
-    });
     
     if (isGameOverDueToRules) {
       let reason = '';
@@ -114,6 +116,23 @@ const Game3D: React.FC = () => {
   useEffect(() => {
     resetGame();
   }, []);
+
+  // Add effect to check game over rules whenever the grid changes
+  useEffect(() => {
+    if (grid.length > 0 && !gameOver && !gamePaused) {
+      const { isGameOver, reason } = checkGameOverRules(grid);
+      
+      if (isGameOver) {
+        setGameOver(true);
+        setControlsEnabled(false);
+        setGamePaused(true);
+        toast({
+          title: "Game Over!",
+          description: `Rule violation: ${reason}. Final score: ${score} | Level: ${level}`,
+        });
+      }
+    }
+  }, [grid, gameOver, gamePaused]);
 
   useEffect(() => {
     if (gamePaused || gameOver) {
@@ -139,7 +158,8 @@ const Game3D: React.FC = () => {
   }, [gamePaused, gameOver, level, position]);
 
   const resetGame = () => {
-    setGrid(initializeGrid());
+    const newGrid = initializeGrid();
+    setGrid(newGrid);
     setScore(0);
     setLinesCleared(0);
     setCurrentBlock(getRandomBlockPattern());
@@ -149,6 +169,9 @@ const Game3D: React.FC = () => {
     setControlsEnabled(true);
     setLevel(1);
     setGamePaused(true);
+    
+    // Reset layer block counts
+    setLayerBlockCounts({ layer1: 0, layer2: 0 });
     
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
@@ -245,6 +268,7 @@ const Game3D: React.FC = () => {
     console.log('Function sequence: Setting updated grid state');
     setGrid(newGrid);
     
+    // Count blocks by layer after placing the block
     countBlocksByLayers(newGrid, level);
     
     console.log('Function sequence: Calling clearCompleteLayers()');
@@ -477,6 +501,7 @@ const Game3D: React.FC = () => {
     
     console.log('Function sequence: clearCompleteLayers() completed');
     
+    // Update the layer counts after clearing and applying gravity
     countBlocksByLayers(gridCopy, level);
     
     setGrid([...gridCopy]);
