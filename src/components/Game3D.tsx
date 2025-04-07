@@ -242,20 +242,50 @@ const Game3D: React.FC = () => {
     // Log function sequence - checking level up condition
     console.log('Function sequence: Checking for level up condition');
     if (layersCleared > 0 && level < MAX_LEVEL) {
-      const layerThreshold = level + 1;
-      if (layersCleared >= layerThreshold) {
-        const newLevel = Math.min(MAX_LEVEL, level + 1);
+      // New tier-based level up system
+      if (level < 5) {
+        // Tiers 1-4: Need to clear [level+1] layers simultaneously
+        const layerThreshold = level + 1;
+        if (layersCleared >= layerThreshold) {
+          const newLevel = Math.min(MAX_LEVEL, level + 1);
+          
+          // Add level up bonus points
+          const levelUpBonus = newLevel * 100;
+          setScore(prevScore => prevScore + levelUpBonus);
+          
+          // Log function sequence - level up
+          console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
+          setLevel(newLevel);
+          toast({
+            title: `Level Up!`,
+            description: `You are now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
+          });
+        }
+      } else {
+        // Tiers 5+: Need to clear 20 total layers per tier
+        const tier = Math.ceil(level / 2);
+        const tierLayerTarget = 20;
         
-        // Add level up bonus points
-        const levelUpBonus = newLevel * 100;
-        setScore(prevScore => prevScore + levelUpBonus);
-        
-        // Log function sequence - level up
-        console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
-        setLevel(newLevel);
-        toast({
-          title: `Level Up!`,
-          description: `You are now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
+        // Add the current layers cleared to the total
+        setLinesCleared(prev => {
+          const newTotal = prev + layersCleared;
+          // Check if we've cleared enough layers for this tier
+          if (Math.floor(prev / tierLayerTarget) < Math.floor(newTotal / tierLayerTarget)) {
+            const newLevel = Math.min(MAX_LEVEL, level + 1);
+            
+            // Add level up bonus points
+            const levelUpBonus = newLevel * 100;
+            setScore(prevScore => prevScore + levelUpBonus);
+            
+            // Log function sequence - level up
+            console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
+            setLevel(newLevel);
+            toast({
+              title: `Level Up!`,
+              description: `You are now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
+            });
+          }
+          return newTotal;
         });
       }
     }
