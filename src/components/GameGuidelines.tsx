@@ -49,6 +49,16 @@ const GameGuidelines: React.FC = () => {
                   </div>
                 </div>
               </section>
+              
+              <section>
+                <h3 className="text-base font-semibold text-foreground mb-2">Game Over Rules</h3>
+                <ul className="list-disc pl-4">
+                  <li>Layer 1 (bottom layer) can have at most 10 blocks</li>
+                  <li>Layer 2 can have at most 5 blocks</li>
+                  <li>No blocks are allowed in Layer 3 or above</li>
+                  <li>Violating any of these rules will end the game</li>
+                </ul>
+              </section>
 
               <section>
                 <h3 className="text-base font-semibold text-foreground mb-2">Scoring & Levels</h3>
@@ -65,6 +75,7 @@ const GameGuidelines: React.FC = () => {
                   <li>Plan your block placement to maximize layer clearance</li>
                   <li>Use rotation strategically to fit blocks efficiently</li>
                   <li>Keep an eye on the upcoming block preview</li>
+                  <li>Monitor block counts in Layer 1 and 2 to avoid game over</li>
                 </ul>
               </section>
             </div>

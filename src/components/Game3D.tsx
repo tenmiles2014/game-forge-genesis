@@ -41,6 +41,7 @@ const Game3D: React.FC = () => {
   const gravityTimerRef = useRef<number | null>(null);
   const gameBoardRef = useRef<HTMLDivElement>(null);
   const [linesCleared, setLinesCleared] = useState(0);
+  const [layerBlockCounts, setLayerBlockCounts] = useState({ layer1: 0, layer2: 0 });
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 50));
@@ -79,6 +80,35 @@ const Game3D: React.FC = () => {
     
     console.log(`Level ${currentLevel}: Blocks per layer: `, 
       layerBlockCounts.map((count, idx) => `Layer ${idx}: ${count}`).join(', '));
+      
+    return layerBlockCounts;
+  };
+
+  const checkGameOverRules = (grid: number[][][]) => {
+    const layerCounts = countBlocksByLayers(grid, level);
+    
+    const tooManyInLayer1 = layerCounts[0] > 10;
+    const tooManyInLayer2 = layerCounts[1] > 5;
+    const blocksInUpperLayers = layerCounts.slice(2).some(count => count > 0);
+    
+    const isGameOverDueToRules = tooManyInLayer1 || tooManyInLayer2 || blocksInUpperLayers;
+    
+    setLayerBlockCounts({
+      layer1: layerCounts[0],
+      layer2: layerCounts[1]
+    });
+    
+    if (isGameOverDueToRules) {
+      let reason = '';
+      if (tooManyInLayer1) reason = `Too many blocks in layer 1 (${layerCounts[0]}/10)`;
+      else if (tooManyInLayer2) reason = `Too many blocks in layer 2 (${layerCounts[1]}/5)`;
+      else if (blocksInUpperLayers) reason = 'Blocks detected above layer 2';
+      
+      console.log(`Game over due to rule violation: ${reason}`);
+      return { isGameOver: true, reason };
+    }
+    
+    return { isGameOver: false, reason: '' };
   };
 
   useEffect(() => {
@@ -728,6 +758,24 @@ const Game3D: React.FC = () => {
             <ScoreDisplay score={score} linesCleared={linesCleared} />
             
             <LevelDisplay level={level} maxLevel={MAX_LEVEL} layersCleared={linesCleared} />
+            
+            <div className="p-4 rounded-lg bg-black bg-opacity-30">
+              <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Block Limits</h3>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span>Layer 1:</span>
+                  <span className={layerBlockCounts.layer1 > 8 ? "text-red-400 font-bold" : ""}>
+                    {layerBlockCounts.layer1}/10
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Layer 2:</span>
+                  <span className={layerBlockCounts.layer2 > 3 ? "text-red-400 font-bold" : ""}>
+                    {layerBlockCounts.layer2}/5
+                  </span>
+                </div>
+              </div>
+            </div>
             
             <div className="p-4 rounded-lg bg-black bg-opacity-30">
               <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-4">Next Block</h3>
