@@ -1,23 +1,22 @@
-
 import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
 import { useFrame, useThree } from '@react-three/fiber';
+import LevelIndicator from './LevelIndicator';
 
 interface Grid3DProps {
   grid: number[][][];
   currentBlock: BlockPattern;
   position: { x: number; y: number; z: number };
+  level: number;
 }
 
-const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
-  // For tracking grid changes and forcing re-renders
+const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, level }) => {
   const gridRef = useRef<string>("");
   const forceUpdateRef = useRef<number>(0);
   const meshRefs = useRef<Map<string, THREE.Mesh>>(new Map());
   const { scene } = useThree();
   
-  // Color mapping
   const getColor = (colorIndex: number) => {
     const colors = {
       1: new THREE.Color('#3b82f6'), // blue
@@ -29,7 +28,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return colors[colorIndex as keyof typeof colors] || new THREE.Color('gray');
   };
 
-  // Get current block's color as THREE.Color
   const blockColor = useMemo(() => {
     const colorMap: Record<string, THREE.Color> = {
       'blue': new THREE.Color('#3b82f6'),
@@ -41,13 +39,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return colorMap[currentBlock.color] || new THREE.Color('gray');
   }, [currentBlock.color]);
 
-  // Calculate ghost position (where block will land)
   const ghostPosition = useMemo(() => {
     let lowestValidY = position.y;
     const pattern = currentBlock.shape;
     const gridSize = grid.length || 10;
     
-    // Loop downward until we find a collision or hit the bottom
     while (lowestValidY > 0) {
       let collision = false;
       
@@ -58,7 +54,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
             const posY = lowestValidY - 1;
             const posZ = position.z + y;
             
-            // Check if we'd hit the bottom or another block
             if (
               posY < 0 || 
               (posX >= 0 && posX < gridSize && 
@@ -79,7 +74,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return { x: position.x, y: lowestValidY, z: position.z };
   }, [grid, currentBlock.shape, position]);
 
-  // Generate a grid fingerprint for change detection
   const getGridFingerprint = () => {
     let fingerprint = "";
     const gridSize = grid.length || 10;
@@ -97,10 +91,8 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return fingerprint;
   };
 
-  // Effect to clean up old meshes when grid changes
   useEffect(() => {
     return () => {
-      // Clean up all meshes on component unmount
       meshRefs.current.forEach(mesh => {
         if (mesh.geometry) mesh.geometry.dispose();
         if (mesh.material) {
@@ -115,18 +107,15 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     };
   }, []);
   
-  // Force update every frame to check for grid changes
   useFrame(() => {
     const currentFingerprint = getGridFingerprint();
     if (currentFingerprint !== gridRef.current) {
       gridRef.current = currentFingerprint;
       forceUpdateRef.current += 1;
       
-      // Clean up old meshes that are no longer needed
       const newKeys = new Set<string>();
       const gridSize = grid.length || 10;
       
-      // Collect keys for current blocks
       for (let y = 0; y < gridSize; y++) {
         for (let x = 0; x < gridSize; x++) {
           for (let z = 0; z < gridSize; z++) {
@@ -137,7 +126,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
         }
       }
       
-      // Remove meshes that are no longer in the grid
       meshRefs.current.forEach((mesh, key) => {
         if (!newKeys.has(key)) {
           if (mesh.parent) mesh.parent.remove(mesh);
@@ -155,15 +143,13 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
   });
 
-  // Render placed blocks using individual instances with explicit cleanup
   const renderPlacedBlocks = useMemo(() => {
     console.log("Rendering placed blocks with force update:", forceUpdateRef.current);
     
     const blocks: JSX.Element[] = [];
     const gridSize = grid.length || 10;
-    const timestamp = Date.now(); // Add timestamp to ensure uniqueness
+    const timestamp = Date.now();
     
-    // Generate new block meshes every time grid changes
     for (let y = 0; y < gridSize; y++) {
       for (let x = 0; x < gridSize; x++) {
         for (let z = 0; z < gridSize; z++) {
@@ -196,13 +182,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return blocks;
   }, [grid, forceUpdateRef.current]);
 
-  // Render ghost block (prediction)
   const renderGhostBlock = useMemo(() => {
     const blocks = [];
     const pattern = currentBlock.shape;
     const gridSize = grid.length || 10;
     
-    // Enhanced ghost block rendering
     if (ghostPosition.y < position.y) {
       for (let y = 0; y < pattern.length; y++) {
         for (let x = 0; x < pattern[y].length; x++) {
@@ -211,7 +195,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
             const posY = ghostPosition.y;
             const posZ = ghostPosition.z + y;
             
-            // Skip rendering blocks that would be outside the grid
             if (posX < 0 || posX >= gridSize || posY < 0 || posY >= gridSize || posZ < 0 || posZ >= gridSize) {
               continue;
             }
@@ -224,11 +207,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
               >
                 <boxGeometry args={[0.95, 0.95, 0.95]} />
                 <meshStandardMaterial 
-                  color="#F97316"  // Bright Orange for high visibility
+                  color="#F97316" 
                   transparent={true} 
-                  opacity={0.3}    // Slightly more transparent
+                  opacity={0.3} 
                   wireframe={true}
-                  wireframeLinewidth={2}  // Increased line thickness
+                  wireframeLinewidth={2}
                 />
               </mesh>
             );
@@ -240,7 +223,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return blocks;
   }, [currentBlock.shape, ghostPosition, position.y, grid.length]);
 
-  // Render current falling block
   const renderCurrentBlock = useMemo(() => {
     const blocks = [];
     const pattern = currentBlock.shape;
@@ -249,12 +231,10 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     for (let y = 0; y < pattern.length; y++) {
       for (let x = 0; x < pattern[y].length; x++) {
         if (pattern[y][x]) {
-          // Calculate absolute positions
           const posX = position.x + x;
           const posY = position.y;
           const posZ = position.z + y;
           
-          // Skip rendering blocks that would be outside the grid
           if (posX < 0 || posX >= gridSize || posY < 0 || posY >= gridSize || posZ < 0 || posZ >= gridSize) {
             continue;
           }
@@ -280,7 +260,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return blocks;
   }, [currentBlock, position, blockColor, grid.length]);
 
-  // Render grid boundaries
   const renderGridBoundaries = useMemo(() => {
     const gridSize = grid.length || 10;
     
@@ -297,13 +276,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     );
   }, [grid]);
 
-  // Render prediction lines between current block and ghost block
   const renderPredictionLines = useMemo(() => {
     const lines = [];
     const pattern = currentBlock.shape;
     const gridSize = grid.length || 10;
     
-    // Only render if the ghost is lower than the current position
     if (ghostPosition.y < position.y) {
       for (let y = 0; y < pattern.length; y++) {
         for (let x = 0; x < pattern[y].length; x++) {
@@ -316,7 +293,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
             const ghostPosY = ghostPosition.y;
             const ghostPosZ = ghostPosition.z + y;
             
-            // Skip rendering lines for blocks that would be outside the grid
             if (
               currentPosX < 0 || currentPosX >= gridSize || 
               currentPosY < 0 || currentPosY >= gridSize || 
@@ -328,17 +304,14 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
               continue;
             }
             
-            // Create line manually using mesh and geometry
             const lineColor = new THREE.Color(blockColor);
             
-            // Calculate the midpoint and length for the cylinder
             const start = new THREE.Vector3(currentPosX, currentPosY, currentPosZ);
             const end = new THREE.Vector3(ghostPosX, ghostPosY, ghostPosZ);
             const direction = end.clone().sub(start);
             const length = direction.length();
             const midpoint = start.clone().add(direction.multiplyScalar(0.5));
             
-            // Calculate rotation to orient the cylinder
             const cylinderDirection = new THREE.Vector3(0, 1, 0);
             const targetDirection = direction.clone().normalize();
             const quaternion = new THREE.Quaternion();
@@ -366,7 +339,6 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     return lines;
   }, [currentBlock.shape, position, ghostPosition, blockColor, grid.length]);
 
-  // Use a group component with a key to force full replacement
   return (
     <group key={`full-grid-${forceUpdateRef.current}-${Date.now()}`}>
       {renderPlacedBlocks}
@@ -375,6 +347,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
       {renderPredictionLines}
       {renderGridBoundaries}
       <gridHelper args={[10, 10]} position={[4.5, -0.5, 4.5]} />
+      <LevelIndicator level={level} gridSize={grid.length} />
     </group>
   );
 };
