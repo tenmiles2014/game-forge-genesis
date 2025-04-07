@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoIcon, Layers, SquareCheck, SquareDot } from 'lucide-react';
@@ -13,6 +14,8 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
   const layerThreshold = level + 1;
   const remainingLayers = Math.max(0, layerThreshold - (layersCleared % layerThreshold));
   const nextLevelBonus = (level + 1) * 100;
+  const dropSpeed = Math.max(100, 1000 - (level * 50));
+  const scoreMultiplier = (1 + (level * 0.1)).toFixed(1);
   
   return (
     <div className="p-4 rounded-lg bg-black bg-opacity-30">
@@ -58,8 +61,17 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <SquareDot className="h-4 w-4 text-blue-400" />
-                  <span>Current level multiplier: x{(1 + (level * 0.1)).toFixed(1)}</span>
+                  <span>Current level multiplier: x{scoreMultiplier}</span>
                 </div>
+              </div>
+              
+              <div className="mt-2 pt-2 border-t border-gray-700">
+                <h4 className="font-medium text-white mb-1">Difficulty Progression</h4>
+                <ul className="space-y-1 text-xs">
+                  <li>• Drop speed: {dropSpeed}ms (decreases by 50ms per level)</li>
+                  <li>• Score multiplier: x{scoreMultiplier} (increases by 0.1x per level)</li>
+                  <li>• Layers needed: {layerThreshold} (increases by 1 per level)</li>
+                </ul>
               </div>
             </div>
           </PopoverContent>
@@ -77,6 +89,14 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
             </TooltipTrigger>
             <TooltipContent className="max-w-xs bg-gray-800 border-gray-700 text-gray-200">
               <p>You need to clear <strong>{layerThreshold}</strong> layers simultaneously in a single move.</p>
+              <div className="mt-1 text-xs text-gray-400">
+                <p>Game gets harder with each level:</p>
+                <ul className="list-disc pl-4 mt-1">
+                  <li>Blocks fall faster</li>
+                  <li>More layers needed to level up</li>
+                  <li>Score multiplier increases</li>
+                </ul>
+              </div>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
