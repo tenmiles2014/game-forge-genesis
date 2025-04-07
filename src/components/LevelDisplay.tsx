@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoIcon, Layers, SquareCheck, SquareDot } from 'lucide-react';
@@ -11,7 +10,6 @@ interface LevelDisplayProps {
 }
 
 const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersCleared = 0 }) => {
-  // Change the calculation: each level tier plus 1 only
   const layerThreshold = level + 1;
   const remainingLayers = Math.max(0, layerThreshold - (layersCleared % layerThreshold));
   const nextLevelBonus = (level + 1) * 100;
@@ -24,7 +22,6 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
         <span className="text-sm text-gray-400">/ {maxLevel}</span>
       </div>
       
-      {/* Progress bar */}
       <div className="mt-2 h-2 bg-gray-700 rounded-full overflow-hidden">
         <div 
           className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
@@ -32,7 +29,6 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
         />
       </div>
       
-      {/* Level upgrade criteria with tooltips */}
       <div className="mt-2 text-xs text-gray-300">
         <Popover>
           <PopoverTrigger asChild>
@@ -76,7 +72,7 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
             <TooltipTrigger asChild>
               <div className="inline-flex items-center text-xs">
                 <Layers className="h-4 w-4 mr-1 text-blue-400" />
-                <span className="font-medium">{layerThreshold}</span> {/* Added whitespace here */} layers needed
+                <span className="font-medium">{layerThreshold} </span> layers needed
               </div>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs bg-gray-800 border-gray-700 text-gray-200">
