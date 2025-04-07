@@ -62,22 +62,25 @@ const Game3D: React.FC = () => {
     return newGrid;
   };
 
-  const countBlocksByLevel = (grid: number[][][], currentLevel: number) => {
+  const countBlocksByLayers = (grid: number[][][], currentLevel: number) => {
     if (currentLevel !== 1 && currentLevel !== 2) return;
     
-    let blockCount = 0;
+    const layerBlockCounts = Array(GRID_SIZE).fill(0);
     
     for (let y = 0; y < GRID_SIZE; y++) {
+      let layerCount = 0;
       for (let x = 0; x < GRID_SIZE; x++) {
         for (let z = 0; z < GRID_SIZE; z++) {
           if (grid[y][x][z] !== 0) {
-            blockCount++;
+            layerCount++;
           }
         }
       }
+      layerBlockCounts[y] = layerCount;
     }
     
-    console.log(`Level ${currentLevel}: Currently ${blockCount} blocks on the grid`);
+    console.log(`Level ${currentLevel}: Blocks per layer: `, 
+      layerBlockCounts.map((count, idx) => `Layer ${idx}: ${count}`).join(', '));
   };
 
   useEffect(() => {
@@ -214,7 +217,7 @@ const Game3D: React.FC = () => {
     console.log('Function sequence: Setting updated grid state');
     setGrid(newGrid);
     
-    countBlocksByLevel(newGrid, level);
+    countBlocksByLayers(newGrid, level);
     
     console.log('Function sequence: Calling clearCompleteLayers()');
     const layersCleared = clearCompleteLayers(newGrid);
