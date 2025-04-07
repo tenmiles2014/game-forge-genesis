@@ -789,7 +789,7 @@ const Game3D: React.FC = () => {
                 <div className="flex justify-between">
                   <span>Layer 2:</span>
                   <span className={layerBlockCounts.layer1 > 8 ? "text-red-400 font-bold" : ""}>
-                    {layerBlockCounts.layer1}/10
+                    {layerBlockCounts.layer1}/8
                   </span>
                 </div>
                 <div className="flex justify-between">
