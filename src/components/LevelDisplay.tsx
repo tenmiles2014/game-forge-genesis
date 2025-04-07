@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { InfoIcon, Layers, SquareCheck, SquareDot } from 'lucide-react';
+import { InfoIcon, Layers, SquareCheck, SquareDot, ChevronDown } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface LevelDisplayProps {
@@ -30,6 +30,21 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
           className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
           style={{ width: `${(level / maxLevel) * 100}%` }}
         />
+      </div>
+      
+      <div className="mt-3 flex items-center text-xs text-cyan-400">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="inline-flex items-center gap-1">
+              <ChevronDown className="h-4 w-4" />
+              <span className="font-medium">{dropSpeed}ms</span> drop speed
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="bg-gray-800 border-gray-700 text-gray-200">
+            <p>Current block drop speed: {dropSpeed}ms</p>
+            <p className="text-xs text-gray-400 mt-1">Decreases by 50ms each level</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
       
       <div className="mt-2 text-xs text-gray-300">
