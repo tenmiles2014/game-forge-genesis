@@ -94,7 +94,7 @@ const Game3D: React.FC = () => {
     const layerCounts = countBlocksByLayers(grid, level);
     
     // No limitation on layer 1 (index 0)
-    const tooManyInLayer2 = layerCounts[1] > 10; // Layer 2 (index 1) max 10 blocks
+    const tooManyInLayer2 = layerCounts[1] > 8; // Layer 2 (index 1) max 8 blocks
     const tooManyInLayer3 = layerCounts[2] > 5;  // Layer 3 (index 2) max 5 blocks
     const blocksInUpperLayers = layerCounts.slice(3).some(count => count > 0); // No blocks above layer 3
     
@@ -102,7 +102,7 @@ const Game3D: React.FC = () => {
     
     if (isGameOverDueToRules) {
       let reason = '';
-      if (tooManyInLayer2) reason = `Too many blocks in layer 2 (${layerCounts[1]}/10)`;
+      if (tooManyInLayer2) reason = `Too many blocks in layer 2 (${layerCounts[1]}/8)`;
       else if (tooManyInLayer3) reason = `Too many blocks in layer 3 (${layerCounts[2]}/5)`;
       else if (blocksInUpperLayers) reason = 'Blocks detected above layer 3';
       
