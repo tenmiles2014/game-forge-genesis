@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -117,7 +116,6 @@ const Game3D: React.FC = () => {
     resetGame();
   }, []);
 
-  // Add effect to check game over rules whenever the grid changes
   useEffect(() => {
     if (grid.length > 0 && !gameOver && !gamePaused) {
       const { isGameOver, reason } = checkGameOverRules(grid);
@@ -788,13 +786,13 @@ const Game3D: React.FC = () => {
               <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Block Limits</h3>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span>Layer 1:</span>
+                  <span>Layer 2:</span>
                   <span className={layerBlockCounts.layer1 > 8 ? "text-red-400 font-bold" : ""}>
                     {layerBlockCounts.layer1}/10
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Layer 2:</span>
+                  <span>Layer 3:</span>
                   <span className={layerBlockCounts.layer2 > 3 ? "text-red-400 font-bold" : ""}>
                     {layerBlockCounts.layer2}/5
                   </span>
