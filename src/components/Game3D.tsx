@@ -63,8 +63,6 @@ const Game3D: React.FC = () => {
   };
 
   const countBlocksByLayers = (grid: number[][][], currentLevel: number) => {
-    if (currentLevel !== 1 && currentLevel !== 2) return;
-    
     const layerBlockCounts = Array(GRID_SIZE).fill(0);
     
     for (let y = 0; y < GRID_SIZE; y++) {
