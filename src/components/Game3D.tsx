@@ -40,6 +40,7 @@ const Game3D: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
   const gameBoardRef = useRef<HTMLDivElement>(null);
+  const [linesCleared, setLinesCleared] = useState(0);
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 50));
@@ -91,6 +92,7 @@ const Game3D: React.FC = () => {
   const resetGame = () => {
     setGrid(initializeGrid());
     setScore(0);
+    setLinesCleared(0);
     setCurrentBlock(getRandomBlockPattern());
     setNextBlock(getRandomBlockPattern());
     setPosition({...INITIAL_POSITION});
@@ -281,6 +283,17 @@ const Game3D: React.FC = () => {
       dimensions: gridCopy.map(layer => layer.length)
     });
     
+    // Log function sequence - applying gravity first time
+    console.log('Function sequence: Applying gravity to blocks FIRST TIME (before clearing)');
+    applyGravityToBlocks(gridCopy);
+    
+    // Log grid state after first gravity application
+    console.log('Grid state after first gravity application:', {
+      gridCopy: gridCopy.map(layer => 
+        layer.map(row => row.some(cell => cell !== 0))
+      )
+    });
+    
     for (let y = 0; y < GRID_SIZE; y++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         let rowFull = true;
@@ -366,19 +379,19 @@ const Game3D: React.FC = () => {
       }
     });
     
-    // Log grid state before applying gravity
-    console.log('Grid state before gravity:', {
+    // Log grid state before second gravity application
+    console.log('Grid state before second gravity application:', {
       gridCopy: gridCopy.map(layer => 
         layer.map(row => row.some(cell => cell !== 0))
       )
     });
     
-    // Log function sequence - applying gravity
-    console.log('Function sequence: Applying gravity to blocks');
+    // Log function sequence - applying gravity second time
+    console.log('Function sequence: Applying gravity to blocks SECOND TIME (after clearing)');
     applyGravityToBlocks(gridCopy);
     
-    // Log grid state after applying gravity
-    console.log('Grid state after gravity:', {
+    // Log grid state after second gravity application
+    console.log('Grid state after second gravity application:', {
       gridCopy: gridCopy.map(layer => 
         layer.map(row => row.some(cell => cell !== 0))
       )
@@ -394,6 +407,18 @@ const Game3D: React.FC = () => {
         basePoints: layersCleared * 10,
         levelMultiplier,
         totalPointsScored: pointsScored
+      });
+      
+      // Update score state
+      setScore(prevScore => prevScore + pointsScored);
+      
+      // Update total lines cleared
+      setLinesCleared(prev => prev + layersCleared);
+      
+      // Show toast notification
+      toast({
+        title: `${layersCleared} lines cleared!`,
+        description: `+${pointsScored} points`,
       });
     }
     
@@ -676,9 +701,9 @@ const Game3D: React.FC = () => {
         
         <div className="flex flex-col justify-between gap-4 w-full md:w-64 p-4">
           <div className="space-y-4">
-            <ScoreDisplay score={score} />
+            <ScoreDisplay score={score} linesCleared={linesCleared} />
             
-            <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
+            <LevelDisplay level={level} maxLevel={MAX_LEVEL} layersCleared={linesCleared} />
             
             <div className="p-4 rounded-lg bg-black bg-opacity-30">
               <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-4">Next Block</h3>

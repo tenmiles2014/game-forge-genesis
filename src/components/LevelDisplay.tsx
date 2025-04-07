@@ -4,9 +4,13 @@ import React from 'react';
 interface LevelDisplayProps {
   level: number;
   maxLevel: number;
+  layersCleared?: number;
 }
 
-const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel }) => {
+const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersCleared = 0 }) => {
+  const layerThreshold = Math.ceil(level / 5) + 1;
+  const remainingLayers = Math.max(0, layerThreshold - (layersCleared % layerThreshold));
+  
   return (
     <div className="p-4 rounded-lg bg-black bg-opacity-30">
       <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Level</h3>
@@ -21,6 +25,11 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel }) => {
           className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
           style={{ width: `${(level / maxLevel) * 100}%` }}
         />
+      </div>
+      
+      {/* Next level info */}
+      <div className="mt-2 text-xs text-gray-300">
+        <span className="font-medium">{remainingLayers}</span> more layers to level up
       </div>
     </div>
   );
