@@ -8,7 +8,8 @@ interface LevelDisplayProps {
 }
 
 const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersCleared = 0 }) => {
-  const layerThreshold = Math.ceil(level / 5) + 2; // Increase threshold to 2 layers
+  // Use 2 layers as the threshold consistently
+  const layerThreshold = Math.ceil(level / 5) + 2;
   const remainingLayers = Math.max(0, layerThreshold - (layersCleared % layerThreshold));
   const nextLevelBonus = (level + 1) * 100;
   
