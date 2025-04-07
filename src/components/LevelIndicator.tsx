@@ -44,7 +44,7 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ level, gridSize }) => {
       
       // Create new circle with lines
       const numLines = getNumLines();
-      const radius = gridSize * 0.75;
+      const radius = gridSize * 0.5; // Reduced from 0.75 to 0.5 to make the circle smaller
       
       // Create material with initial opacity
       const material = new THREE.LineBasicMaterial({ 
