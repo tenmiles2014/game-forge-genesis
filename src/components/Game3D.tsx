@@ -26,27 +26,6 @@ const VIEW_POINTS: ViewPoint[] = [
   { name: "Corner View", position: [20, 10, 20] },
 ];
 
-const DebugConsole: React.FC<{ logs: string[] }> = ({ logs }) => {
-  const consoleRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    if (consoleRef.current) {
-      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
-    }
-  }, [logs]);
-  
-  return (
-    <div className="bg-black bg-opacity-75 text-green-400 p-2 rounded-lg overflow-auto h-[200px] w-full font-mono text-xs">
-      <div className="mb-2 font-bold text-white border-b border-gray-600 pb-1">3D Blocks Debug Console</div>
-      <div ref={consoleRef} className="overflow-auto max-h-[160px]">
-        {logs.map((log, idx) => (
-          <div key={idx} className="mb-1">&gt; {log}</div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 const Game3D: React.FC = () => {
   const [grid, setGrid] = useState<number[][][]>([]);
   const [score, setScore] = useState(0);
@@ -61,13 +40,6 @@ const Game3D: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewPoint>(VIEW_POINTS[0]);
   const gravityTimerRef = useRef<number | null>(null);
   const gameBoardRef = useRef<HTMLDivElement>(null);
-  const [debugLogs, setDebugLogs] = useState<string[]>([]);
-
-  const addDebugLog = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setDebugLogs(prev => [...prev, `[${timestamp}] ${message}`]);
-    console.log(`[DEBUG] ${message}`);
-  };
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 50));
@@ -91,7 +63,6 @@ const Game3D: React.FC = () => {
 
   useEffect(() => {
     resetGame();
-    addDebugLog("Game initialized and ready");
   }, []);
 
   useEffect(() => {
@@ -127,14 +98,11 @@ const Game3D: React.FC = () => {
     setControlsEnabled(true);
     setLevel(1);
     setGamePaused(true);
-    setDebugLogs([]);
-
+    
     if (gravityTimerRef.current) {
       clearInterval(gravityTimerRef.current);
       gravityTimerRef.current = null;
     }
-    
-    addDebugLog("Game reset");
   };
 
   const wouldExceedBoundary = (pattern: number[][], newX: number, newY: number, newZ: number) => {
@@ -189,26 +157,6 @@ const Game3D: React.FC = () => {
   };
 
   const placeBlock = () => {
-    addDebugLog(`Block ${currentBlock.color} placed at position: x:${position.x}, y:${position.y}, z:${position.z}`);
-    
-    for (let y = 0; y < currentBlock.shape.length; y++) {
-      for (let x = 0; x < currentBlock.shape[y].length; x++) {
-        if (currentBlock.shape[y][x]) {
-          const gridX = position.x + x;
-          const gridY = position.y;
-          const gridZ = position.z + y;
-          
-          if (
-            gridX >= 0 && gridX < GRID_SIZE &&
-            gridY >= 0 && gridY < GRID_SIZE &&
-            gridZ >= 0 && gridZ < GRID_SIZE
-          ) {
-            addDebugLog(`  Block segment at: x:${gridX}, y:${gridY}, z:${gridZ}`);
-          }
-        }
-      }
-    }
-    
     const newGrid = JSON.parse(JSON.stringify(grid));
     for (let y = 0; y < currentBlock.shape.length; y++) {
       for (let x = 0; x < currentBlock.shape[y].length; x++) {
@@ -236,15 +184,12 @@ const Game3D: React.FC = () => {
     setCurrentBlock(nextBlockPattern);
     setNextBlock(getRandomBlockPattern());
     
-    addDebugLog(`Next block ready: ${nextBlockPattern.color}`);
-    
     const newPosition = {...INITIAL_POSITION};
     
     if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
       setGameOver(true);
       setControlsEnabled(false);
       setGamePaused(true);
-      addDebugLog("GAME OVER: No valid position for next block");
       toast({
         title: "Game Over!",
         description: `No space for new block. Final score: ${score} | Level: ${level}`,
@@ -259,7 +204,6 @@ const Game3D: React.FC = () => {
       if (layersCleared >= layerThreshold) {
         const newLevel = Math.min(MAX_LEVEL, level + 1);
         setLevel(newLevel);
-        addDebugLog(`Level UP! Now at level ${newLevel}`);
         toast({
           title: `Level Up!`,
           description: `You are now on level ${newLevel}`,
@@ -283,8 +227,6 @@ const Game3D: React.FC = () => {
     let layersCleared = 0;
     const gridCopy = JSON.parse(JSON.stringify(grid));
     
-    addDebugLog("Analyzing grid for complete layers...");
-    
     for (let y = 0; y < GRID_SIZE; y++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         let rowFull = true;
@@ -296,7 +238,6 @@ const Game3D: React.FC = () => {
         }
         
         if (rowFull) {
-          addDebugLog(`Complete row found at y:${y}, z:${z} (along x-axis)`);
           for (let x = 0; x < GRID_SIZE; x++) {
             gridCopy[y][x][z] = 0;
           }
@@ -314,7 +255,6 @@ const Game3D: React.FC = () => {
         }
         
         if (rowFull) {
-          addDebugLog(`Complete row found at y:${y}, x:${x} (along z-axis)`);
           for (let z = 0; z < GRID_SIZE; z++) {
             gridCopy[y][x][z] = 0;
           }
@@ -334,7 +274,6 @@ const Game3D: React.FC = () => {
         }
         
         if (columnFull) {
-          addDebugLog(`Complete column found at x:${x}, z:${z} (along y-axis)`);
           for (let y = 0; y < GRID_SIZE; y++) {
             gridCopy[y][x][z] = 0;
           }
@@ -354,7 +293,6 @@ const Game3D: React.FC = () => {
       }
       
       if (layerFull) {
-        addDebugLog(`Complete horizontal layer found at y:${y}`);
         for (let x = 0; x < GRID_SIZE; x++) {
           for (let z = 0; z < GRID_SIZE; z++) {
             gridCopy[y][x][z] = 0;
@@ -364,10 +302,9 @@ const Game3D: React.FC = () => {
       }
     }
     
+    applyGravityToBlocks(gridCopy);
+    
     if (layersCleared > 0) {
-      addDebugLog(`Total of ${layersCleared} layers cleared, applying gravity...`);
-      applyGravityToBlocks(gridCopy);
-      
       const levelMultiplier = 1 + (level * 0.1);
       const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
       setScore(prevScore => prevScore + pointsScored);
@@ -382,8 +319,6 @@ const Game3D: React.FC = () => {
   };
 
   const applyGravityToBlocks = (grid: number[][][]) => {
-    const blocksMoved: { from: string, to: string }[] = [];
-    
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         for (let y = 1; y < GRID_SIZE; y++) {
@@ -395,27 +330,12 @@ const Game3D: React.FC = () => {
             }
             
             if (newY < y) {
-              blocksMoved.push({
-                from: `x:${x}, y:${y}, z:${z}`, 
-                to: `x:${x}, y:${newY}, z:${z}`
-              });
               grid[newY][x][z] = grid[y][x][z];
               grid[y][x][z] = 0;
             }
           }
         }
       }
-    }
-    
-    if (blocksMoved.length > 0) {
-      addDebugLog(`Gravity applied - ${blocksMoved.length} blocks moved`);
-      blocksMoved.forEach((move, idx) => {
-        if (idx < 5) {
-          addDebugLog(`  Block moved from (${move.from}) to (${move.to})`);
-        } else if (idx === 5) {
-          addDebugLog(`  ... and ${blocksMoved.length - 5} more blocks moved`);
-        }
-      });
     }
   };
 
@@ -465,7 +385,6 @@ const Game3D: React.FC = () => {
           ...currentBlock,
           shape: newPattern
         });
-        addDebugLog(`Block rotated around ${axis}-axis`);
       } else {
         const offsets = [
           { x: -1, y: 0, z: 0 },
@@ -491,14 +410,12 @@ const Game3D: React.FC = () => {
               shape: newPattern
             });
             setPosition({ x: newX, y: newY, z: newZ });
-            addDebugLog(`Block rotated around ${axis}-axis with wall kick (offset: x:${offset.x}, z:${offset.z})`);
             validPositionFound = true;
             break;
           }
         }
         
         if (!validPositionFound) {
-          addDebugLog(`Rotation around ${axis}-axis failed - not enough space`);
           toast({
             title: "Can't rotate",
             description: "Not enough space to rotate block",
@@ -517,7 +434,6 @@ const Game3D: React.FC = () => {
       newY--;
     }
     
-    addDebugLog(`Block dropped from y:${position.y} to y:${newY}`);
     setPosition({ ...position, y: newY });
     
     setTimeout(() => {
@@ -533,13 +449,11 @@ const Game3D: React.FC = () => {
     setControlsEnabled(!newPausedState);
     
     if (newPausedState) {
-      addDebugLog("Game paused");
       toast({
         title: "Game Paused",
         description: "Take a breather!",
       });
     } else {
-      addDebugLog("Game resumed");
       toast({
         title: "Game Resumed",
         description: "Let's go!",
@@ -565,7 +479,6 @@ const Game3D: React.FC = () => {
       }, 0);
     }
     
-    addDebugLog("Game started");
     toast({
       title: "Game Started",
       description: "Good luck!",
@@ -629,7 +542,6 @@ const Game3D: React.FC = () => {
       }
     }
     
-    addDebugLog(`View changed to ${viewPoint.name}`);
     toast({
       title: `View Changed`,
       description: `Now viewing from ${viewPoint.name}`,
@@ -673,10 +585,6 @@ const Game3D: React.FC = () => {
               />
             </Canvas>
             <Grid3DLabels />
-          </div>
-          
-          <div className="mt-4">
-            <DebugConsole logs={debugLogs} />
           </div>
         </div>
         
