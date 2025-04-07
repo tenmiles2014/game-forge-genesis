@@ -164,7 +164,13 @@ const Game3D: React.FC = () => {
     });
     console.log('Current Position:', position);
 
+    // Log function sequence entry point
+    console.log('Function sequence: placeBlock() started');
+
     const newGrid = JSON.parse(JSON.stringify(grid));
+    
+    // Log function sequence - grid copy created
+    console.log('Function sequence: Creating new grid copy');
     
     for (let y = 0; y < currentBlock.shape.length; y++) {
       for (let x = 0; x < currentBlock.shape[y].length; x++) {
@@ -173,7 +179,7 @@ const Game3D: React.FC = () => {
           const gridY = position.y;
           const gridZ = position.z + y;
           
-          console.log(`Attempting to place block at (${gridX},${gridY},${gridZ})`);
+          // Removed the logs for "Attempting to place block" and "Placing block with color index"
           
           if (
             gridX >= 0 && gridX < GRID_SIZE &&
@@ -181,7 +187,6 @@ const Game3D: React.FC = () => {
             gridZ >= 0 && gridZ < GRID_SIZE
           ) {
             const colorIndex = getColorIndex(currentBlock.color);
-            console.log(`Placing block with color index: ${colorIndex}`);
             newGrid[gridY][gridX][gridZ] = colorIndex;
           } else {
             console.warn(`Block placement out of bounds: (${gridX},${gridY},${gridZ})`);
@@ -190,10 +195,16 @@ const Game3D: React.FC = () => {
       }
     }
     
+    // Log function sequence - setting grid
+    console.log('Function sequence: Setting updated grid state');
     setGrid(newGrid);
     
+    // Log function sequence - clearing layers
+    console.log('Function sequence: Calling clearCompleteLayers()');
     const layersCleared = clearCompleteLayers(newGrid);
     
+    // Log function sequence - preparing next block
+    console.log('Function sequence: Setting up next block');
     const nextBlockPattern = nextBlock;
     setCurrentBlock(nextBlockPattern);
     setNextBlock(getRandomBlockPattern());
@@ -205,8 +216,13 @@ const Game3D: React.FC = () => {
       color: nextBlockPattern.color
     });
     
+    // Log function sequence - checking game over condition
+    console.log('Function sequence: Checking if new block can be placed');
     if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
       console.error('Game Over: No space for new block');
+      
+      // Log function sequence - game over
+      console.log('Function sequence: Game over condition triggered');
       setGameOver(true);
       setControlsEnabled(false);
       setGamePaused(true);
@@ -217,12 +233,19 @@ const Game3D: React.FC = () => {
       return;
     }
     
+    // Log function sequence - setting new position
+    console.log('Function sequence: Setting new position');
     setPosition(newPosition);
     
+    // Log function sequence - checking level up
+    console.log('Function sequence: Checking for level up condition');
     if (layersCleared > 0 && level < MAX_LEVEL) {
       const layerThreshold = Math.ceil(level / 5) + 1;
       if (layersCleared >= layerThreshold) {
         const newLevel = Math.min(MAX_LEVEL, level + 1);
+        
+        // Log function sequence - level up
+        console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
         setLevel(newLevel);
         toast({
           title: `Level Up!`,
@@ -246,6 +269,9 @@ const Game3D: React.FC = () => {
   };
 
   const clearCompleteLayers = (grid: number[][][]) => {
+    // Log function sequence - start of clearCompleteLayers
+    console.log('Function sequence: clearCompleteLayers() started');
+    
     let layersCleared = 0;
     const gridCopy = JSON.parse(JSON.stringify(grid));
     
@@ -324,6 +350,8 @@ const Game3D: React.FC = () => {
       }
     }
     
+    // Log function sequence - applying gravity
+    console.log('Function sequence: Applying gravity to blocks');
     applyGravityToBlocks(gridCopy);
     
     if (layersCleared > 0) {
@@ -338,6 +366,9 @@ const Game3D: React.FC = () => {
         description: `+${pointsScored} points`,
       });
     }
+    
+    // Log function sequence - end of clearCompleteLayers
+    console.log('Function sequence: clearCompleteLayers() completed');
     
     setGrid([...gridCopy]);
     return layersCleared;
