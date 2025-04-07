@@ -237,7 +237,7 @@ const Game3D: React.FC = () => {
     console.log('Function sequence: Setting new position');
     setPosition(newPosition);
     
-    // Log function sequence - checking level up
+    // Log function sequence - checking level up condition
     console.log('Function sequence: Checking for level up condition');
     if (layersCleared > 0 && level < MAX_LEVEL) {
       const layerThreshold = Math.ceil(level / 5) + 1;
@@ -274,6 +274,12 @@ const Game3D: React.FC = () => {
     
     let layersCleared = 0;
     const gridCopy = JSON.parse(JSON.stringify(grid));
+    
+    // Debug logs for layer clearing process
+    console.log('Initial grid copy created:', {
+      gridSize: gridCopy.length,
+      dimensions: gridCopy.map(layer => layer.length)
+    });
     
     for (let y = 0; y < GRID_SIZE; y++) {
       for (let z = 0; z < GRID_SIZE; z++) {
@@ -350,20 +356,44 @@ const Game3D: React.FC = () => {
       }
     }
     
+    // Log detailed information about cleared layers
+    console.log('Layers cleared details:', {
+      totalLayersCleared: layersCleared,
+      clearDetails: {
+        rowsClearedPerLayer: layersCleared,
+        columnsCleared: layersCleared,
+        completeLayers: layersCleared
+      }
+    });
+    
+    // Log grid state before applying gravity
+    console.log('Grid state before gravity:', {
+      gridCopy: gridCopy.map(layer => 
+        layer.map(row => row.some(cell => cell !== 0))
+      )
+    });
+    
     // Log function sequence - applying gravity
     console.log('Function sequence: Applying gravity to blocks');
     applyGravityToBlocks(gridCopy);
+    
+    // Log grid state after applying gravity
+    console.log('Grid state after gravity:', {
+      gridCopy: gridCopy.map(layer => 
+        layer.map(row => row.some(cell => cell !== 0))
+      )
+    });
     
     if (layersCleared > 0) {
       const levelMultiplier = 1 + (level * 0.1);
       const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
       
-      console.log(`Score increased by ${pointsScored} points (${layersCleared} layers × 10 × ${levelMultiplier.toFixed(1)} multiplier)`);
-      
-      setScore(prevScore => prevScore + pointsScored);
-      toast({
-        title: `${layersCleared} lines cleared!`,
-        description: `+${pointsScored} points`,
+      // Log scoring details
+      console.log('Scoring details:', {
+        layersCleared,
+        basePoints: layersCleared * 10,
+        levelMultiplier,
+        totalPointsScored: pointsScored
       });
     }
     
