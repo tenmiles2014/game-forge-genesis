@@ -242,7 +242,7 @@ const Game3D: React.FC = () => {
     // Log function sequence - checking level up condition
     console.log('Function sequence: Checking for level up condition');
     if (layersCleared > 0 && level < MAX_LEVEL) {
-      const layerThreshold = Math.ceil(level / 5) + 1;
+      const layerThreshold = level + 1;
       if (layersCleared >= layerThreshold) {
         const newLevel = Math.min(MAX_LEVEL, level + 1);
         

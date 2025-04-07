@@ -11,8 +11,8 @@ interface LevelDisplayProps {
 }
 
 const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersCleared = 0 }) => {
-  // Use 2 layers as the threshold consistently
-  const layerThreshold = Math.ceil(level / 5) + 2;
+  // Change the calculation: each level tier plus 1 only
+  const layerThreshold = level + 1;
   const remainingLayers = Math.max(0, layerThreshold - (layersCleared % layerThreshold));
   const nextLevelBonus = (level + 1) * 100;
   
@@ -76,7 +76,7 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
             <TooltipTrigger asChild>
               <div className="inline-flex items-center text-xs">
                 <Layers className="h-4 w-4 mr-1 text-blue-400" />
-                <span className="font-medium">{layerThreshold}</span> layers needed
+                <span className="font-medium">{layerThreshold}</span> {/* Added whitespace here */} layers needed
               </div>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs bg-gray-800 border-gray-700 text-gray-200">
