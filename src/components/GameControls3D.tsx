@@ -19,10 +19,10 @@ const GameControls3D: React.FC<GameControls3DProps> = ({
   className 
 }) => {
   return (
-    <div className={`flex flex-col gap-4 ${className}`}>
+    <div className={`flex gap-2 ${className}`}>
       <Button 
         variant="outline"
-        className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300 w-full"
+        className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300"
         onClick={onStartPause}
         disabled={gameOver}
         autoFocus={false}
@@ -42,7 +42,7 @@ const GameControls3D: React.FC<GameControls3DProps> = ({
       
       <Button 
         variant="outline"
-        className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300 w-full"
+        className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300"
         onClick={onReset}
       >
         <Gamepad className="h-5 w-5 mr-2" />

@@ -12,11 +12,12 @@ export interface ViewPoint {
 interface ViewControlsProps {
   viewPoints: ViewPoint[];
   onSelectView: (viewPoint: ViewPoint) => void;
+  className?: string;
 }
 
-const ViewControls: React.FC<ViewControlsProps> = ({ viewPoints, onSelectView }) => {
+const ViewControls: React.FC<ViewControlsProps> = ({ viewPoints, onSelectView, className }) => {
   return (
-    <div className="flex flex-wrap gap-2 items-center">
+    <div className={`flex flex-wrap gap-2 items-center ${className}`}>
       {viewPoints.map((viewPoint) => (
         <Button
           key={viewPoint.name}

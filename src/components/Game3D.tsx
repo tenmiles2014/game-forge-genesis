@@ -745,10 +745,18 @@ const Game3D: React.FC = () => {
       
       <div className="game-container rounded-lg overflow-hidden w-full max-w-[1400px] flex flex-col md:flex-row gap-4 bg-black bg-opacity-30">
         <div className="flex-1 min-h-[550px] md:min-h-[650px]">
-          <div className="flex justify-end items-center mb-2 p-2">
+          <div className="flex justify-between items-center mb-2 p-2">
             <ViewControls 
               viewPoints={VIEW_POINTS} 
               onSelectView={handleViewChange}
+            />
+            
+            <GameControls3D 
+              onReset={resetGame}
+              onStartPause={gamePaused ? startGame : toggleGamePause}
+              isPaused={gamePaused}
+              gameOver={gameOver}
+              className="justify-end"
             />
           </div>
           
@@ -778,14 +786,7 @@ const Game3D: React.FC = () => {
         </div>
         
         <div className="flex flex-col justify-between gap-4 w-full md:w-64 p-4">
-          <div className="space-y-4">
-            <GameControls3D 
-              onReset={resetGame}
-              onStartPause={gamePaused ? startGame : toggleGamePause}
-              isPaused={gamePaused}
-              gameOver={gameOver}
-            />
-            
+          <div className="space-y-4">            
             <ScoreDisplay score={score} linesCleared={linesCleared} />
             
             <LevelDisplay level={level} maxLevel={MAX_LEVEL} layersCleared={linesCleared} />
