@@ -162,9 +162,14 @@ const Game3D: React.FC = () => {
   };
 
   const placeBlock = () => {
+    console.log("----------- placeBlock STARTED -----------");
+    console.log(`Current block type: ${currentBlock.color}, position: (${position.x},${position.y},${position.z})`);
+    console.log(`Creating new grid from existing grid (${grid.length}x${grid[0]?.length}x${grid[0]?.[0]?.length})`);
+    
     const newGrid = JSON.parse(JSON.stringify(grid));
     const blockPositions: {x: number, y: number, z: number}[] = [];
     
+    console.log("Transforming block pattern to absolute grid positions:");
     for (let y = 0; y < currentBlock.shape.length; y++) {
       for (let x = 0; x < currentBlock.shape[y].length; x++) {
         if (currentBlock.shape[y][x]) {
@@ -172,31 +177,49 @@ const Game3D: React.FC = () => {
           const gridY = position.y;
           const gridZ = position.z + y;
           
+          console.log(`  - Block part at relative (${x},0,${y}) => absolute (${gridX},${gridY},${gridZ})`);
+          
           if (
             gridX >= 0 && gridX < GRID_SIZE &&
             gridY >= 0 && gridY < GRID_SIZE &&
             gridZ >= 0 && gridZ < GRID_SIZE
           ) {
-            newGrid[gridY][gridX][gridZ] = getColorIndex(currentBlock.color);
+            const colorIndex = getColorIndex(currentBlock.color);
+            console.log(`  - Setting grid[${gridY}][${gridX}][${gridZ}] = ${colorIndex} (${currentBlock.color})`);
+            newGrid[gridY][gridX][gridZ] = colorIndex;
             blockPositions.push({x: gridX, y: gridY, z: gridZ});
+          } else {
+            console.warn(`  - Position out of bounds (${gridX},${gridY},${gridZ}), skipping`);
           }
         }
       }
     }
     
+    console.log(`Updating grid with ${blockPositions.length} new block positions`);
     setGrid(newGrid);
     
     console.log(`Block placed: ${currentBlock.color} at positions [${blockPositions.map(p => `(${p.x},${p.y},${p.z})`).join(', ')}]`);
     
+    console.log("Checking for complete layers to clear...");
     const layersCleared = clearCompleteLayers(newGrid);
+    console.log(`clearCompleteLayers returned: ${layersCleared} layers cleared`);
     
+    console.log("Preparing next block...");
     const nextBlockPattern = nextBlock;
+    console.log(`Current nextBlock is ${nextBlock.color}, setting as new currentBlock`);
     setCurrentBlock(nextBlockPattern);
-    setNextBlock(getRandomBlockPattern());
+    
+    console.log("Generating new nextBlock...");
+    const newNextBlock = getRandomBlockPattern();
+    console.log(`Generated new nextBlock: ${newNextBlock.color}`);
+    setNextBlock(newNextBlock);
     
     const newPosition = {...INITIAL_POSITION};
+    console.log(`Setting new position to INITIAL_POSITION: (${newPosition.x},${newPosition.y},${newPosition.z})`);
     
+    console.log("Checking if next block can be placed at initial position...");
     if (!isValidPosition(nextBlockPattern.shape, newPosition.x, newPosition.y, newPosition.z)) {
+      console.warn("GAME OVER: No valid position for next block");
       setGameOver(true);
       setControlsEnabled(false);
       setGamePaused(true);
@@ -205,23 +228,33 @@ const Game3D: React.FC = () => {
         title: "Game Over!",
         description: `No space for new block. Final score: ${score} | Level: ${level}`,
       });
+      console.log("----------- placeBlock COMPLETED (GAME OVER) -----------");
       return;
     }
     
+    console.log(`Next block can be placed, setting position to (${newPosition.x},${newPosition.y},${newPosition.z})`);
     setPosition(newPosition);
     
+    console.log(`Checking for level up: current level ${level}, layers cleared ${layersCleared}`);
     if (layersCleared > 0 && level < MAX_LEVEL) {
       const layerThreshold = Math.ceil(level / 5) + 1;
+      console.log(`Level up threshold: ${layerThreshold} layers`);
+      
       if (layersCleared >= layerThreshold) {
         const newLevel = Math.min(MAX_LEVEL, level + 1);
+        console.log(`LEVEL UP! ${level} -> ${newLevel}`);
         setLevel(newLevel);
-        console.log(`Level Up! Now on level ${newLevel}`);
+        console.log(`New drop speed: ${getDropSpeed()} ms`);
         toast({
           title: `Level Up!`,
           description: `You are now on level ${newLevel}`,
         });
+      } else {
+        console.log(`Not enough layers cleared for level up (need ${layerThreshold}, got ${layersCleared})`);
       }
     }
+    
+    console.log("----------- placeBlock COMPLETED -----------");
   };
 
   const getColorIndex = (color: string): number => {
@@ -236,10 +269,12 @@ const Game3D: React.FC = () => {
   };
 
   const clearCompleteLayers = (grid: number[][][]) => {
+    console.log("----------- clearCompleteLayers STARTED -----------");
     let layersCleared = 0;
     const gridCopy = JSON.parse(JSON.stringify(grid));
     const clearedPositions: string[] = [];
     
+    console.log("Checking Z-rows (along X-axis)...");
     for (let y = 0; y < GRID_SIZE; y++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         let rowFull = true;
@@ -251,7 +286,9 @@ const Game3D: React.FC = () => {
         }
         
         if (rowFull) {
+          console.log(`Complete Z-row found at y=${y}, z=${z}`);
           for (let x = 0; x < GRID_SIZE; x++) {
+            console.log(`  - Clearing block at (${x},${y},${z})`);
             gridCopy[y][x][z] = 0;
             clearedPositions.push(`(${x},${y},${z})`);
           }
@@ -259,7 +296,10 @@ const Game3D: React.FC = () => {
           console.log(`Z-row cleared at y=${y}, z=${z}`);
         }
       }
-      
+    }
+    
+    console.log("Checking X-rows (along Z-axis)...");
+    for (let y = 0; y < GRID_SIZE; y++) {
       for (let x = 0; x < GRID_SIZE; x++) {
         let rowFull = true;
         for (let z = 0; z < GRID_SIZE; z++) {
@@ -270,7 +310,9 @@ const Game3D: React.FC = () => {
         }
         
         if (rowFull) {
+          console.log(`Complete X-row found at y=${y}, x=${x}`);
           for (let z = 0; z < GRID_SIZE; z++) {
+            console.log(`  - Clearing block at (${x},${y},${z})`);
             gridCopy[y][x][z] = 0;
             clearedPositions.push(`(${x},${y},${z})`);
           }
@@ -280,6 +322,7 @@ const Game3D: React.FC = () => {
       }
     }
     
+    console.log("Checking Y-columns...");
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         let columnFull = true;
@@ -291,7 +334,9 @@ const Game3D: React.FC = () => {
         }
         
         if (columnFull) {
+          console.log(`Complete column found at x=${x}, z=${z}`);
           for (let y = 0; y < GRID_SIZE; y++) {
+            console.log(`  - Clearing block at (${x},${y},${z})`);
             gridCopy[y][x][z] = 0;
             clearedPositions.push(`(${x},${y},${z})`);
           }
@@ -301,6 +346,7 @@ const Game3D: React.FC = () => {
       }
     }
     
+    console.log("Checking full horizontal layers...");
     for (let y = 0; y < GRID_SIZE; y++) {
       let layerFull = true;
       for (let x = 0; x < GRID_SIZE && layerFull; x++) {
@@ -312,8 +358,10 @@ const Game3D: React.FC = () => {
       }
       
       if (layerFull) {
+        console.log(`Complete horizontal layer found at y=${y}`);
         for (let x = 0; x < GRID_SIZE; x++) {
           for (let z = 0; z < GRID_SIZE; z++) {
+            console.log(`  - Clearing block at (${x},${y},${z})`);
             gridCopy[y][x][z] = 0;
             clearedPositions.push(`(${x},${y},${z})`);
           }
@@ -324,7 +372,10 @@ const Game3D: React.FC = () => {
     }
     
     if (clearedPositions.length > 0) {
+      console.log(`Total positions cleared: ${clearedPositions.length}`);
       console.log(`Cleared blocks at positions: [${clearedPositions.join(', ')}]`);
+    } else {
+      console.log("No positions were cleared");
     }
     
     console.log(`Applying gravity to remaining blocks...`);
@@ -333,7 +384,12 @@ const Game3D: React.FC = () => {
     if (layersCleared > 0) {
       const levelMultiplier = 1 + (level * 0.1);
       const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
-      setScore(prevScore => prevScore + pointsScored);
+      console.log(`Calculating score: ${layersCleared} layers × 10 points × ${levelMultiplier.toFixed(1)} level multiplier = ${pointsScored} points`);
+      setScore(prevScore => {
+        const newScore = prevScore + pointsScored;
+        console.log(`Score updated: ${prevScore} + ${pointsScored} = ${newScore}`);
+        return newScore;
+      });
       console.log(`${layersCleared} layers cleared! +${pointsScored} points (level multiplier: ${levelMultiplier.toFixed(1)}x)`);
       toast({
         title: `${layersCleared} lines cleared!`,
@@ -341,17 +397,23 @@ const Game3D: React.FC = () => {
       });
     }
     
+    console.log("Updating grid with cleared positions and gravity applied");
     setGrid([...gridCopy]);
+    console.log(`----------- clearCompleteLayers COMPLETED (${layersCleared} layers cleared) -----------`);
     return layersCleared;
   };
 
   const applyGravityToBlocks = (grid: number[][][]) => {
+    console.log("----------- applyGravityToBlocks STARTED -----------");
     let blocksMoved = 0;
     
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         for (let y = 1; y < GRID_SIZE; y++) {
           if (grid[y][x][z] !== 0) {
+            const blockColor = getColorIndex(grid[y][x][z]);
+            console.log(`Found block (color: ${blockColor}) at position (${x},${y},${z})`);
+            
             let newY = y;
             
             while (newY > 0 && grid[newY - 1][x][z] === 0) {
@@ -359,10 +421,12 @@ const Game3D: React.FC = () => {
             }
             
             if (newY < y) {
+              console.log(`  - Moving block from (${x},${y},${z}) to (${x},${newY},${z}) (${y - newY} positions down)`);
               grid[newY][x][z] = grid[y][x][z];
               grid[y][x][z] = 0;
               blocksMoved++;
-              console.log(`Block moved from (${x},${y},${z}) to (${x},${newY},${z})`);
+            } else {
+              console.log(`  - Block at (${x},${y},${z}) cannot move down any further`);
             }
           }
         }
@@ -371,7 +435,12 @@ const Game3D: React.FC = () => {
     
     if (blocksMoved > 0) {
       console.log(`Gravity applied: ${blocksMoved} blocks moved down`);
+    } else {
+      console.log("No blocks moved by gravity");
     }
+    
+    console.log("----------- applyGravityToBlocks COMPLETED -----------");
+    return blocksMoved;
   };
 
   const moveBlock = (direction: 'left' | 'right' | 'forward' | 'backward' | 'down') => {
