@@ -25,7 +25,7 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
   
   // Game mechanics calculations
   const nextLevelBonus = (level + 1) * 100;
-  const dropSpeed = Math.max(100, 1000 - (level * 50));
+  const dropSpeed = Math.max(100, 1000 - (level * 5)); // Updated to decrease by 5ms per level
   const scoreMultiplier = (1 + (level * 0.1)).toFixed(1);
   
   return (
@@ -53,7 +53,7 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
           </TooltipTrigger>
           <TooltipContent className="bg-gray-800 border-gray-700 text-gray-200">
             <p>Current block drop speed: {dropSpeed}ms</p>
-            <p className="text-xs text-gray-400 mt-1">Decreases by 50ms each level</p>
+            <p className="text-xs text-gray-400 mt-1">Decreases by 5ms each level</p>
           </TooltipContent>
         </Tooltip>
       </div>
@@ -108,7 +108,7 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel, layersClea
               <div className="mt-2 pt-2 border-t border-gray-700">
                 <h4 className="font-medium text-white mb-1">Difficulty Progression</h4>
                 <ul className="space-y-1 text-xs">
-                  <li>• Drop speed: {dropSpeed}ms (decreases by 50ms per level)</li>
+                  <li>• Drop speed: {dropSpeed}ms (decreases by 5ms per level)</li>
                   <li>• Score multiplier: x{scoreMultiplier} (increases by 0.1x per level)</li>
                   {!isHighTier ? (
                     <li>• Simultaneous layers needed: {maxSimultaneousLayers} (increases by 1 per level, max 5)</li>

@@ -52,7 +52,7 @@ const Game3D: React.FC = () => {
   const [isBlinking, setIsBlinking] = useState(false);
 
   const getDropSpeed = () => {
-    return Math.max(100, BASE_DROP_SPEED - (level * 50));
+    return Math.max(100, BASE_DROP_SPEED - (level * 5)); // Updated to decrease by 5ms per level
   };
 
   const initializeGrid = () => {
