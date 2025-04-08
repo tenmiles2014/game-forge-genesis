@@ -311,46 +311,6 @@ const Game3D: React.FC = () => {
     console.log('Function sequence: Setting new position');
     setPosition(newPosition);
     
-    console.log('Function sequence: Checking for level up condition');
-    if (linesCleared > 0 && level < MAX_LEVEL) {
-      if (level < 5) {
-        const layerThreshold = level + 1;
-        if (linesCleared >= layerThreshold) {
-          const newLevel = Math.min(MAX_LEVEL, level + 1);
-          
-          const levelUpBonus = newLevel * 100;
-          setScore(prevScore => prevScore + levelUpBonus);
-          
-          console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
-          setLevel(newLevel);
-          toast({
-            title: `Level Up!`,
-            description: `You cleared ${layersCleared} layers simultaneously! Now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
-          });
-        }
-      } else {
-        const tier = Math.ceil(level / 2);
-        const tierLayerTarget = 20;
-        
-        const prevTierProgress = Math.floor(linesCleared / tierLayerTarget);
-        const newTierProgress = Math.floor(updatedLinesCleared / tierLayerTarget);
-        
-        if (prevTierProgress < newTierProgress) {
-          const newLevel = Math.min(MAX_LEVEL, level + 1);
-          
-          const levelUpBonus = newLevel * 100;
-          setScore(prevScore => prevScore + levelUpBonus);
-          
-          console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
-          setLevel(newLevel);
-          toast({
-            title: `Level Up!`,
-            description: `You completed tier ${tier} (${tierLayerTarget} layers)! Now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
-          });
-        }
-      }
-    }
-
     console.log('--- placeBlock END ---');
   };
 
@@ -504,8 +464,8 @@ const Game3D: React.FC = () => {
         setScore(prevScore => prevScore + pointsScored);
         
         // Update the linesCleared counter
-        const updatedLinesCleared = linesCleared + layersCleared;
-        setLinesCleared(updatedLinesCleared);
+        const newLinesCleared = linesCleared + layersCleared;
+        setLinesCleared(newLinesCleared);
         
         toast({
           title: `${layersCleared} lines cleared!`,
@@ -538,7 +498,7 @@ const Game3D: React.FC = () => {
             const tierLayerTarget = 20;
             
             const prevTierProgress = Math.floor(linesCleared / tierLayerTarget);
-            const newTierProgress = Math.floor(updatedLinesCleared / tierLayerTarget);
+            const newTierProgress = Math.floor(newLinesCleared / tierLayerTarget);
             
             if (prevTierProgress < newTierProgress) {
               const newLevel = Math.min(MAX_LEVEL, level + 1);
