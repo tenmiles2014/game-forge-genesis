@@ -325,30 +325,29 @@ const Game3D: React.FC = () => {
           setLevel(newLevel);
           toast({
             title: `Level Up!`,
-            description: `You are now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
+            description: `You cleared ${layersCleared} layers simultaneously! Now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
           });
         }
       } else {
         const tier = Math.ceil(level / 2);
         const tierLayerTarget = 20;
         
-        setLinesCleared(prev => {
-          const newTotal = prev + linesCleared;
-          if (Math.floor(prev / tierLayerTarget) < Math.floor(newTotal / tierLayerTarget)) {
-            const newLevel = Math.min(MAX_LEVEL, level + 1);
-            
-            const levelUpBonus = newLevel * 100;
-            setScore(prevScore => prevScore + levelUpBonus);
-            
-            console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
-            setLevel(newLevel);
-            toast({
-              title: `Level Up!`,
-              description: `You are now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
-            });
-          }
-          return newTotal;
-        });
+        const prevTierProgress = Math.floor(linesCleared / tierLayerTarget);
+        const newTierProgress = Math.floor(updatedLinesCleared / tierLayerTarget);
+        
+        if (prevTierProgress < newTierProgress) {
+          const newLevel = Math.min(MAX_LEVEL, level + 1);
+          
+          const levelUpBonus = newLevel * 100;
+          setScore(prevScore => prevScore + levelUpBonus);
+          
+          console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
+          setLevel(newLevel);
+          toast({
+            title: `Level Up!`,
+            description: `You completed tier ${tier} (${tierLayerTarget} layers)! Now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
+          });
+        }
       }
     }
 
@@ -517,7 +516,7 @@ const Game3D: React.FC = () => {
         
         console.log('Function sequence: clearCompleteLayers() completed');
         
-        // Check for level up - All level up logic consolidated here
+        // Check for level up - Modified to fix incorrect progressions
         if (layersCleared > 0 && level < MAX_LEVEL) {
           if (level < 5) {
             const layerThreshold = level + 1;
@@ -531,14 +530,17 @@ const Game3D: React.FC = () => {
               setLevel(newLevel);
               toast({
                 title: `Level Up!`,
-                description: `You are now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
+                description: `You cleared ${layersCleared} layers simultaneously! Now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
               });
             }
           } else {
             const tier = Math.ceil(level / 2);
             const tierLayerTarget = 20;
             
-            if (Math.floor(linesCleared / tierLayerTarget) < Math.floor(updatedLinesCleared / tierLayerTarget)) {
+            const prevTierProgress = Math.floor(linesCleared / tierLayerTarget);
+            const newTierProgress = Math.floor(updatedLinesCleared / tierLayerTarget);
+            
+            if (prevTierProgress < newTierProgress) {
               const newLevel = Math.min(MAX_LEVEL, level + 1);
               
               const levelUpBonus = newLevel * 100;
@@ -548,7 +550,7 @@ const Game3D: React.FC = () => {
               setLevel(newLevel);
               toast({
                 title: `Level Up!`,
-                description: `You are now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
+                description: `You completed tier ${tier} (${tierLayerTarget} layers)! Now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
               });
             }
           }
