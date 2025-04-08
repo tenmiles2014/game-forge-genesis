@@ -503,7 +503,10 @@ const Game3D: React.FC = () => {
         });
         
         setScore(prevScore => prevScore + pointsScored);
-        setLinesCleared(prev => prev + layersCleared);
+        
+        // Update the linesCleared counter
+        const updatedLinesCleared = linesCleared + layersCleared;
+        setLinesCleared(updatedLinesCleared);
         
         toast({
           title: `${layersCleared} lines cleared!`,
@@ -514,7 +517,7 @@ const Game3D: React.FC = () => {
         
         console.log('Function sequence: clearCompleteLayers() completed');
         
-        // Check for level up
+        // Check for level up - All level up logic consolidated here
         if (layersCleared > 0 && level < MAX_LEVEL) {
           if (level < 5) {
             const layerThreshold = level + 1;
@@ -535,8 +538,7 @@ const Game3D: React.FC = () => {
             const tier = Math.ceil(level / 2);
             const tierLayerTarget = 20;
             
-            const newTotal = linesCleared + layersCleared;
-            if (Math.floor(linesCleared / tierLayerTarget) < Math.floor(newTotal / tierLayerTarget)) {
+            if (Math.floor(linesCleared / tierLayerTarget) < Math.floor(updatedLinesCleared / tierLayerTarget)) {
               const newLevel = Math.min(MAX_LEVEL, level + 1);
               
               const levelUpBonus = newLevel * 100;
