@@ -42,7 +42,16 @@
     @apply bg-game-background text-foreground;
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Adjust overflow for mobile devices */
+  @media (max-width: 768px) {
+    body {
+      overflow-y: auto;
+    }
   }
 }
 
@@ -62,6 +71,7 @@
   position: relative;
   border: 2px solid rgba(74, 155, 247, 0.3);
   border-radius: 8px;
+  height: fit-content;
 }
 
 .game-container::before {
@@ -84,4 +94,11 @@
 
 .game-circle {
   background: radial-gradient(circle, transparent 60%, rgba(74, 155, 247, 0.2) 61%);
+}
+
+/* Ensure controls are readable on smaller screens */
+@media (max-width: 640px) {
+  .game-container {
+    max-height: calc(100vh - 100px);
+  }
 }

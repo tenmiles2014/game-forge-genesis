@@ -12,6 +12,7 @@ import ViewControls, { ViewPoint } from './ViewControls';
 import GuidelineOverlay from './GuidelineOverlay';
 import Grid3DLabels from './Grid3DLabels';
 import Gyroscope from './Gyroscope';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
@@ -24,10 +25,10 @@ const VIEW_POINTS: ViewPoint[] = [
   { name: "Top View", position: [4.5, 25, 4.5], target: [4.5, 0, 4.5] },
   { name: "Side View", position: [25, 5, 4.5], target: [0, 5, 4.5] },
   { name: "Front View", position: [4.5, 5, 25], target: [4.5, 5, 0] },
-  { name: "Corner View", position: [20, 10, 20] },
 ];
 
 const Game3D: React.FC = () => {
+  const isMobile = useIsMobile();
   const [grid, setGrid] = useState<number[][][]>([]);
   const [score, setScore] = useState(0);
   const [currentBlock, setCurrentBlock] = useState<BlockPattern>(getRandomBlockPattern());
@@ -757,12 +758,13 @@ const Game3D: React.FC = () => {
         3D Block Busters
       </h1>
       
-      <div className="game-container rounded-lg overflow-hidden w-full max-w-[1400px] flex flex-col md:flex-row gap-4 bg-black bg-opacity-30">
-        <div className="flex-1 min-h-[550px] md:min-h-[650px]">
+      <div className="game-container rounded-lg overflow-hidden w-full max-w-full md:max-w-[90vw] lg:max-w-[85vw] 2xl:max-w-[75vw] flex flex-col md:flex-row gap-4 bg-black bg-opacity-30">
+        <div className="flex-1 min-h-[400px] md:min-h-[550px] lg:min-h-[650px]">
           <div className="flex justify-between items-center mb-2 p-2">
             <ViewControls 
               viewPoints={VIEW_POINTS} 
               onSelectView={handleViewChange}
+              className={isMobile ? "gap-1" : ""}
             />
             
             <GameControls3D 
@@ -775,7 +777,7 @@ const Game3D: React.FC = () => {
           </div>
           
           <div 
-            className="game-board rounded-lg overflow-hidden h-[500px] md:h-[600px] relative"
+            className="game-board rounded-lg overflow-hidden h-[350px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[650px] relative"
             ref={gameBoardRef}
             tabIndex={0}
           >
