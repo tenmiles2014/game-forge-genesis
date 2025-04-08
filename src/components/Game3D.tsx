@@ -17,7 +17,7 @@ const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
 const MAX_LEVEL = 99;
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
-const BLINK_DURATION = 1000; // Duration of blinking and explosion effect in ms
+const BLINK_DURATION = 1000; // Duration of blinking effect in ms
 
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
@@ -448,10 +448,10 @@ const Game3D: React.FC = () => {
       }
     }
     
-    const linesCleared = completeLayers.length;
+    const layersCleared = completeLayers.length;
     
-    // If we have layers to clear, start the blinking effect and dust explosion effect
-    if (linesCleared > 0) {
+    // If we have layers to clear, start the blinking effect
+    if (layersCleared > 0) {
       setBlinkingLayers(completeLayers);
       setIsBlinking(true);
       
@@ -493,20 +493,20 @@ const Game3D: React.FC = () => {
         
         // Calculate score based on layers cleared
         const levelMultiplier = 1 + (level * 0.1);
-        const pointsScored = Math.floor(linesCleared * 10 * levelMultiplier);
+        const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
         
         console.log('Scoring details:', {
-          linesCleared,
-          basePoints: linesCleared * 10,
+          layersCleared,
+          basePoints: layersCleared * 10,
           levelMultiplier,
           totalPointsScored: pointsScored
         });
         
         setScore(prevScore => prevScore + pointsScored);
-        setLinesCleared(prev => prev + linesCleared);
+        setLinesCleared(prev => prev + layersCleared);
         
         toast({
-          title: `${linesCleared} lines cleared!`,
+          title: `${layersCleared} lines cleared!`,
           description: `+${pointsScored} points`,
         });
         
@@ -515,10 +515,10 @@ const Game3D: React.FC = () => {
         console.log('Function sequence: clearCompleteLayers() completed');
         
         // Check for level up
-        if (linesCleared > 0 && level < MAX_LEVEL) {
+        if (layersCleared > 0 && level < MAX_LEVEL) {
           if (level < 5) {
             const layerThreshold = level + 1;
-            if (linesCleared >= layerThreshold) {
+            if (layersCleared >= layerThreshold) {
               const newLevel = Math.min(MAX_LEVEL, level + 1);
               
               const levelUpBonus = newLevel * 100;
@@ -535,7 +535,7 @@ const Game3D: React.FC = () => {
             const tier = Math.ceil(level / 2);
             const tierLayerTarget = 20;
             
-            const newTotal = linesCleared + linesCleared;
+            const newTotal = linesCleared + layersCleared;
             if (Math.floor(linesCleared / tierLayerTarget) < Math.floor(newTotal / tierLayerTarget)) {
               const newLevel = Math.min(MAX_LEVEL, level + 1);
               
@@ -554,7 +554,7 @@ const Game3D: React.FC = () => {
       }, BLINK_DURATION);
     }
     
-    return linesCleared;
+    return layersCleared;
   };
 
   const applyGravityToBlocks = (grid: number[][][]) => {

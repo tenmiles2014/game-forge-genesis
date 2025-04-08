@@ -16,15 +16,15 @@ interface Grid3DProps {
 }
 
 const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingLayers = [] }) => {
+  // For tracking grid changes and forcing re-renders
   const gridRef = useRef<string>("");
   const forceUpdateRef = useRef<number>(0);
   const meshRefs = useRef<Map<string, THREE.Mesh>>(new Map());
   const { scene } = useThree();
   const blinkingTimerRef = useRef<number>(0);
   const blinkPhaseRef = useRef<boolean>(false);
-  const particlesRef = useRef<THREE.Points[]>([]);
-  const dustParticlesActive = useRef<boolean>(false);
   
+  // Color mapping
   const getColor = (colorIndex: number) => {
     const colors = {
       1: new THREE.Color('#3b82f6'), // blue
@@ -36,6 +36,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     return colors[colorIndex as keyof typeof colors] || new THREE.Color('gray');
   };
 
+  // Get current block's color as THREE.Color
   const blockColor = useMemo(() => {
     const colorMap: Record<string, THREE.Color> = {
       'blue': new THREE.Color('#3b82f6'),
@@ -47,74 +48,13 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     return colorMap[currentBlock.color] || new THREE.Color('gray');
   }, [currentBlock.color]);
 
-  const createDustExplosion = (position: [number, number, number], color: THREE.Color) => {
-    const particleCount = 50;
-    const particleGeometry = new THREE.BufferGeometry();
-    const particlePositions = new Float32Array(particleCount * 3);
-    
-    for (let i = 0; i < particleCount; i++) {
-      particlePositions[i * 3] = position[0];
-      particlePositions[i * 3 + 1] = position[1];
-      particlePositions[i * 3 + 2] = position[2];
-    }
-    
-    particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-    
-    const particleMaterial = new THREE.PointsMaterial({
-      color: color,
-      size: 0.2,
-      transparent: true,
-      opacity: 0.8,
-      blending: THREE.AdditiveBlending,
-    });
-    
-    const particles = new THREE.Points(particleGeometry, particleMaterial);
-    
-    const velocities = Array(particleCount).fill(0).map(() => ({
-      x: (Math.random() - 0.5) * 0.3,
-      y: (Math.random() - 0.5) * 0.3,
-      z: (Math.random() - 0.5) * 0.3,
-    }));
-    
-    scene.add(particles);
-    
-    const particleSystem = {
-      points: particles,
-      velocities,
-      life: 1.0,
-      update: (delta: number) => {
-        particleSystem.life -= delta;
-        
-        const positions = particles.geometry.attributes.position.array as Float32Array;
-        for (let i = 0; i < particleCount; i++) {
-          positions[i * 3] += velocities[i].x;
-          positions[i * 3 + 1] += velocities[i].y;
-          positions[i * 3 + 2] += velocities[i].z;
-          
-          velocities[i].y -= 0.01;
-        }
-        
-        (particles.material as THREE.PointsMaterial).opacity = particleSystem.life;
-        
-        particles.geometry.attributes.position.needsUpdate = true;
-        
-        return particleSystem.life <= 0;
-      },
-      dispose: () => {
-        particles.geometry.dispose();
-        (particles.material as THREE.PointsMaterial).dispose();
-        scene.remove(particles);
-      }
-    };
-    
-    return particleSystem;
-  };
-
+  // Calculate ghost position (where block will land)
   const ghostPosition = useMemo(() => {
     let lowestValidY = position.y;
     const pattern = currentBlock.shape;
     const gridSize = grid.length || 10;
     
+    // Loop downward until we find a collision or hit the bottom
     while (lowestValidY > 0) {
       let collision = false;
       
@@ -125,6 +65,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
             const posY = lowestValidY - 1;
             const posZ = position.z + y;
             
+            // Check if we'd hit the bottom or another block
             if (
               posY < 0 || 
               (posX >= 0 && posX < gridSize && 
@@ -145,6 +86,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     return { x: position.x, y: lowestValidY, z: position.z };
   }, [grid, currentBlock.shape, position]);
 
+  // Generate a grid fingerprint for change detection
   const getGridFingerprint = () => {
     let fingerprint = "";
     const gridSize = grid.length || 10;
@@ -162,8 +104,10 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     return fingerprint;
   };
 
+  // Effect to clean up old meshes when grid changes
   useEffect(() => {
     return () => {
+      // Clean up all meshes on component unmount
       meshRefs.current.forEach(mesh => {
         if (mesh.geometry) mesh.geometry.dispose();
         if (mesh.material) {
@@ -175,79 +119,15 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
         }
       });
       meshRefs.current.clear();
-      
-      particlesRef.current.forEach(particles => {
-        if (particles.geometry) particles.geometry.dispose();
-        if (particles.material) {
-          if (Array.isArray(particles.material)) {
-            particles.material.forEach(mat => mat.dispose());
-          } else {
-            particles.material.dispose();
-          }
-        }
-        if (particles.parent) particles.parent.remove(particles);
-      });
-      particlesRef.current = [];
     };
   }, []);
-
-  useEffect(() => {
-    if (blinkingLayers.length > 0 && !dustParticlesActive.current) {
-      dustParticlesActive.current = true;
-      
-      const activeSystems: any[] = [];
-      const gridSize = grid.length || 10;
-      
-      blinkingLayers.forEach(layer => {
-        if (layer.type === 'row' && layer.y !== undefined && layer.z !== undefined) {
-          for (let x = 0; x < gridSize; x++) {
-            if (grid[layer.y][x][layer.z] !== 0) {
-              const color = getColor(grid[layer.y][x][layer.z]);
-              const particleSystem = createDustExplosion([x, layer.y, layer.z], color);
-              activeSystems.push(particleSystem);
-            }
-          }
-        } else if (layer.type === 'column' && layer.y !== undefined && layer.x !== undefined) {
-          for (let z = 0; z < gridSize; z++) {
-            if (grid[layer.y][layer.x][z] !== 0) {
-              const color = getColor(grid[layer.y][layer.x][z]);
-              const particleSystem = createDustExplosion([layer.x, layer.y, z], color);
-              activeSystems.push(particleSystem);
-            }
-          }
-        } else if (layer.type === 'column' && layer.x !== undefined && layer.z !== undefined) {
-          for (let y = 0; y < gridSize; y++) {
-            if (grid[y][layer.x][layer.z] !== 0) {
-              const color = getColor(grid[y][layer.x][layer.z]);
-              const particleSystem = createDustExplosion([layer.x, y, layer.z], color);
-              activeSystems.push(particleSystem);
-            }
-          }
-        } else if (layer.type === 'layer' && layer.y !== undefined) {
-          for (let x = 0; x < gridSize; x++) {
-            for (let z = 0; z < gridSize; z++) {
-              if (grid[layer.y][x][z] !== 0) {
-                const color = getColor(grid[layer.y][x][z]);
-                const particleSystem = createDustExplosion([x, layer.y, z], color);
-                activeSystems.push(particleSystem);
-              }
-            }
-          }
-        }
-      });
-      
-      particlesRef.current = activeSystems.map(system => system.points);
-    }
-    
-    if (blinkingLayers.length === 0) {
-      dustParticlesActive.current = false;
-    }
-  }, [blinkingLayers, grid]);
-
-  useFrame((state, delta) => {
+  
+  // Blinking animation for complete layers
+  useFrame(() => {
+    // Update blink phase for blinking layers (about 5 times per second)
     if (blinkingLayers.length > 0) {
       blinkingTimerRef.current += 1;
-      if (blinkingTimerRef.current >= 12) {
+      if (blinkingTimerRef.current >= 12) { // ~200ms at 60fps
         blinkingTimerRef.current = 0;
         blinkPhaseRef.current = !blinkPhaseRef.current;
       }
@@ -261,9 +141,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
       gridRef.current = currentFingerprint;
       forceUpdateRef.current += 1;
       
+      // Clean up old meshes that are no longer needed
       const newKeys = new Set<string>();
       const gridSize = grid.length || 10;
       
+      // Collect keys for current blocks
       for (let y = 0; y < gridSize; y++) {
         for (let x = 0; x < gridSize; x++) {
           for (let z = 0; z < gridSize; z++) {
@@ -274,6 +156,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
         }
       }
       
+      // Remove meshes that are no longer in the grid
       meshRefs.current.forEach((mesh, key) => {
         if (!newKeys.has(key)) {
           if (mesh.parent) mesh.parent.remove(mesh);
@@ -288,47 +171,10 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
           meshRefs.current.delete(key);
         }
       });
-      
-      if (particlesRef.current.length > 0) {
-        const activeSystems = scene.children.filter(
-          child => child instanceof THREE.Points && 
-          particlesRef.current.includes(child)
-        ) as THREE.Points[];
-        
-        activeSystems.forEach(points => {
-          const index = scene.children.indexOf(points);
-          if (index !== -1) {
-            const positions = points.geometry.attributes.position.array as Float32Array;
-            const count = positions.length / 3;
-            
-            for (let i = 0; i < count; i++) {
-              positions[i * 3] += (Math.random() - 0.5) * 0.05;
-              positions[i * 3 + 1] += (Math.random() - 0.5) * 0.05 - 0.02;
-              positions[i * 3 + 2] += (Math.random() - 0.5) * 0.05;
-              
-              (points.material as THREE.PointsMaterial).opacity -= 0.005;
-            }
-            
-            points.geometry.attributes.position.needsUpdate = true;
-            
-            if ((points.material as THREE.PointsMaterial).opacity <= 0) {
-              scene.remove(points);
-              if (points.geometry) points.geometry.dispose();
-              if (points.material) {
-                if (Array.isArray(points.material)) {
-                  points.material.forEach(mat => mat.dispose());
-                } else {
-                  points.material.dispose();
-                }
-              }
-              particlesRef.current = particlesRef.current.filter(p => p !== points);
-            }
-          }
-        });
-      }
     }
   });
 
+  // Check if a cell is in a blinking layer
   const isInBlinkingLayer = (y: number, x: number, z: number) => {
     if (!blinkingLayers.length) return false;
     
@@ -349,13 +195,15 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     });
   };
 
+  // Render placed blocks using individual instances with explicit cleanup
   const renderPlacedBlocks = useMemo(() => {
     console.log("Rendering placed blocks with force update:", forceUpdateRef.current);
     
     const blocks: JSX.Element[] = [];
     const gridSize = grid.length || 10;
-    const timestamp = Date.now();
+    const timestamp = Date.now(); // Add timestamp to ensure uniqueness
     
+    // Generate new block meshes every time grid changes
     for (let y = 0; y < gridSize; y++) {
       for (let x = 0; x < gridSize; x++) {
         for (let z = 0; z < gridSize; z++) {
@@ -364,8 +212,10 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
             const posKey = `${y}-${x}-${z}`;
             const uniqueKey = `block-${posKey}-${cellValue}-${timestamp}-${forceUpdateRef.current}`;
             
+            // Check if this block is in a blinking layer
             const isBlinking = isInBlinkingLayer(y, x, z);
             
+            // Skip rendering during the "off" phase of blinking
             if (isBlinking && blinkPhaseRef.current) {
               continue;
             }
@@ -398,11 +248,13 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     return blocks;
   }, [grid, forceUpdateRef.current, blinkingLayers, blinkPhaseRef.current]);
 
+  // Render ghost block (prediction)
   const renderGhostBlock = useMemo(() => {
     const blocks = [];
     const pattern = currentBlock.shape;
     const gridSize = grid.length || 10;
     
+    // Enhanced ghost block rendering
     if (ghostPosition.y < position.y) {
       for (let y = 0; y < pattern.length; y++) {
         for (let x = 0; x < pattern[y].length; x++) {
@@ -411,6 +263,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
             const posY = ghostPosition.y;
             const posZ = ghostPosition.z + y;
             
+            // Skip rendering blocks that would be outside the grid
             if (posX < 0 || posX >= gridSize || posY < 0 || posY >= gridSize || posZ < 0 || posZ >= gridSize) {
               continue;
             }
@@ -423,11 +276,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
               >
                 <boxGeometry args={[0.95, 0.95, 0.95]} />
                 <meshStandardMaterial 
-                  color="#F97316"
+                  color="#F97316"  // Bright Orange for high visibility
                   transparent={true} 
-                  opacity={0.3} 
+                  opacity={0.3}    // Slightly more transparent
                   wireframe={true}
-                  wireframeLinewidth={2}
+                  wireframeLinewidth={2}  // Increased line thickness
                 />
               </mesh>
             );
@@ -439,6 +292,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     return blocks;
   }, [currentBlock.shape, ghostPosition, position.y, grid.length]);
 
+  // Render current falling block
   const renderCurrentBlock = useMemo(() => {
     const blocks = [];
     const pattern = currentBlock.shape;
@@ -447,10 +301,12 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     for (let y = 0; y < pattern.length; y++) {
       for (let x = 0; x < pattern[y].length; x++) {
         if (pattern[y][x]) {
+          // Calculate absolute positions
           const posX = position.x + x;
           const posY = position.y;
           const posZ = position.z + y;
           
+          // Skip rendering blocks that would be outside the grid
           if (posX < 0 || posX >= gridSize || posY < 0 || posY >= gridSize || posZ < 0 || posZ >= gridSize) {
             continue;
           }
@@ -476,6 +332,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     return blocks;
   }, [currentBlock, position, blockColor, grid.length]);
 
+  // Render grid boundaries
   const renderGridBoundaries = useMemo(() => {
     const gridSize = grid.length || 10;
     
@@ -492,11 +349,13 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     );
   }, [grid]);
 
+  // Render prediction lines between current block and ghost block
   const renderPredictionLines = useMemo(() => {
     const lines = [];
     const pattern = currentBlock.shape;
     const gridSize = grid.length || 10;
     
+    // Only render if the ghost is lower than the current position
     if (ghostPosition.y < position.y) {
       for (let y = 0; y < pattern.length; y++) {
         for (let x = 0; x < pattern[y].length; x++) {
@@ -509,6 +368,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
             const ghostPosY = ghostPosition.y;
             const ghostPosZ = ghostPosition.z + y;
             
+            // Skip rendering lines for blocks that would be outside the grid
             if (
               currentPosX < 0 || currentPosX >= gridSize || 
               currentPosY < 0 || currentPosY >= gridSize || 
@@ -520,16 +380,21 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
               continue;
             }
             
+            // Create line manually using mesh and geometry
             const lineColor = new THREE.Color(blockColor);
             
+            // Calculate the midpoint and length for the cylinder
             const start = new THREE.Vector3(currentPosX, currentPosY, currentPosZ);
             const end = new THREE.Vector3(ghostPosX, ghostPosY, ghostPosZ);
             const direction = end.clone().sub(start);
             const length = direction.length();
             const midpoint = start.clone().add(direction.multiplyScalar(0.5));
             
+            // Calculate rotation to orient the cylinder
+            const cylinderDirection = new THREE.Vector3(0, 1, 0);
+            const targetDirection = direction.clone().normalize();
             const quaternion = new THREE.Quaternion();
-            quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
+            quaternion.setFromUnitVectors(cylinderDirection, targetDirection);
             
             lines.push(
               <mesh 
@@ -553,6 +418,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     return lines;
   }, [currentBlock.shape, position, ghostPosition, blockColor, grid.length]);
 
+  // Use a group component with a key to force full replacement
   return (
     <group key={`full-grid-${forceUpdateRef.current}-${Date.now()}`}>
       {renderPlacedBlocks}
