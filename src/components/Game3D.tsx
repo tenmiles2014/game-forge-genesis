@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -23,7 +24,6 @@ const BLINK_DURATION = 1000; // Duration of blinking effect in ms
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
   { name: "Top View", position: [4.5, 25, 4.5], target: [4.5, 0, 4.5] },
-  { name: "Side View", position: [25, 5, 4.5], target: [0, 5, 4.5] },
   { name: "Front View", position: [4.5, 5, 25], target: [4.5, 5, 0] },
 ];
 
