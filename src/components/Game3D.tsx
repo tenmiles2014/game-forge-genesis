@@ -312,10 +312,10 @@ const Game3D: React.FC = () => {
     setPosition(newPosition);
     
     console.log('Function sequence: Checking for level up condition');
-    if (layersCleared > 0 && level < MAX_LEVEL) {
+    if (linesCleared > 0 && level < MAX_LEVEL) {
       if (level < 5) {
         const layerThreshold = level + 1;
-        if (layersCleared >= layerThreshold) {
+        if (linesCleared >= layerThreshold) {
           const newLevel = Math.min(MAX_LEVEL, level + 1);
           
           const levelUpBonus = newLevel * 100;
@@ -333,7 +333,7 @@ const Game3D: React.FC = () => {
         const tierLayerTarget = 20;
         
         setLinesCleared(prev => {
-          const newTotal = prev + layersCleared;
+          const newTotal = prev + linesCleared;
           if (Math.floor(prev / tierLayerTarget) < Math.floor(newTotal / tierLayerTarget)) {
             const newLevel = Math.min(MAX_LEVEL, level + 1);
             
