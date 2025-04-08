@@ -23,6 +23,8 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
   const { scene } = useThree();
   const blinkingTimerRef = useRef<number>(0);
   const blinkPhaseRef = useRef<boolean>(false);
+  const particlesRef = useRef<THREE.Points[]>([]);
+  const dustParticlesActive = useRef<boolean>(false);
   
   // Color mapping
   const getColor = (colorIndex: number) => {
@@ -48,6 +50,81 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     return colorMap[currentBlock.color] || new THREE.Color('gray');
   }, [currentBlock.color]);
 
+  // Create dust explosion effect
+  const createDustExplosion = (position: [number, number, number], color: THREE.Color) => {
+    // Create particle geometry
+    const particleCount = 50;
+    const particleGeometry = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(particleCount * 3);
+    
+    // Set initial positions (all at the center)
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions[i * 3] = position[0];
+      particlePositions[i * 3 + 1] = position[1];
+      particlePositions[i * 3 + 2] = position[2];
+    }
+    
+    particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    
+    // Create particle material with custom colors
+    const particleMaterial = new THREE.PointsMaterial({
+      color: color,
+      size: 0.2,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+    });
+    
+    // Create particles system
+    const particles = new THREE.Points(particleGeometry, particleMaterial);
+    
+    // Store velocities for each particle
+    const velocities = Array(particleCount).fill(0).map(() => ({
+      x: (Math.random() - 0.5) * 0.3,
+      y: (Math.random() - 0.5) * 0.3,
+      z: (Math.random() - 0.5) * 0.3,
+    }));
+    
+    // Add to scene
+    scene.add(particles);
+    
+    // Store reference for update and cleanup
+    const particleSystem = {
+      points: particles,
+      velocities,
+      life: 1.0, // Life duration in seconds
+      update: (delta: number) => {
+        particleSystem.life -= delta;
+        
+        // Update positions based on velocities
+        const positions = particles.geometry.attributes.position.array as Float32Array;
+        for (let i = 0; i < particleCount; i++) {
+          positions[i * 3] += velocities[i].x;
+          positions[i * 3 + 1] += velocities[i].y;
+          positions[i * 3 + 2] += velocities[i].z;
+          
+          // Add gravity effect
+          velocities[i].y -= 0.01;
+        }
+        
+        // Update opacity based on remaining life
+        (particles.material as THREE.PointsMaterial).opacity = particleSystem.life;
+        
+        // Flag attributes as needing update
+        particles.geometry.attributes.position.needsUpdate = true;
+        
+        return particleSystem.life <= 0;
+      },
+      dispose: () => {
+        particles.geometry.dispose();
+        (particles.material as THREE.PointsMaterial).dispose();
+        scene.remove(particles);
+      }
+    };
+    
+    return particleSystem;
+  };
+  
   // Calculate ghost position (where block will land)
   const ghostPosition = useMemo(() => {
     let lowestValidY = position.y;
@@ -119,11 +196,83 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
         }
       });
       meshRefs.current.clear();
+      
+      // Clean up any remaining particle systems
+      particlesRef.current.forEach(particles => {
+        if (particles.geometry) particles.geometry.dispose();
+        if (particles.material) {
+          if (Array.isArray(particles.material)) {
+            particles.material.forEach(mat => mat.dispose());
+          } else {
+            particles.material.dispose();
+          }
+        }
+        if (particles.parent) particles.parent.remove(particles);
+      });
+      particlesRef.current = [];
     };
   }, []);
   
-  // Blinking animation for complete layers
-  useFrame(() => {
+  // Handle dust explosion creation when blinking changes to true
+  useEffect(() => {
+    // Create dust explosions when blinking layers appear
+    if (blinkingLayers.length > 0 && !dustParticlesActive.current) {
+      dustParticlesActive.current = true;
+      
+      const activeSystems: any[] = [];
+      const gridSize = grid.length || 10;
+      
+      // Create explosions for all blocks in blinking layers
+      blinkingLayers.forEach(layer => {
+        if (layer.type === 'row' && layer.y !== undefined && layer.z !== undefined) {
+          for (let x = 0; x < gridSize; x++) {
+            if (grid[layer.y][x][layer.z] !== 0) {
+              const color = getColor(grid[layer.y][x][layer.z]);
+              const particleSystem = createDustExplosion([x, layer.y, layer.z], color);
+              activeSystems.push(particleSystem);
+            }
+          }
+        } else if (layer.type === 'column' && layer.y !== undefined && layer.x !== undefined) {
+          for (let z = 0; z < gridSize; z++) {
+            if (grid[layer.y][layer.x][z] !== 0) {
+              const color = getColor(grid[layer.y][layer.x][z]);
+              const particleSystem = createDustExplosion([layer.x, layer.y, z], color);
+              activeSystems.push(particleSystem);
+            }
+          }
+        } else if (layer.type === 'column' && layer.x !== undefined && layer.z !== undefined) {
+          for (let y = 0; y < gridSize; y++) {
+            if (grid[y][layer.x][layer.z] !== 0) {
+              const color = getColor(grid[y][layer.x][layer.z]);
+              const particleSystem = createDustExplosion([layer.x, y, layer.z], color);
+              activeSystems.push(particleSystem);
+            }
+          }
+        } else if (layer.type === 'layer' && layer.y !== undefined) {
+          for (let x = 0; x < gridSize; x++) {
+            for (let z = 0; z < gridSize; z++) {
+              if (grid[layer.y][x][z] !== 0) {
+                const color = getColor(grid[layer.y][x][z]);
+                const particleSystem = createDustExplosion([x, layer.y, z], color);
+                activeSystems.push(particleSystem);
+              }
+            }
+          }
+        }
+      });
+      
+      // Store active systems for updating
+      particlesRef.current = activeSystems.map(system => system.points);
+    }
+    
+    // Reset when blinking ends
+    if (blinkingLayers.length === 0) {
+      dustParticlesActive.current = false;
+    }
+  }, [blinkingLayers, grid]);
+  
+  // Blinking animation for complete layers and update particle systems
+  useFrame((state, delta) => {
     // Update blink phase for blinking layers (about 5 times per second)
     if (blinkingLayers.length > 0) {
       blinkingTimerRef.current += 1;
@@ -171,6 +320,49 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
           meshRefs.current.delete(key);
         }
       });
+      
+      // Update and clean up finished particle systems
+      if (particlesRef.current.length > 0) {
+        const activeSystems = scene.children.filter(
+          child => child instanceof THREE.Points && 
+          particlesRef.current.includes(child)
+        ) as THREE.Points[];
+        
+        // Animate particles
+        activeSystems.forEach(points => {
+          const index = scene.children.indexOf(points);
+          if (index !== -1) {
+            const positions = points.geometry.attributes.position.array as Float32Array;
+            const count = positions.length / 3;
+            
+            for (let i = 0; i < count; i++) {
+              // Add random movement
+              positions[i * 3] += (Math.random() - 0.5) * 0.05;
+              positions[i * 3 + 1] += (Math.random() - 0.5) * 0.05 - 0.02; // Slight gravity
+              positions[i * 3 + 2] += (Math.random() - 0.5) * 0.05;
+              
+              // Fade out
+              (points.material as THREE.PointsMaterial).opacity -= 0.005;
+            }
+            
+            points.geometry.attributes.position.needsUpdate = true;
+            
+            // Remove particles that have faded out
+            if ((points.material as THREE.PointsMaterial).opacity <= 0) {
+              scene.remove(points);
+              if (points.geometry) points.geometry.dispose();
+              if (points.material) {
+                if (Array.isArray(points.material)) {
+                  points.material.forEach(mat => mat.dispose());
+                } else {
+                  points.material.dispose();
+                }
+              }
+              particlesRef.current = particlesRef.current.filter(p => p !== points);
+            }
+          }
+        });
+      }
     }
   });
 
