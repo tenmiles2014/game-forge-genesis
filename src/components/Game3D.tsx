@@ -17,6 +17,7 @@ const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
 const MAX_LEVEL = 99;
 const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
+const BLINK_DURATION = 1000; // Duration of blinking effect in ms
 
 const VIEW_POINTS: ViewPoint[] = [
   { name: "Default", position: [15, 15, 15] },
@@ -42,6 +43,13 @@ const Game3D: React.FC = () => {
   const gameBoardRef = useRef<HTMLDivElement>(null);
   const [linesCleared, setLinesCleared] = useState(0);
   const [layerBlockCounts, setLayerBlockCounts] = useState({ layer1: 0, layer2: 0 });
+  const [blinkingLayers, setBlinkingLayers] = useState<Array<{
+    type: 'row' | 'column' | 'layer', 
+    y?: number, 
+    x?: number, 
+    z?: number
+  }>>([]);
+  const [isBlinking, setIsBlinking] = useState(false);
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 50));
@@ -271,7 +279,7 @@ const Game3D: React.FC = () => {
     countBlocksByLayers(newGrid, level);
     
     console.log('Function sequence: Calling clearCompleteLayers()');
-    const layersCleared = clearCompleteLayers(newGrid);
+    clearCompleteLayers(newGrid);
     
     console.log('Function sequence: Setting up next block');
     const nextBlockPattern = nextBlock;
@@ -359,151 +367,193 @@ const Game3D: React.FC = () => {
   };
 
   const clearCompleteLayers = (grid: number[][][]) => {
-    let layersCleared = 0;
-    const gridCopy = JSON.parse(JSON.stringify(grid));
-    
     console.log('Function sequence: clearCompleteLayers() started');
     
-    console.log('Initial grid copy created:', {
-      gridSize: gridCopy.length,
-      dimensions: gridCopy.map(layer => layer.length)
-    });
-    
+    // Apply gravity to blocks first
     console.log('Function sequence: Applying gravity to blocks FIRST TIME (before clearing)');
-    applyGravityToBlocks(gridCopy);
+    applyGravityToBlocks(grid);
     
-    console.log('Grid state after first gravity application:', {
-      gridCopy: gridCopy.map(layer => 
-        layer.map(row => row.some(cell => cell !== 0))
-      )
-    });
+    // Find all complete layers
+    const completeLayers: Array<{
+      type: 'row' | 'column' | 'layer', 
+      y?: number, 
+      x?: number, 
+      z?: number
+    }> = [];
     
+    // Check for complete rows (X-axis lines at fixed Y,Z)
     for (let y = 0; y < GRID_SIZE; y++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         let rowFull = true;
         for (let x = 0; x < GRID_SIZE; x++) {
-          if (gridCopy[y][x][z] === 0) {
+          if (grid[y][x][z] === 0) {
             rowFull = false;
             break;
           }
         }
         
         if (rowFull) {
-          for (let x = 0; x < GRID_SIZE; x++) {
-            gridCopy[y][x][z] = 0;
-          }
-          layersCleared++;
-        }
-      }
-      
-      for (let x = 0; x < GRID_SIZE; x++) {
-        let rowFull = true;
-        for (let z = 0; z < GRID_SIZE; z++) {
-          if (gridCopy[y][x][z] === 0) {
-            rowFull = false;
-            break;
-          }
-        }
-        
-        if (rowFull) {
-          for (let z = 0; z < GRID_SIZE; z++) {
-            gridCopy[y][x][z] = 0;
-          }
-          layersCleared++;
+          completeLayers.push({ type: 'row', y, z });
         }
       }
     }
     
+    // Check for complete columns (Z-axis lines at fixed X,Y)
+    for (let y = 0; y < GRID_SIZE; y++) {
+      for (let x = 0; x < GRID_SIZE; x++) {
+        let rowFull = true;
+        for (let z = 0; z < GRID_SIZE; z++) {
+          if (grid[y][x][z] === 0) {
+            rowFull = false;
+            break;
+          }
+        }
+        
+        if (rowFull) {
+          completeLayers.push({ type: 'column', y, x });
+        }
+      }
+    }
+    
+    // Check for complete vertical columns (Y-axis lines at fixed X,Z)
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let z = 0; z < GRID_SIZE; z++) {
         let columnFull = true;
         for (let y = 0; y < GRID_SIZE; y++) {
-          if (gridCopy[y][x][z] === 0) {
+          if (grid[y][x][z] === 0) {
             columnFull = false;
             break;
           }
         }
         
         if (columnFull) {
-          for (let y = 0; y < GRID_SIZE; y++) {
-            gridCopy[y][x][z] = 0;
-          }
-          layersCleared++;
+          completeLayers.push({ type: 'column', x, z });
         }
       }
     }
     
+    // Check for complete horizontal layers (all blocks at a fixed Y)
     for (let y = 0; y < GRID_SIZE; y++) {
       let layerFull = true;
       for (let x = 0; x < GRID_SIZE && layerFull; x++) {
         for (let z = 0; z < GRID_SIZE && layerFull; z++) {
-          if (gridCopy[y][x][z] === 0) {
+          if (grid[y][x][z] === 0) {
             layerFull = false;
           }
         }
       }
       
       if (layerFull) {
-        for (let x = 0; x < GRID_SIZE; x++) {
-          for (let z = 0; z < GRID_SIZE; z++) {
-            gridCopy[y][x][z] = 0;
+        completeLayers.push({ type: 'layer', y });
+      }
+    }
+    
+    const layersCleared = completeLayers.length;
+    
+    // If we have layers to clear, start the blinking effect
+    if (layersCleared > 0) {
+      setBlinkingLayers(completeLayers);
+      setIsBlinking(true);
+      
+      // After the blinking duration, clear the layers
+      setTimeout(() => {
+        setIsBlinking(false);
+        setBlinkingLayers([]);
+        
+        const gridCopy = JSON.parse(JSON.stringify(grid));
+        
+        // Clear the complete layers
+        completeLayers.forEach(layer => {
+          if (layer.type === 'row' && layer.y !== undefined && layer.z !== undefined) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+              gridCopy[layer.y][x][layer.z] = 0;
+            }
+          } else if (layer.type === 'column' && layer.y !== undefined && layer.x !== undefined) {
+            for (let z = 0; z < GRID_SIZE; z++) {
+              gridCopy[layer.y][layer.x][z] = 0;
+            }
+          } else if (layer.type === 'column' && layer.x !== undefined && layer.z !== undefined) {
+            for (let y = 0; y < GRID_SIZE; y++) {
+              gridCopy[y][layer.x][layer.z] = 0;
+            }
+          } else if (layer.type === 'layer' && layer.y !== undefined) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+              for (let z = 0; z < GRID_SIZE; z++) {
+                gridCopy[layer.y][x][z] = 0;
+              }
+            }
+          }
+        });
+        
+        console.log('Function sequence: Applying gravity to blocks SECOND TIME (after clearing)');
+        applyGravityToBlocks(gridCopy);
+        
+        // Update the layer counts after clearing and applying gravity
+        countBlocksByLayers(gridCopy, level);
+        
+        // Calculate score based on layers cleared
+        const levelMultiplier = 1 + (level * 0.1);
+        const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
+        
+        console.log('Scoring details:', {
+          layersCleared,
+          basePoints: layersCleared * 10,
+          levelMultiplier,
+          totalPointsScored: pointsScored
+        });
+        
+        setScore(prevScore => prevScore + pointsScored);
+        setLinesCleared(prev => prev + layersCleared);
+        
+        toast({
+          title: `${layersCleared} lines cleared!`,
+          description: `+${pointsScored} points`,
+        });
+        
+        setGrid([...gridCopy]);
+        
+        console.log('Function sequence: clearCompleteLayers() completed');
+        
+        // Check for level up
+        if (layersCleared > 0 && level < MAX_LEVEL) {
+          if (level < 5) {
+            const layerThreshold = level + 1;
+            if (layersCleared >= layerThreshold) {
+              const newLevel = Math.min(MAX_LEVEL, level + 1);
+              
+              const levelUpBonus = newLevel * 100;
+              setScore(prevScore => prevScore + levelUpBonus);
+              
+              console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
+              setLevel(newLevel);
+              toast({
+                title: `Level Up!`,
+                description: `You are now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
+              });
+            }
+          } else {
+            const tier = Math.ceil(level / 2);
+            const tierLayerTarget = 20;
+            
+            const newTotal = linesCleared + layersCleared;
+            if (Math.floor(linesCleared / tierLayerTarget) < Math.floor(newTotal / tierLayerTarget)) {
+              const newLevel = Math.min(MAX_LEVEL, level + 1);
+              
+              const levelUpBonus = newLevel * 100;
+              setScore(prevScore => prevScore + levelUpBonus);
+              
+              console.log(`Function sequence: Level up triggered (${level} → ${newLevel})`);
+              setLevel(newLevel);
+              toast({
+                title: `Level Up!`,
+                description: `You are now on level ${newLevel}. Bonus: +${levelUpBonus} points!`,
+              });
+            }
           }
         }
-        layersCleared++;
-      }
+      }, BLINK_DURATION);
     }
     
-    console.log('Layers cleared details:', {
-      totalLayersCleared: layersCleared,
-      clearDetails: {
-        rowsClearedPerLayer: layersCleared,
-        columnsCleared: layersCleared,
-        completeLayers: layersCleared
-      }
-    });
-    
-    console.log('Grid state before second gravity application:', {
-      gridCopy: gridCopy.map(layer => 
-        layer.map(row => row.some(cell => cell !== 0))
-      )
-    });
-    
-    console.log('Function sequence: Applying gravity to blocks SECOND TIME (after clearing)');
-    applyGravityToBlocks(gridCopy);
-    
-    console.log('Grid state after second gravity application:', {
-      gridCopy: gridCopy.map(layer => 
-        layer.map(row => row.some(cell => cell !== 0))
-      )
-    });
-    
-    if (layersCleared > 0) {
-      const levelMultiplier = 1 + (level * 0.1);
-      const pointsScored = Math.floor(layersCleared * 10 * levelMultiplier);
-      
-      console.log('Scoring details:', {
-        layersCleared,
-        basePoints: layersCleared * 10,
-        levelMultiplier,
-        totalPointsScored: pointsScored
-      });
-      
-      setScore(prevScore => prevScore + pointsScored);
-      
-      setLinesCleared(prev => prev + layersCleared);
-      
-      toast({
-        title: `${layersCleared} lines cleared!`,
-        description: `+${pointsScored} points`,
-      });
-    }
-    
-    console.log('Function sequence: clearCompleteLayers() completed');
-    
-    // Update the layer counts after clearing and applying gravity
-    countBlocksByLayers(gridCopy, level);
-    
-    setGrid([...gridCopy]);
     return layersCleared;
   };
 
@@ -772,6 +822,7 @@ const Game3D: React.FC = () => {
                 grid={grid} 
                 currentBlock={currentBlock} 
                 position={position}
+                blinkingLayers={isBlinking ? blinkingLayers : []}
               />
               <OrbitControls 
                 ref={orbitControlsRef} 

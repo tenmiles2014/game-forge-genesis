@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
@@ -8,14 +7,22 @@ interface Grid3DProps {
   grid: number[][][];
   currentBlock: BlockPattern;
   position: { x: number; y: number; z: number };
+  blinkingLayers?: Array<{
+    type: 'row' | 'column' | 'layer', 
+    y?: number, 
+    x?: number, 
+    z?: number
+  }>;
 }
 
-const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
+const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingLayers = [] }) => {
   // For tracking grid changes and forcing re-renders
   const gridRef = useRef<string>("");
   const forceUpdateRef = useRef<number>(0);
   const meshRefs = useRef<Map<string, THREE.Mesh>>(new Map());
   const { scene } = useThree();
+  const blinkingTimerRef = useRef<number>(0);
+  const blinkPhaseRef = useRef<boolean>(false);
   
   // Color mapping
   const getColor = (colorIndex: number) => {
@@ -115,8 +122,20 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     };
   }, []);
   
-  // Force update every frame to check for grid changes
+  // Blinking animation for complete layers
   useFrame(() => {
+    // Update blink phase for blinking layers (about 5 times per second)
+    if (blinkingLayers.length > 0) {
+      blinkingTimerRef.current += 1;
+      if (blinkingTimerRef.current >= 12) { // ~200ms at 60fps
+        blinkingTimerRef.current = 0;
+        blinkPhaseRef.current = !blinkPhaseRef.current;
+      }
+    } else {
+      blinkPhaseRef.current = false;
+      blinkingTimerRef.current = 0;
+    }
+    
     const currentFingerprint = getGridFingerprint();
     if (currentFingerprint !== gridRef.current) {
       gridRef.current = currentFingerprint;
@@ -155,6 +174,27 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
   });
 
+  // Check if a cell is in a blinking layer
+  const isInBlinkingLayer = (y: number, x: number, z: number) => {
+    if (!blinkingLayers.length) return false;
+    
+    return blinkingLayers.some(layer => {
+      if (layer.type === 'row' && layer.y === y && layer.z === z) {
+        return true;
+      }
+      if (layer.type === 'column' && layer.y === y && layer.x === x) {
+        return true;
+      }
+      if (layer.type === 'column' && layer.x === x && layer.z === z) {
+        return true;
+      }
+      if (layer.type === 'layer' && layer.y === y) {
+        return true;
+      }
+      return false;
+    });
+  };
+
   // Render placed blocks using individual instances with explicit cleanup
   const renderPlacedBlocks = useMemo(() => {
     console.log("Rendering placed blocks with force update:", forceUpdateRef.current);
@@ -172,6 +212,14 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
             const posKey = `${y}-${x}-${z}`;
             const uniqueKey = `block-${posKey}-${cellValue}-${timestamp}-${forceUpdateRef.current}`;
             
+            // Check if this block is in a blinking layer
+            const isBlinking = isInBlinkingLayer(y, x, z);
+            
+            // Skip rendering during the "off" phase of blinking
+            if (isBlinking && blinkPhaseRef.current) {
+              continue;
+            }
+            
             blocks.push(
               <mesh 
                 key={uniqueKey}
@@ -185,7 +233,11 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
                 }}
               >
                 <boxGeometry args={[0.95, 0.95, 0.95]} />
-                <meshStandardMaterial color={getColor(cellValue)} />
+                <meshStandardMaterial 
+                  color={getColor(cellValue)} 
+                  emissive={isBlinking ? new THREE.Color('#ffffff') : undefined}
+                  emissiveIntensity={isBlinking ? 0.5 : 0}
+                />
               </mesh>
             );
           }
@@ -194,7 +246,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position }) => {
     }
     
     return blocks;
-  }, [grid, forceUpdateRef.current]);
+  }, [grid, forceUpdateRef.current, blinkingLayers, blinkPhaseRef.current]);
 
   // Render ghost block (prediction)
   const renderGhostBlock = useMemo(() => {
