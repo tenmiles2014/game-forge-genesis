@@ -88,13 +88,27 @@
 
 /* Background gradient and scene styling */
 body {
-  background: linear-gradient(135deg, #0f172a, #1e3a8a, #172554);
+  background: linear-gradient(135deg, #2a1a4a, #1e2b4a, #221F26);
   background-size: 400% 400%;
   animation: gradient 15s ease infinite;
   height: 100vh;
   margin: 0;
   padding: 0;
   overflow: hidden;
+}
+
+/* AR Mode Background */
+body.ar-mode {
+  background: transparent !important;
+  animation: none;
+}
+
+.ar-mode-container {
+  background: transparent !important;
+}
+
+.ar-mode-game-board {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 @keyframes gradient {
