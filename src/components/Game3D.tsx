@@ -908,6 +908,23 @@ const Game3D: React.FC = () => {
               </div>
             )}
             
+            {/* Block Limits for Mobile */}
+            {isMobile && !gamePaused && (
+              <div className="absolute top-0 right-0 mr-2 mt-2 bg-black bg-opacity-70 p-2 rounded-md text-white">
+                <h3 className="text-xs uppercase tracking-wide font-medium mb-1">BLOCK LIMITS</h3>
+                <div className="text-xs">
+                  <div className="flex justify-between">
+                    <span>Layer 2:</span>
+                    <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : ""}>{layerBlockCounts.layer2}/8</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Layer 3:</span>
+                    <span>0/5</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <Canvas camera={{ position: currentView.position, fov: isMobile ? 60 : 50 }}>
               <ambientLight intensity={0.5} />
               <pointLight position={[10, 10, 10]} />
@@ -937,7 +954,20 @@ const Game3D: React.FC = () => {
               <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Next Block</h3>
               <BlockPreview block={nextBlock} className="w-24 h-24 mx-auto" />
             </div>
-            <Grid3DLabels />
+            <div className="p-4 rounded-lg bg-black bg-opacity-30">
+              <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">BLOCK LIMITS</h3>
+              <div className="text-sm">
+                <div className="flex justify-between items-center">
+                  <span>Layer 2:</span>
+                  <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : ""}>{layerBlockCounts.layer2}/8</span>
+                </div>
+                <div className="flex justify-between items-center mt-1">
+                  <span>Layer 3:</span>
+                  <span>0/5</span>
+                </div>
+              </div>
+            </div>
+            <Grid3DLabels layerBlockCounts={layerBlockCounts} />
           </div>
         )}
       </div>
