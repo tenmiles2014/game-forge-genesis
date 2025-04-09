@@ -723,77 +723,9 @@ const Game3D: React.FC = () => {
   };
 
   const handleTouchStart = React.useCallback((event: React.TouchEvent) => {
-    if (!controlsEnabled || gamePaused || gameOver) return;
-    
-    const touchStartX = event.touches[0].clientX;
-    const touchStartY = event.touches[0].clientY;
-    
-    const handleTouchMove = (moveEvent: TouchEvent) => {
-      moveEvent.preventDefault();
-      
-      if (!controlsEnabled || gamePaused || gameOver) return;
-      
-      const touchEndX = moveEvent.touches[0].clientX;
-      const touchEndY = moveEvent.touches[0].clientY;
-      
-      const deltaX = touchEndX - touchStartX;
-      const deltaY = touchEndY - touchStartY;
-      
-      // Minimum swipe distance to register as a swipe
-      const swipeThreshold = 30;
-      
-      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
-        // Horizontal swipe
-        if (deltaX > 0) {
-          moveBlock('right');
-        } else {
-          moveBlock('left');
-        }
-      } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > swipeThreshold) {
-        // Vertical swipe
-        if (deltaY > 0) {
-          moveBlock('backward');
-        } else {
-          moveBlock('forward');
-        }
-      }
-    };
-    
-    const handleTouchEnd = () => {
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-    };
-    
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
-  }, [controlsEnabled, gamePaused, gameOver, moveBlock]);
-  
-  const handleDoubleTap = React.useCallback((event: React.TouchEvent) => {
-    if (!controlsEnabled || gamePaused || gameOver) return;
-    
-    // Double tap to rotate
-    rotateBlock('z');
-  }, [controlsEnabled, gamePaused, gameOver, rotateBlock]);
-  
-  const handleLongPress = React.useCallback((event: React.TouchEvent) => {
-    if (!controlsEnabled || gamePaused || gameOver) return;
-    
-    event.preventDefault();
-    
-    // Long press to drop block
-    const timer = setTimeout(() => {
-      dropBlock();
-    }, 500);
-    
-    const cancelLongPress = () => {
-      clearTimeout(timer);
-      document.removeEventListener('touchend', cancelLongPress);
-      document.removeEventListener('touchcancel', cancelLongPress);
-    };
-    
-    document.addEventListener('touchend', cancelLongPress);
-    document.addEventListener('touchcancel', cancelLongPress);
-  }, [controlsEnabled, gamePaused, gameOver, dropBlock]);
+    // We're keeping this only for the touch feedback but not for controlling blocks
+    // It will do nothing functional, but preserves the touch feedback for UI elements
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -876,15 +808,15 @@ const Game3D: React.FC = () => {
                 <BlockPreview block={nextBlock} className="w-10 h-10 mx-auto" />
               </div>
               <div className="rounded-lg bg-black bg-opacity-30 p-2">
-                <h3 className="text-xs uppercase tracking-wide font-medium text-gray-300 mb-1">BLOCK LIMITS</h3>
-                <div className="text-[10px]">
-                  <div className="flex justify-between">
-                    <span>Layer 2:</span>
-                    <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : ""}>{layerBlockCounts.layer2}/8</span>
+                <h3 className="text-xs uppercase tracking-wide font-medium text-white mb-1">BLOCK LIMITS</h3>
+                <div className="text-[10px] text-white">
+                  <div className="flex justify-between text-white">
+                    <span className="text-white">Layer 2:</span>
+                    <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : "text-white"}>{layerBlockCounts.layer2}/8</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Layer 3:</span>
-                    <span>0/5</span>
+                  <div className="flex justify-between text-white">
+                    <span className="text-white">Layer 3:</span>
+                    <span className="text-white">0/5</span>
                   </div>
                 </div>
               </div>
@@ -912,8 +844,6 @@ const Game3D: React.FC = () => {
             ref={gameBoardRef}
             tabIndex={0}
             onTouchStart={handleTouchStart}
-            onDoubleClick={handleDoubleTap as any}
-            onTouchStartCapture={handleLongPress}
           >
             {/* Countdown Label */}
             {!gamePaused && !gameOver && (
