@@ -810,11 +810,11 @@ const Game3D: React.FC = () => {
               <div className="rounded-lg bg-black bg-opacity-30 p-2">
                 <h3 className="text-xs uppercase tracking-wide font-medium text-white mb-1">BLOCK LIMITS</h3>
                 <div className="text-[10px] text-white">
-                  <div className="flex justify-between text-white">
+                  <div className="flex justify-between">
                     <span className="text-white">Layer 2:</span>
                     <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : "text-white"}>{layerBlockCounts.layer2}/8</span>
                   </div>
-                  <div className="flex justify-between text-white">
+                  <div className="flex justify-between">
                     <span className="text-white">Layer 3:</span>
                     <span className="text-white">0/5</span>
                   </div>
