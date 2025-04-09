@@ -15,10 +15,12 @@ interface ScoreDisplayProps {
 const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score }) => {
   return (
     <div className="p-4 rounded-lg bg-black bg-opacity-30 text-center">
+      <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">SCORE</h3>
       <div className="text-2xl font-bold text-white">{score}</div>
       
-      {/* Level Up Criteria */}
-      <div className="mt-2 text-left">
+      {/* Level Up Criteria - Now positioned below the score */}
+      <div className="mt-4 text-left border-t border-gray-700 pt-3">
+        <h4 className="text-xs uppercase tracking-wide font-medium text-gray-300 mb-2">LEVEL UP CRITERIA</h4>
         <div className="flex items-center gap-1.5 text-sm text-cyan-400">
           <Layers className="h-4 w-4" />
           <span>2 layers simultaneously</span>
@@ -30,9 +32,8 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score }) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-1.5 text-sm text-sky-400 cursor-help mt-1">
-                <Layers className="h-4 w-4" />
-                <span>Level Up Criteria</span>
-                <Info className="h-3.5 w-3.5" />
+                <Info className="h-3.5 w-3.5 mr-1" />
+                <span>More information</span>
               </div>
             </TooltipTrigger>
             <TooltipContent side="right" className="max-w-xs">
