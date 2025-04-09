@@ -908,9 +908,9 @@ const Game3D: React.FC = () => {
               </div>
             )}
             
-            {/* Block Limits for Mobile */}
+            {/* Updated Mobile Block Limits section */}
             {isMobile && !gamePaused && (
-              <div className="absolute top-0 right-0 mr-2 mt-2 bg-black bg-opacity-70 p-2 rounded-md text-white">
+              <div className="absolute top-0 right-0 mr-2 mt-2 bg-black bg-opacity-70 p-2 rounded-md text-white z-10">
                 <h3 className="text-xs uppercase tracking-wide font-medium mb-1">BLOCK LIMITS</h3>
                 <div className="text-xs">
                   <div className="flex justify-between">

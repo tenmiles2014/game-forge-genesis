@@ -44,21 +44,7 @@ const Grid3DLabels: React.FC<Grid3DLabelsProps> = ({ layerBlockCounts }) => {
       </div>
 
       {/* Block Limits section */}
-      {layerBlockCounts && (
-        <div className="absolute top-0 left-0 ml-2 mt-2 bg-black bg-opacity-70 p-2 rounded-md text-white">
-          <h3 className="text-xs uppercase tracking-wide font-medium mb-1">BLOCK LIMITS</h3>
-          <div className="text-xs">
-            <div className="flex justify-between">
-              <span>Layer 2:</span>
-              <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : ""}>{layerBlockCounts.layer2}/8</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Layer 3:</span>
-              <span>0/5</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Removing the block limits section from labels, as per user request */}
     </div>
   );
 };
