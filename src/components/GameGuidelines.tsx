@@ -14,7 +14,7 @@ const GameGuidelines: React.FC = () => {
   return (
     <Dialog>
       <DialogTrigger className="w-full text-left">
-        <div className="flex items-center gap-2 px-2 py-1.5 hover:bg-accent hover:text-white"> {/* Changed text color */}
+        <div className="flex items-center gap-2 px-2 py-1.5 hover:text-[#33C3F0] transition-colors"> {/* Changed hover text color */}
           <Info className="h-4 w-4" />
           Game Guidelines
         </div>
