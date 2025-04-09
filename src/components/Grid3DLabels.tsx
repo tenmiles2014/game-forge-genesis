@@ -47,13 +47,13 @@ const Grid3DLabels: React.FC<Grid3DLabelsProps> = ({ layerBlockCounts }) => {
       {!isMobile && layerBlockCounts && (
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 px-3 py-1 rounded-md">
           <div className="text-[10px] text-white">
-            <div className="flex justify-between">
-              <span>Layer 2:</span>
-              <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : ""}>{layerBlockCounts.layer2}/8</span>
+            <div className="flex justify-between text-white">
+              <span className="text-white">Layer 2:</span>
+              <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : "text-white"}>{layerBlockCounts.layer2}/8</span>
             </div>
-            <div className="flex justify-between">
-              <span>Layer 3:</span>
-              <span>0/5</span>
+            <div className="flex justify-between text-white">
+              <span className="text-white">Layer 3:</span>
+              <span className="text-white">0/5</span>
             </div>
           </div>
         </div>
