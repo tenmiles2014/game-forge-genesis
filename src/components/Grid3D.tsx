@@ -1,3 +1,4 @@
+
 import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { BlockPattern } from './BlockPatterns';
@@ -254,7 +255,7 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
     const pattern = currentBlock.shape;
     const gridSize = grid.length || 10;
     
-    // Enhanced ghost block rendering
+    // Enhanced ghost block rendering with glowy effect
     if (ghostPosition.y < position.y) {
       for (let y = 0; y < pattern.length; y++) {
         for (let x = 0; x < pattern[y].length; x++) {
@@ -276,11 +277,13 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
               >
                 <boxGeometry args={[0.95, 0.95, 0.95]} />
                 <meshStandardMaterial 
-                  color="#F97316"  // Bright Orange for high visibility
+                  color="#F97316"  // Bright Orange
                   transparent={true} 
-                  opacity={0.3}    // Slightly more transparent
+                  opacity={0.6}    // More visible
+                  emissive="#F97316"  // Add emissive glow
+                  emissiveIntensity={0.5}  // Adjust glow intensity
                   wireframe={true}
-                  wireframeLinewidth={2}  // Increased line thickness
+                  wireframeLinewidth={2}  // Thick wireframe lines
                 />
               </mesh>
             );
@@ -432,3 +435,4 @@ const Grid3D: React.FC<Grid3DProps> = ({ grid, currentBlock, position, blinkingL
 };
 
 export default Grid3D;
+
