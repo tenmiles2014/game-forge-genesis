@@ -122,6 +122,36 @@ const Game3D: React.FC = () => {
     return { isGameOver: false, reason: '' };
   };
 
+  const resetGame = () => {
+    const newGrid = initializeGrid();
+    setGrid(newGrid);
+    setScore(0);
+    setLinesCleared(0);
+    setCurrentBlock(getRandomBlockPattern());
+    setNextBlock(getRandomBlockPattern());
+    setPosition({...INITIAL_POSITION});
+    setGameOver(false);
+    setControlsEnabled(true);
+    setLevel(1);
+    setGamePaused(true);
+    
+    // Reset layer block counts
+    setLayerBlockCounts({ layer1: 0, layer2: 0 });
+    
+    // Reset the countdown counter
+    setLayersUntilCollision(0);
+    
+    if (gravityTimerRef.current) {
+      clearInterval(gravityTimerRef.current);
+      gravityTimerRef.current = null;
+    }
+    
+    toast({
+      title: "New Game",
+      description: "Game has been reset. Click Start to begin!",
+    });
+  };
+
   useEffect(() => {
     resetGame();
   }, []);
