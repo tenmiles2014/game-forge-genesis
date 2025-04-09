@@ -870,4 +870,23 @@ const Game3D: React.FC = () => {
                 enabled={controlsEnabled}
                 minDistance={8}
                 maxDistance={30}
-                target={currentView.target || [4.5,
+                target={currentView.target || [4.5, 4.5, 4.5]}
+              />
+            </Canvas>
+          </div>
+        </div>
+        
+        <div className="game-score p-2 md:p-4 rounded-lg w-full md:w-64 flex flex-col gap-2 md:gap-4">
+          <ScoreDisplay score={score} />
+          <LevelDisplay level={level} />
+          <BlockPreview nextBlock={nextBlock} />
+          <GuidelineOverlay />
+          <Grid3DLabels />
+          <Gyroscope />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Game3D;
