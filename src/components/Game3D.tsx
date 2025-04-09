@@ -13,6 +13,7 @@ import GuidelineOverlay from './GuidelineOverlay';
 import Grid3DLabels from './Grid3DLabels';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CameraIcon, ArrowUp, ArrowLeft } from 'lucide-react';
+import MobileControlsOverlay from './MobileControlsOverlay';
 
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
@@ -867,16 +868,16 @@ const Game3D: React.FC = () => {
         <div className="flex-1 min-h-[350px] sm:min-h-[400px] md:min-h-[550px] lg:min-h-[650px]">
           {/* Mobile Game Stats Grid - Only visible on mobile */}
           {isMobile && (
-            <div className="grid grid-cols-2 grid-rows-2 gap-2 mb-2 p-2 bg-black bg-opacity-30 rounded-lg">
+            <div className="grid grid-cols-2 grid-rows-2 gap-1 mb-2 p-1 bg-black bg-opacity-30 rounded-lg max-h-[110px]">
               <ScoreDisplay score={score} />
               <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
-              <div className="rounded-lg bg-black bg-opacity-30 p-3 text-center">
+              <div className="rounded-lg bg-black bg-opacity-30 p-2 text-center">
                 <h3 className="text-xs uppercase tracking-wide font-medium text-gray-300 mb-1">NEXT</h3>
-                <BlockPreview block={nextBlock} className="w-14 h-14 mx-auto" />
+                <BlockPreview block={nextBlock} className="w-10 h-10 mx-auto" />
               </div>
-              <div className="rounded-lg bg-black bg-opacity-30 p-3">
+              <div className="rounded-lg bg-black bg-opacity-30 p-2">
                 <h3 className="text-xs uppercase tracking-wide font-medium text-gray-300 mb-1">BLOCK LIMITS</h3>
-                <div className="text-xs">
+                <div className="text-[10px]">
                   <div className="flex justify-between">
                     <span>Layer 2:</span>
                     <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : ""}>{layerBlockCounts.layer2}/8</span>
@@ -938,6 +939,15 @@ const Game3D: React.FC = () => {
                 target={currentView.target || [4.5, 4.5, 4.5]}
               />
             </Canvas>
+            
+            {/* Mobile Controls Overlay - Only visible on mobile and when game is active */}
+            {isMobile && !gamePaused && !gameOver && (
+              <MobileControlsOverlay
+                onMove={moveBlock}
+                onRotate={() => rotateBlock('z')}
+                onDrop={dropBlock}
+              />
+            )}
           </div>
         </div>
         

@@ -1,76 +1,77 @@
 
 import React, { useState } from 'react';
+import { Info, X } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import { X, Info, Gamepad } from 'lucide-react';
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger, 
-} from "@/components/ui/popover";
 
-interface GuidelineOverlayProps {
-  className?: string;
-}
-
-const GuidelineOverlay: React.FC<GuidelineOverlayProps> = ({ className }) => {
-  const [isVisible, setIsVisible] = useState(true);
-  
-  if (!isVisible) return null;
+const GuidelineOverlay: React.FC = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const isMobile = useIsMobile();
 
   return (
-    <div 
-      className={`fixed bottom-5 left-5 z-10 transition-all duration-300 max-w-xs rounded-lg bg-black bg-opacity-80 border border-gray-700 shadow-lg ${className}`}
-    >
-      <div className="p-4">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-lg font-bold text-white">Controls</h3>
-          <div className="flex gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-6 w-6 text-gray-400 hover:text-white hover:bg-transparent"
-              onClick={() => setIsVisible(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        className="fixed bottom-3 right-3 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 border-gray-600 z-20"
+        onClick={() => setIsVisible(true)}
+      >
+        <Info className="h-4 w-4 text-gray-300" />
+      </Button>
+
+      {isVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 overflow-y-auto p-4 flex flex-col">
+          <Button
+            variant="ghost"
+            className="self-end p-2 text-gray-400 hover:text-white"
+            onClick={() => setIsVisible(false)}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+          
+          <div className="max-w-lg mx-auto text-gray-200 text-sm space-y-4 mt-4">
+            <h2 className="text-xl font-bold text-white">Game Guidelines</h2>
+            
+            <div>
+              <h3 className="font-bold text-white mb-1">Game Rules:</h3>
+              <ul className="list-disc pl-6 space-y-1">
+                <li>Clear lines by filling an entire row, column, or layer with blocks.</li>
+                <li>Block limits: Layer 2 max 8 blocks, Layer 3 max 5 blocks.</li>
+                <li>Game over if blocks exceed limits or reach above layer 3.</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-bold text-white mb-1">Controls:</h3>
+              {isMobile ? (
+                <ul className="list-disc pl-6 space-y-1">
+                  <li>Use the D-pad buttons to move blocks.</li>
+                  <li>Purple button to rotate blocks.</li>
+                  <li>Green button to drop blocks instantly.</li>
+                  <li>Double tap to rotate blocks.</li>
+                </ul>
+              ) : (
+                <ul className="list-disc pl-6 space-y-1">
+                  <li>Arrow keys to move blocks.</li>
+                  <li>Z key to rotate around Z-axis.</li>
+                  <li>X key to rotate around X-axis.</li>
+                  <li>Space to drop blocks instantly.</li>
+                </ul>
+              )}
+            </div>
+            
+            <div>
+              <h3 className="font-bold text-white mb-1">Scoring:</h3>
+              <ul className="list-disc pl-6 space-y-1">
+                <li>Clearing lines gives points based on current level.</li>
+                <li>Clearing multiple lines at once gives bonus points.</li>
+                <li>Level up for bigger score multipliers (but faster drop speed).</li>
+              </ul>
+            </div>
           </div>
         </div>
-        
-        <div className="text-sm text-gray-200 space-y-2">
-          <p><span className="font-medium">Arrow Keys:</span> Move</p>
-          <p><span className="font-medium">Z/X:</span> Rotate</p>
-          <p><span className="font-medium">Space:</span> Drop</p>
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="mt-1 w-full text-left flex items-center justify-start p-1 h-auto text-xs text-blue-400 hover:text-blue-300">
-                <Info className="h-3 w-3 mr-1" />
-                <span>View game rules</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-4 text-xs">
-              <h4 className="font-bold text-white mb-2">Game Rules</h4>
-              <div className="space-y-2 text-gray-300">
-                <p><span className="font-medium">Objective:</span> Clear layers by filling them completely.</p>
-                <p><span className="font-medium">Game Over Rules:</span></p>
-                <ul className="list-disc pl-4 space-y-1">
-                  <li>Layer 2 can have at most 8 blocks</li>
-                  <li>Layer 3 can have at most 5 blocks</li>
-                  <li>No blocks allowed above Layer 3</li>
-                </ul>
-                <p><span className="font-medium">Tips:</span></p>
-                <ul className="list-disc pl-4 space-y-1">
-                  <li>On mobile: Swipe to move, double-tap to rotate, long-press to drop</li>
-                  <li>Clear multiple layers at once to level up faster</li>
-                  <li>Watch your block counts in upper layers</li>
-                  <li>Use camera views to check your block placement</li>
-                </ul>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 

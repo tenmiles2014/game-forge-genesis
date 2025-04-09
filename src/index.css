@@ -5,141 +5,105 @@
 
 @layer base {
   :root {
-    --background: 222 47% 11%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 11%;
+    --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 47% 11%;
+    --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 210 40% 98%;
-    --primary-foreground: 222 47% 11%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 217 32% 17%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217 32% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217 32% 17%;
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62% 30%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 32% 17%;
-    --input: 217 32% 17%;
-    --ring: 212 26% 83%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
+}
 
+@layer base {
   * {
     @apply border-border;
   }
-  
   body {
-    @apply bg-game-background text-foreground;
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    width: 100vw;
-    overflow-x: hidden;
-  }
-
-  /* Adjust overflow for mobile devices */
-  @media (max-width: 768px) {
-    body {
-      overflow-y: auto;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-.game-board {
-  background-color: rgba(26, 31, 44, 0.8);
-  background-image: linear-gradient(rgba(42, 48, 64, 0.5) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(42, 48, 64, 0.5) 1px, transparent 1px);
-  background-size: 30px 30px;
-  backdrop-filter: blur(5px);
-}
-
-.block-shadow {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.game-container {
-  position: relative;
-  border: 2px solid rgba(74, 155, 247, 0.3);
-  border-radius: 8px;
-  height: fit-content;
-}
-
-.game-container::before {
-  content: '';
-  position: absolute;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  border: 1px solid rgba(74, 155, 247, 0.5);
-  border-radius: 10px;
-  pointer-events: none;
-}
-
-.game-score {
-  background: rgba(26, 31, 44, 0.8);
-  border: 1px solid rgba(74, 155, 247, 0.3);
-  box-shadow: 0 0 15px rgba(74, 155, 247, 0.2);
-}
-
-.game-circle {
-  background: radial-gradient(circle, transparent 60%, rgba(74, 155, 247, 0.2) 61%);
-}
-
-/* Mobile touch interaction improvements */
-@media (max-width: 640px) {
-  .game-container {
-    max-height: calc(100vh - 80px);
-  }
-  
-  .game-board {
-    touch-action: none;
-    user-select: none;
-  }
-  
-  /* Prevent accidental text selection on mobile */
-  .game-board * {
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  
-  /* Optimize controls spacing for small screens */
-  button {
-    touch-action: manipulation;
-  }
-}
-
-/* Animations for mobile feedback */
-@keyframes button-press {
-  0% { transform: scale(1); }
-  50% { transform: scale(0.95); }
-  100% { transform: scale(1); }
+/* Custom touch feedback animation for mobile controls */
+.touch-feedback {
+  transition: transform 0.1s ease-out;
 }
 
 .touch-feedback:active {
-  animation: button-press 0.2s ease-in-out;
+  transform: scale(0.95);
 }
 
-/* Ensure no delay on touch events */
-@media (hover: none) and (pointer: coarse) {
-  .game-board {
-    background-size: 20px 20px; /* Smaller grid on mobile */
+/* Background gradient and scene styling */
+body {
+  background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
   }
-  
-  button, a {
-    cursor: none;
-    -webkit-tap-highlight-color: transparent;
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
