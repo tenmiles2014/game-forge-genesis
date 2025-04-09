@@ -878,8 +878,11 @@ const Game3D: React.FC = () => {
         
         <div className="game-score p-2 md:p-4 rounded-lg w-full md:w-64 flex flex-col gap-2 md:gap-4">
           <ScoreDisplay score={score} />
-          <LevelDisplay level={level} />
-          <BlockPreview nextBlock={nextBlock} />
+          <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
+          <div className="p-4 rounded-lg bg-black bg-opacity-30">
+            <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Next Block</h3>
+            <BlockPreview block={nextBlock} className="w-24 h-24 mx-auto" />
+          </div>
           <GuidelineOverlay />
           <Grid3DLabels />
           <Gyroscope />

@@ -3,12 +3,17 @@ import React from 'react';
 import GameBlock from './GameBlock';
 import { BlockPattern } from './BlockPatterns';
 
-interface BlockPreviewProps {
+export interface BlockPreviewProps {
   block: BlockPattern;
   className?: string;
 }
 
 const BlockPreview: React.FC<BlockPreviewProps> = ({ block, className }) => {
+  if (!block || !block.shape) {
+    // Return an empty placeholder when block is undefined
+    return <div className={`${className} bg-gray-800 bg-opacity-20 rounded-lg`}></div>;
+  }
+  
   const maxRows = Math.max(block.shape.length, 4);
   const maxCols = Math.max(...block.shape.map(row => row.length), 4);
   
