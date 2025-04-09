@@ -865,14 +865,27 @@ const Game3D: React.FC = () => {
       
       <div className="game-container rounded-lg overflow-hidden w-full max-w-full md:max-w-[90vw] lg:max-w-[85vw] 2xl:max-w-[75vw] flex flex-col md:flex-row gap-2 md:gap-4 bg-black bg-opacity-30">
         <div className="flex-1 min-h-[350px] sm:min-h-[400px] md:min-h-[550px] lg:min-h-[650px]">
-          {/* Mobile Game Stats Row - Only visible on mobile */}
+          {/* Mobile Game Stats Grid - Only visible on mobile */}
           {isMobile && (
-            <div className="flex justify-between items-center mb-2 p-2 gap-2 bg-black bg-opacity-30 rounded-lg">
+            <div className="grid grid-cols-2 grid-rows-2 gap-2 mb-2 p-2 bg-black bg-opacity-30 rounded-lg">
               <ScoreDisplay score={score} />
               <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
-              <div className="rounded-lg bg-black bg-opacity-30 p-2">
-                <h3 className="text-xs uppercase tracking-wide font-medium text-gray-300 mb-1">Next</h3>
-                <BlockPreview block={nextBlock} className="w-16 h-16" />
+              <div className="rounded-lg bg-black bg-opacity-30 p-3 text-center">
+                <h3 className="text-xs uppercase tracking-wide font-medium text-gray-300 mb-1">NEXT</h3>
+                <BlockPreview block={nextBlock} className="w-14 h-14 mx-auto" />
+              </div>
+              <div className="rounded-lg bg-black bg-opacity-30 p-3">
+                <h3 className="text-xs uppercase tracking-wide font-medium text-gray-300 mb-1">BLOCK LIMITS</h3>
+                <div className="text-xs">
+                  <div className="flex justify-between">
+                    <span>Layer 2:</span>
+                    <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : ""}>{layerBlockCounts.layer2}/8</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Layer 3:</span>
+                    <span>0/5</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -905,23 +918,6 @@ const Game3D: React.FC = () => {
             {!gamePaused && !gameOver && (
               <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-black bg-opacity-70 px-3 py-1 rounded-md text-white font-semibold">
                 {layersUntilCollision} {layersUntilCollision === 1 ? 'layer' : 'layers'} until collision
-              </div>
-            )}
-            
-            {/* Updated Mobile Block Limits section */}
-            {isMobile && !gamePaused && (
-              <div className="absolute top-0 right-0 mr-2 mt-2 bg-black bg-opacity-70 p-2 rounded-md text-white z-10">
-                <h3 className="text-xs uppercase tracking-wide font-medium mb-1">BLOCK LIMITS</h3>
-                <div className="text-xs">
-                  <div className="flex justify-between">
-                    <span>Layer 2:</span>
-                    <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : ""}>{layerBlockCounts.layer2}/8</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Layer 3:</span>
-                    <span>0/5</span>
-                  </div>
-                </div>
               </div>
             )}
             
