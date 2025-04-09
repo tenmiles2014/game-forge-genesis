@@ -52,7 +52,6 @@ const Game3D: React.FC = () => {
   }>>([]);
   const [isBlinking, setIsBlinking] = useState(false);
   const [layersUntilCollision, setLayersUntilCollision] = useState<number>(0);
-  const [arModeEnabled, setArModeEnabled] = useState(false);
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 5)); // Updated to decrease by 5ms per level
@@ -791,53 +790,24 @@ const Game3D: React.FC = () => {
     });
   };
 
-  const toggleARMode = () => {
-    const newArModeState = !arModeEnabled;
-    setArModeEnabled(newArModeState);
-    
-    if (newArModeState) {
-      toast({
-        title: "AR Mode Enabled",
-        description: "Background is now transparent for AR-like experience",
-      });
-    } else {
-      toast({
-        title: "AR Mode Disabled",
-        description: "Returning to normal view",
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (arModeEnabled) {
-      document.body.classList.add('ar-mode');
-    } else {
-      document.body.classList.remove('ar-mode');
-    }
-    
-    return () => {
-      document.body.classList.remove('ar-mode');
-    };
-  }, [arModeEnabled]);
-
   return (
-    <div className={`flex flex-col justify-center items-center min-h-screen p-2 md:p-4 ${arModeEnabled ? 'ar-mode-container' : ''}`}>
+    <div className="flex flex-col justify-center items-center min-h-screen p-2 md:p-4">
       <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 md:mb-4 text-white text-center">
         3D Block Busters
       </h1>
       
-      <div className={`game-container rounded-lg overflow-hidden w-full max-w-full md:max-w-[90vw] lg:max-w-[85vw] 2xl:max-w-[75vw] flex flex-col md:flex-row gap-2 md:gap-4 ${arModeEnabled ? 'bg-transparent' : 'bg-black bg-opacity-30'}`}>
+      <div className="game-container rounded-lg overflow-hidden w-full max-w-full md:max-w-[90vw] lg:max-w-[85vw] 2xl:max-w-[75vw] flex flex-col md:flex-row gap-2 md:gap-4 bg-black bg-opacity-30">
         <div className="flex-1 min-h-[350px] sm:min-h-[400px] md:min-h-[550px] lg:min-h-[650px]">
           {/* Mobile Game Stats Grid - Only visible on mobile */}
           {isMobile && (
-            <div className={`grid grid-cols-2 grid-rows-2 gap-1 mb-2 p-1 rounded-lg max-h-[110px] ${arModeEnabled ? 'bg-transparent' : 'bg-black bg-opacity-30'}`}>
+            <div className="grid grid-cols-2 grid-rows-2 gap-1 mb-2 p-1 bg-black bg-opacity-30 rounded-lg max-h-[110px]">
               <ScoreDisplay score={score} />
               <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
-              <div className={`rounded-lg p-2 text-center ${arModeEnabled ? 'bg-black bg-opacity-30' : 'bg-black bg-opacity-30'}`}>
+              <div className="rounded-lg bg-black bg-opacity-30 p-2 text-center">
                 <h3 className="text-xs uppercase tracking-wide font-medium text-gray-300 mb-1">NEXT</h3>
                 <BlockPreview block={nextBlock} className="w-10 h-10 mx-auto" />
               </div>
-              <div className={`rounded-lg p-2 ${arModeEnabled ? 'bg-black bg-opacity-30' : 'bg-black bg-opacity-30'}`}>
+              <div className="rounded-lg bg-black bg-opacity-30 p-2">
                 <h3 className="text-xs uppercase tracking-wide font-medium text-white mb-1">BLOCK LIMITS</h3>
                 <div className="text-[10px] text-white">
                   <div className="flex justify-between">
@@ -858,8 +828,6 @@ const Game3D: React.FC = () => {
               viewPoints={VIEW_POINTS} 
               onSelectView={handleViewChange}
               className="flex-1 mr-1"
-              arModeEnabled={arModeEnabled}
-              onToggleARMode={isMobile ? toggleARMode : undefined}
             />
             
             <GameControls3D 
@@ -872,14 +840,14 @@ const Game3D: React.FC = () => {
           </div>
           
           <div 
-            className={`game-board rounded-lg overflow-hidden h-[350px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[650px] relative ${arModeEnabled ? 'ar-mode-game-board' : ''}`}
+            className="game-board rounded-lg overflow-hidden h-[350px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[650px] relative"
             ref={gameBoardRef}
             tabIndex={0}
             onTouchStart={handleTouchStart}
           >
             {/* Countdown Label */}
             {!gamePaused && !gameOver && (
-              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-black bg-opacity-70 px-3 py-1 rounded-md text-white font-semibold text-xs sm:text-sm whitespace-nowrap">
+              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-black bg-opacity-70 px-3 py-1 rounded-md text-white font-semibold text-xs sm:text-sm">
                 {layersUntilCollision} {layersUntilCollision === 1 ? 'layer' : 'layers'} until collision
               </div>
             )}
