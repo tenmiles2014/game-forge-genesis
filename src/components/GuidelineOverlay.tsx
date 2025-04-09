@@ -13,7 +13,7 @@ const GuidelineOverlay: React.FC = () => {
       <Button
         variant="outline"
         size="sm"
-        className="fixed top-3 right-3 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 border-gray-600 z-20"
+        className="fixed bottom-3 right-3 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 border-gray-600 z-20"
         onClick={() => setIsVisible(true)}
       >
         <Info className="h-4 w-4 text-gray-300" />
@@ -76,4 +76,3 @@ const GuidelineOverlay: React.FC = () => {
 };
 
 export default GuidelineOverlay;
-
