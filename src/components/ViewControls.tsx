@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { CameraIcon, ArrowUp, ArrowLeft, Smartphone } from 'lucide-react';
+import { CameraIcon, ArrowUp, ArrowLeft } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Tooltip,
@@ -21,17 +21,9 @@ interface ViewControlsProps {
   viewPoints: ViewPoint[];
   onSelectView: (viewPoint: ViewPoint) => void;
   className?: string;
-  arModeEnabled?: boolean;
-  onToggleARMode?: () => void;
 }
 
-const ViewControls: React.FC<ViewControlsProps> = ({ 
-  viewPoints, 
-  onSelectView, 
-  className,
-  arModeEnabled,
-  onToggleARMode
-}) => {
+const ViewControls: React.FC<ViewControlsProps> = ({ viewPoints, onSelectView, className }) => {
   const isMobile = useIsMobile();
   
   return (
@@ -54,29 +46,6 @@ const ViewControls: React.FC<ViewControlsProps> = ({
             </TooltipContent>
           </Tooltip>
         ))}
-        
-        {/* AR Mode Button - Mobile Only */}
-        {isMobile && onToggleARMode && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className={`w-8 h-8 sm:w-9 sm:h-9 ${
-                  arModeEnabled 
-                    ? "bg-purple-700 border-purple-500 text-white hover:bg-purple-800" 
-                    : "bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300"
-                }`}
-                onClick={onToggleARMode}
-              >
-                <Smartphone className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p className="text-xs">Mobile AR Mode</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
       </TooltipProvider>
     </div>
   );
