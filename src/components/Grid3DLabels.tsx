@@ -17,12 +17,6 @@ const Grid3DLabels: React.FC = () => {
         <Label className="text-white bg-black bg-opacity-70 px-3 py-1 rounded-md font-semibold">Bottom</Label>
       </div>
       
-      {/* Left label with indicator ball */}
-      <div className="absolute top-1/2 left-0 -translate-y-1/2 ml-2 flex items-center">
-        <div className="w-3 h-3 rounded-full bg-white mr-1 shadow-lg shadow-white/50"></div>
-        <Label className="text-white bg-black bg-opacity-70 px-3 py-1 rounded-md font-semibold">Left</Label>
-      </div>
-      
       {/* Right label with indicator ball */}
       <div className="absolute top-1/2 right-0 -translate-y-1/2 mr-2 flex items-center">
         <div className="w-3 h-3 rounded-full bg-white mr-1 shadow-lg shadow-white/50"></div>
@@ -45,3 +39,4 @@ const Grid3DLabels: React.FC = () => {
 };
 
 export default Grid3DLabels;
+
