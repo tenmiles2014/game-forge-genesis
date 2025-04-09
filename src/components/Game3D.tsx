@@ -11,8 +11,8 @@ import LevelDisplay from './LevelDisplay';
 import ViewControls, { ViewPoint } from './ViewControls';
 import GuidelineOverlay from './GuidelineOverlay';
 import Grid3DLabels from './Grid3DLabels';
-import Gyroscope from './Gyroscope';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CameraIcon, ArrowUp, ArrowLeft } from 'lucide-react';
 
 const GRID_SIZE = 10;
 const INITIAL_POSITION = { x: 4, y: GRID_SIZE - 1, z: 4 }; // Start at the top
@@ -21,9 +21,9 @@ const BASE_DROP_SPEED = 1000; // Base speed in ms (level 1)
 const BLINK_DURATION = 1000; // Duration of blinking effect in ms
 
 const VIEW_POINTS: ViewPoint[] = [
-  { name: "Default", position: [15, 15, 15] },
-  { name: "Top View", position: [4.5, 25, 4.5], target: [4.5, 0, 4.5] },
-  { name: "Front View", position: [4.5, 5, 25], target: [4.5, 5, 0] },
+  { name: "Default View", position: [15, 15, 15], icon: <CameraIcon className="h-4 w-4" /> },
+  { name: "Top View", position: [4.5, 25, 4.5], target: [4.5, 0, 4.5], icon: <ArrowUp className="h-4 w-4" /> },
+  { name: "Front View", position: [4.5, 5, 25], target: [4.5, 5, 0], icon: <ArrowLeft className="h-4 w-4" /> },
 ];
 
 const Game3D: React.FC = () => {
@@ -819,8 +819,8 @@ const Game3D: React.FC = () => {
     }
     
     toast({
-      title: `View Changed`,
-      description: `Now viewing from ${viewPoint.name}`,
+      title: `Camera: ${viewPoint.name}`,
+      description: `Switched to ${viewPoint.name.toLowerCase()} for better visibility`,
     });
   };
 
@@ -883,11 +883,11 @@ const Game3D: React.FC = () => {
             <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Next Block</h3>
             <BlockPreview block={nextBlock} className="w-24 h-24 mx-auto" />
           </div>
-          <GuidelineOverlay />
           <Grid3DLabels />
-          <Gyroscope />
         </div>
       </div>
+      
+      <GuidelineOverlay />
     </div>
   );
 };
