@@ -50,6 +50,7 @@ const Game3D: React.FC = () => {
     z?: number
   }>>([]);
   const [isBlinking, setIsBlinking] = useState(false);
+  const [layersUntilCollision, setLayersUntilCollision] = useState<number>(0);
 
   const getDropSpeed = () => {
     return Math.max(100, BASE_DROP_SPEED - (level * 5)); // Updated to decrease by 5ms per level
@@ -164,26 +165,23 @@ const Game3D: React.FC = () => {
     };
   }, [gamePaused, gameOver, level, position]);
 
-  const resetGame = () => {
-    const newGrid = initializeGrid();
-    setGrid(newGrid);
-    setScore(0);
-    setLinesCleared(0);
-    setCurrentBlock(getRandomBlockPattern());
-    setNextBlock(getRandomBlockPattern());
-    setPosition({...INITIAL_POSITION});
-    setGameOver(false);
-    setControlsEnabled(true);
-    setLevel(1);
-    setGamePaused(true);
-    
-    // Reset layer block counts
-    setLayerBlockCounts({ layer1: 0, layer2: 0 });
-    
-    if (gravityTimerRef.current) {
-      clearInterval(gravityTimerRef.current);
-      gravityTimerRef.current = null;
+  useEffect(() => {
+    if (!gamePaused && !gameOver && grid.length > 0) {
+      calculateLayersUntilCollision();
     }
+  }, [position, grid, currentBlock, gamePaused, gameOver]);
+
+  const calculateLayersUntilCollision = () => {
+    let layersCount = 0;
+    let newY = position.y;
+    
+    // Keep checking layers below until we find a collision
+    while (newY > 0 && isValidPosition(currentBlock.shape, position.x, newY - 1, position.z)) {
+      newY--;
+      layersCount++;
+    }
+    
+    setLayersUntilCollision(layersCount);
   };
 
   const wouldExceedBoundary = (pattern: number[][], newX: number, newY: number, newZ: number) => {
@@ -557,6 +555,11 @@ const Game3D: React.FC = () => {
     
     if (isValidPosition(currentBlock.shape, newX, newY, newZ)) {
       setPosition({ x: newX, y: newY, z: newZ });
+      
+      // Recalculate layers after a move
+      if (direction !== 'down') {
+        setTimeout(() => calculateLayersUntilCollision(), 0);
+      }
     } else if (direction === 'down') {
       placeBlock();
     }
@@ -856,6 +859,13 @@ const Game3D: React.FC = () => {
             onDoubleClick={handleDoubleTap as any}
             onTouchStartCapture={handleLongPress}
           >
+            {/* Countdown Label */}
+            {!gamePaused && !gameOver && (
+              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-black bg-opacity-70 px-3 py-1 rounded-md text-white font-semibold">
+                {layersUntilCollision} {layersUntilCollision === 1 ? 'layer' : 'layers'} until collision
+              </div>
+            )}
+            
             <Canvas camera={{ position: currentView.position, fov: isMobile ? 60 : 50 }}>
               <ambientLight intensity={0.5} />
               <pointLight position={[10, 10, 10]} />
