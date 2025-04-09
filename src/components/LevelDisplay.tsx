@@ -38,8 +38,8 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel = 99 }) => 
               <TooltipTrigger asChild>
                 <CircleHelp className="inline-block ml-1 h-3 w-3 text-white" />
               </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <p className="text-white">Your current game level. Clearing multiple layers simultaneously helps you level up faster!</p>
+              <TooltipContent side="right" className="max-w-xs text-white"> {/* Added text-white */}
+                <p>Your current game level. Clearing multiple layers simultaneously helps you level up faster!</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -48,7 +48,7 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel = 99 }) => 
       
       <div className="text-base sm:text-xl font-bold text-white flex justify-between items-baseline">
         <span className="text-white">{level}</span>
-        {maxLevel && <span className="text-xs text-white/70">/ {maxLevel}</span>}
+        {maxLevel && <span className="text-xs text-white">/ {maxLevel}</span>}
       </div>
       
       {/* Level Up Criteria - Collapsible section */}
@@ -83,8 +83,8 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel = 99 }) => 
                       <span>More information</span>
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="max-w-xs">
-                    <p className="text-white">Clear multiple layers simultaneously to level up faster. Higher levels give better score multipliers but faster drop speeds.</p>
+                  <TooltipContent side="right" className="max-w-xs text-white"> {/* Added text-white */}
+                    <p>Clear multiple layers simultaneously to level up faster. Higher levels give better score multipliers but faster drop speeds.</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
