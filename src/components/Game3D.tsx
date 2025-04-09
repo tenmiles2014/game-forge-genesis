@@ -847,7 +847,7 @@ const Game3D: React.FC = () => {
           >
             {/* Countdown Label */}
             {!gamePaused && !gameOver && (
-              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-black bg-opacity-70 px-3 py-1 rounded-md text-white font-semibold">
+              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-black bg-opacity-70 px-3 py-1 rounded-md text-white font-semibold text-xs sm:text-sm">
                 {layersUntilCollision} {layersUntilCollision === 1 ? 'layer' : 'layers'} until collision
               </div>
             )}
