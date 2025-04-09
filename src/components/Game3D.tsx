@@ -865,6 +865,18 @@ const Game3D: React.FC = () => {
       
       <div className="game-container rounded-lg overflow-hidden w-full max-w-full md:max-w-[90vw] lg:max-w-[85vw] 2xl:max-w-[75vw] flex flex-col md:flex-row gap-2 md:gap-4 bg-black bg-opacity-30">
         <div className="flex-1 min-h-[350px] sm:min-h-[400px] md:min-h-[550px] lg:min-h-[650px]">
+          {/* Mobile Game Stats Row - Only visible on mobile */}
+          {isMobile && (
+            <div className="flex justify-between items-center mb-2 p-2 gap-2 bg-black bg-opacity-30 rounded-lg">
+              <ScoreDisplay score={score} />
+              <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
+              <div className="rounded-lg bg-black bg-opacity-30 p-2">
+                <h3 className="text-xs uppercase tracking-wide font-medium text-gray-300 mb-1">Next</h3>
+                <BlockPreview block={nextBlock} className="w-16 h-16" />
+              </div>
+            </div>
+          )}
+          
           <div className="flex flex-wrap justify-between items-center mb-1 sm:mb-2 p-1 sm:p-2">
             <ViewControls 
               viewPoints={VIEW_POINTS} 
@@ -882,7 +894,7 @@ const Game3D: React.FC = () => {
           </div>
           
           <div 
-            className="game-board rounded-lg overflow-hidden h-[300px] sm:h-[350px] md:h-[500px] lg:h-[600px] xl:h-[650px] relative"
+            className="game-board rounded-lg overflow-hidden h-[350px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[650px] relative"
             ref={gameBoardRef}
             tabIndex={0}
             onTouchStart={handleTouchStart}
@@ -916,15 +928,18 @@ const Game3D: React.FC = () => {
           </div>
         </div>
         
-        <div className="game-score p-2 md:p-4 rounded-lg w-full md:w-64 flex flex-col gap-2 md:gap-4">
-          <ScoreDisplay score={score} />
-          <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
-          <div className="p-4 rounded-lg bg-black bg-opacity-30">
-            <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Next Block</h3>
-            <BlockPreview block={nextBlock} className="w-24 h-24 mx-auto" />
+        {/* Desktop Game Stats - Only visible on non-mobile */}
+        {!isMobile && (
+          <div className="game-score p-2 md:p-4 rounded-lg w-full md:w-64 flex flex-col gap-2 md:gap-4">
+            <ScoreDisplay score={score} />
+            <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
+            <div className="p-4 rounded-lg bg-black bg-opacity-30">
+              <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Next Block</h3>
+              <BlockPreview block={nextBlock} className="w-24 h-24 mx-auto" />
+            </div>
+            <Grid3DLabels />
           </div>
-          <Grid3DLabels />
-        </div>
+        )}
       </div>
       
       <GuidelineOverlay />
