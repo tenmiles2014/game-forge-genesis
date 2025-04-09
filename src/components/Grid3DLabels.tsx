@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -50,34 +49,34 @@ const Grid3DLabels: React.FC<Grid3DLabelsProps> = ({ layerBlockCounts }) => {
         <Label className="text-white bg-black bg-opacity-70 px-3 py-1 rounded-md font-semibold">Back</Label>
       </div>
 
-      {/* Block Limits section */}
-      {!isMobile && layerBlockCounts && (
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 px-3 py-1 rounded-md">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="text-xs uppercase tracking-wide font-medium text-white">BLOCK LIMITS</h3>
-            <TooltipProvider delayDuration={300}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <CircleHelp className="inline-block ml-1 h-3 w-3 text-white" />
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-white">Maximum blocks allowed per layer. Exceeding these limits will end the game.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+    {/* Block Limits section */}
+    {!isMobile && layerBlockCounts && (
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 px-3 py-1 rounded-md">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-xs uppercase tracking-wide font-medium text-white">BLOCK LIMITS</h3>
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <CircleHelp className="inline-block ml-1 h-3 w-3 text-white" />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p className="text-white">Maximum blocks allowed per layer. Exceeding these limits will end the game.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <div className="text-[10px] text-white">
+          <div className="flex justify-between">
+            <span className="text-white">Layer 2:</span>
+            <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : "text-white"}>{layerBlockCounts.layer2}/8</span>
           </div>
-          <div className="text-[10px] text-white">
-            <div className="flex justify-between">
-              <span className="text-white">Layer 2:</span>
-              <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : "text-white"}>{layerBlockCounts.layer2}/8</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-white">Layer 3:</span>
-              <span className="text-white">0/5</span>
-            </div>
+          <div className="flex justify-between">
+            <span className="text-white">Layer 3:</span>
+            <span className="text-white">0/5</span>
           </div>
         </div>
-      )}
+      </div>
+    )}
     </div>
   );
 };
