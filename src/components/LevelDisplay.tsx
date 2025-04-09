@@ -38,8 +38,8 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel = 99 }) => 
               <TooltipTrigger asChild>
                 <CircleHelp className="inline-block ml-1 h-3 w-3 text-white" />
               </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <p className="text-white">Your current game level. Clearing multiple layers simultaneously helps you level up faster!</p>
+              <TooltipContent side="right" className="max-w-xs text-black">
+                <p>Your current game level. Clearing multiple layers simultaneously helps you level up faster!</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -83,8 +83,8 @@ const LevelDisplay: React.FC<LevelDisplayProps> = ({ level, maxLevel = 99 }) => 
                       <span>More information</span>
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="max-w-xs">
-                    <p className="text-white">Clear multiple layers simultaneously to level up faster. Higher levels give better score multipliers but faster drop speeds.</p>
+                  <TooltipContent side="right" className="max-w-xs text-black">
+                    <p>Clear multiple layers simultaneously to level up faster. Higher levels give better score multipliers but faster drop speeds.</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
