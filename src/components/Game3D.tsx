@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -689,6 +688,79 @@ const Game3D: React.FC = () => {
     });
   };
 
+  const handleTouchStart = React.useCallback((event: React.TouchEvent) => {
+    if (!controlsEnabled || gamePaused || gameOver) return;
+    
+    const touchStartX = event.touches[0].clientX;
+    const touchStartY = event.touches[0].clientY;
+    
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      moveEvent.preventDefault();
+      
+      if (!controlsEnabled || gamePaused || gameOver) return;
+      
+      const touchEndX = moveEvent.touches[0].clientX;
+      const touchEndY = moveEvent.touches[0].clientY;
+      
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = touchEndY - touchStartY;
+      
+      // Minimum swipe distance to register as a swipe
+      const swipeThreshold = 30;
+      
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
+        // Horizontal swipe
+        if (deltaX > 0) {
+          moveBlock('right');
+        } else {
+          moveBlock('left');
+        }
+      } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > swipeThreshold) {
+        // Vertical swipe
+        if (deltaY > 0) {
+          moveBlock('backward');
+        } else {
+          moveBlock('forward');
+        }
+      }
+    };
+    
+    const handleTouchEnd = () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+    
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+  }, [controlsEnabled, gamePaused, gameOver, moveBlock]);
+  
+  const handleDoubleTap = React.useCallback((event: React.TouchEvent) => {
+    if (!controlsEnabled || gamePaused || gameOver) return;
+    
+    // Double tap to rotate
+    rotateBlock('z');
+  }, [controlsEnabled, gamePaused, gameOver, rotateBlock]);
+  
+  const handleLongPress = React.useCallback((event: React.TouchEvent) => {
+    if (!controlsEnabled || gamePaused || gameOver) return;
+    
+    event.preventDefault();
+    
+    // Long press to drop block
+    const timer = setTimeout(() => {
+      dropBlock();
+    }, 500);
+    
+    const cancelLongPress = () => {
+      clearTimeout(timer);
+      document.removeEventListener('touchend', cancelLongPress);
+      document.removeEventListener('touchcancel', cancelLongPress);
+    };
+    
+    document.addEventListener('touchend', cancelLongPress);
+    document.addEventListener('touchcancel', cancelLongPress);
+  }, [controlsEnabled, gamePaused, gameOver, dropBlock]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!controlsEnabled || gamePaused) return;
@@ -754,17 +826,17 @@ const Game3D: React.FC = () => {
 
   return (
     <div className="flex flex-col justify-center items-center min-h-screen p-2 md:p-4">
-      <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white text-center">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 md:mb-4 text-white text-center">
         3D Block Busters
       </h1>
       
-      <div className="game-container rounded-lg overflow-hidden w-full max-w-full md:max-w-[90vw] lg:max-w-[85vw] 2xl:max-w-[75vw] flex flex-col md:flex-row gap-4 bg-black bg-opacity-30">
-        <div className="flex-1 min-h-[400px] md:min-h-[550px] lg:min-h-[650px]">
-          <div className="flex justify-between items-center mb-2 p-2">
+      <div className="game-container rounded-lg overflow-hidden w-full max-w-full md:max-w-[90vw] lg:max-w-[85vw] 2xl:max-w-[75vw] flex flex-col md:flex-row gap-2 md:gap-4 bg-black bg-opacity-30">
+        <div className="flex-1 min-h-[350px] sm:min-h-[400px] md:min-h-[550px] lg:min-h-[650px]">
+          <div className="flex flex-wrap justify-between items-center mb-1 sm:mb-2 p-1 sm:p-2">
             <ViewControls 
               viewPoints={VIEW_POINTS} 
               onSelectView={handleViewChange}
-              className={isMobile ? "gap-1" : ""}
+              className="flex-1 mr-1"
             />
             
             <GameControls3D 
@@ -772,16 +844,19 @@ const Game3D: React.FC = () => {
               onStartPause={gamePaused ? startGame : toggleGamePause}
               isPaused={gamePaused}
               gameOver={gameOver}
-              className="justify-end"
+              className="flex-none"
             />
           </div>
           
           <div 
-            className="game-board rounded-lg overflow-hidden h-[350px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[650px] relative"
+            className="game-board rounded-lg overflow-hidden h-[300px] sm:h-[350px] md:h-[500px] lg:h-[600px] xl:h-[650px] relative"
             ref={gameBoardRef}
             tabIndex={0}
+            onTouchStart={handleTouchStart}
+            onDoubleClick={handleDoubleTap as any}
+            onTouchStartCapture={handleLongPress}
           >
-            <Canvas camera={{ position: currentView.position, fov: 50 }}>
+            <Canvas camera={{ position: currentView.position, fov: isMobile ? 60 : 50 }}>
               <ambientLight intensity={0.5} />
               <pointLight position={[10, 10, 10]} />
               <Grid3D 
@@ -793,58 +868,6 @@ const Game3D: React.FC = () => {
               <OrbitControls 
                 ref={orbitControlsRef} 
                 enabled={controlsEnabled}
-                minDistance={10}
+                minDistance={8}
                 maxDistance={30}
-                target={currentView.target || [4.5, 4.5, 4.5]}
-              />
-            </Canvas>
-            <Grid3DLabels />
-          </div>
-        </div>
-        
-        <div className="flex flex-col justify-between gap-4 w-full md:w-64 p-4">
-          <div className="space-y-4">            
-            <ScoreDisplay score={score} linesCleared={linesCleared} />
-            
-            <LevelDisplay level={level} maxLevel={MAX_LEVEL} layersCleared={linesCleared} />
-            
-            <div className="p-4 rounded-lg bg-black bg-opacity-30">
-              <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Block Limits</h3>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span>Layer 2:</span>
-                  <span className={layerBlockCounts.layer1 > 8 ? "text-red-400 font-bold" : ""}>
-                    {layerBlockCounts.layer1}/8
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Layer 3:</span>
-                  <span className={layerBlockCounts.layer2 > 3 ? "text-red-400 font-bold" : ""}>
-                    {layerBlockCounts.layer2}/5
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-4 rounded-lg bg-black bg-opacity-30">
-              <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-4">Next Block</h3>
-              <div className="flex justify-center">
-                <BlockPreview block={nextBlock} className="w-24 h-24" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {gameOver && (
-        <div className="mt-6 animate-scale-in">
-          <p className="text-xl text-white mb-3">Game Over! Final Score: {score} | Level: {level}</p>
-        </div>
-      )}
-      
-      <GuidelineOverlay />
-    </div>
-  );
-};
-
-export default Game3D;
+                target={currentView.target || [4.5,

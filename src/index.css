@@ -51,6 +51,8 @@
   @media (max-width: 768px) {
     body {
       overflow-y: auto;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
   }
 }
@@ -96,9 +98,48 @@
   background: radial-gradient(circle, transparent 60%, rgba(74, 155, 247, 0.2) 61%);
 }
 
-/* Ensure controls are readable on smaller screens */
+/* Mobile touch interaction improvements */
 @media (max-width: 640px) {
   .game-container {
-    max-height: calc(100vh - 100px);
+    max-height: calc(100vh - 80px);
+  }
+  
+  .game-board {
+    touch-action: none;
+    user-select: none;
+  }
+  
+  /* Prevent accidental text selection on mobile */
+  .game-board * {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  
+  /* Optimize controls spacing for small screens */
+  button {
+    touch-action: manipulation;
+  }
+}
+
+/* Animations for mobile feedback */
+@keyframes button-press {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.touch-feedback:active {
+  animation: button-press 0.2s ease-in-out;
+}
+
+/* Ensure no delay on touch events */
+@media (hover: none) and (pointer: coarse) {
+  .game-board {
+    background-size: 20px 20px; /* Smaller grid on mobile */
+  }
+  
+  button, a {
+    cursor: none;
+    -webkit-tap-highlight-color: transparent;
   }
 }

@@ -1,7 +1,8 @@
 
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Gamepad, Play, RotateCw, Maximize, Minimize } from 'lucide-react';
+import { Gamepad, Play, Pause } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface GameControls3DProps {
   onReset: () => void;
@@ -12,79 +13,44 @@ interface GameControls3DProps {
 }
 
 const GameControls3D: React.FC<GameControls3DProps> = ({ 
-  onReset,
+  onReset, 
   onStartPause,
   isPaused,
   gameOver,
   className 
 }) => {
-  const [isFullScreen, setIsFullScreen] = useState(false);
-
-  const toggleFullScreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen()
-        .then(() => setIsFullScreen(true))
-        .catch(err => {
-          console.error(`Error attempting to enable fullscreen: ${err.message}`);
-        });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen()
-          .then(() => setIsFullScreen(false))
-          .catch(err => {
-            console.error(`Error attempting to exit fullscreen: ${err.message}`);
-          });
-      }
-    }
-  }, []);
-
+  const isMobile = useIsMobile();
+  
   return (
-    <div className={`flex gap-2 ${className}`}>
+    <div className={`flex gap-1 md:gap-2 ${className}`}>
       <Button 
         variant="outline"
-        className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300"
+        size={isMobile ? "sm" : "default"}
+        className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300 touch-feedback"
         onClick={onStartPause}
         disabled={gameOver}
-        autoFocus={false}
       >
         {isPaused ? (
           <>
-            <Play className="h-5 w-5 mr-2" />
-            Start
+            <Play className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+            <span className="text-xs md:text-sm">{isMobile ? "Play" : "Start Game"}</span>
           </>
         ) : (
           <>
-            <RotateCw className="h-5 w-5 mr-2" />
-            Pause
+            <Pause className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+            <span className="text-xs md:text-sm">{isMobile ? "Pause" : "Pause Game"}</span>
           </>
         )}
       </Button>
       
       <Button 
         variant="outline"
-        className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300"
+        size={isMobile ? "sm" : "default"}
+        className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300 touch-feedback"
         onClick={onReset}
       >
-        <Gamepad className="h-5 w-5 mr-2" />
-        Reset
-      </Button>
-
-      <Button 
-        variant="outline"
-        className="bg-transparent border-gray-700 hover:bg-gray-800 text-gray-300"
-        onClick={toggleFullScreen}
-      >
-        {isFullScreen ? (
-          <>
-            <Minimize className="h-5 w-5 mr-2" />
-            Exit
-          </>
-        ) : (
-          <>
-            <Maximize className="h-5 w-5 mr-2" />
-            Full
-          </>
-        )}
+        <Gamepad className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+        <span className="text-xs md:text-sm">{isMobile ? "New" : "New Game"}</span>
       </Button>
     </div>
   );
