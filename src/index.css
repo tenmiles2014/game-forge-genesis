@@ -88,11 +88,12 @@
 
 /* Background gradient and scene styling */
 body {
-  background: linear-gradient(135deg, #1a103c, #432355, #2c1e3d);
+  background: linear-gradient(135deg, #2b1876, #5b21b6, #3b2291);
   background-size: 400% 400%;
   animation: gradient 15s ease infinite;
   height: 100vh;
   margin: 0;
+  padding: 0;
   overflow: hidden;
 }
 
@@ -106,4 +107,30 @@ body {
   100% {
     background-position: 0% 50%;
   }
+}
+
+/* Adjust game container to maximize screen usage */
+#root {
+  height: 100vh;
+  width: 100vw;
+  padding: 0;
+  margin: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the game area expands to fit available space */
+.game-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+/* Adjust canvas to take full height */
+canvas {
+  width: 100% !important;
+  height: 100% !important;
 }

@@ -16,9 +16,9 @@ const MobileControlsOverlay: React.FC<MobileControlsOverlayProps> = ({
   className
 }) => {
   return (
-    <div className={`fixed bottom-4 left-0 right-0 flex justify-between items-center px-4 pointer-events-none ${className}`}>
+    <div className={`fixed bottom-2 left-0 right-0 flex justify-between items-center px-2 pointer-events-none ${className}`}>
       {/* D-Pad for movement */}
-      <div className="d-pad grid grid-cols-3 grid-rows-3 gap-1 pointer-events-auto">
+      <div className="d-pad grid grid-cols-3 grid-rows-3 gap-0.5 pointer-events-auto scale-90 origin-bottom-left">
         <div className="col-start-1 col-end-2 row-start-1 row-end-2"></div>
         <button 
           className="col-start-2 col-end-3 row-start-1 row-end-2 bg-blue-500 bg-opacity-70 rounded-full p-2 flex items-center justify-center active:bg-blue-700 touch-feedback"
@@ -57,7 +57,7 @@ const MobileControlsOverlay: React.FC<MobileControlsOverlayProps> = ({
       </div>
       
       {/* Action Buttons */}
-      <div className="flex gap-4 pointer-events-auto">
+      <div className="flex gap-3 pointer-events-auto scale-90 origin-bottom-right">
         <button 
           className="bg-purple-500 bg-opacity-70 rounded-full p-3 flex items-center justify-center active:bg-purple-700 touch-feedback"
           onClick={onRotate}

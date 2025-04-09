@@ -3,7 +3,11 @@ import React from 'react';
 import Game3D from "@/components/Game3D";
 
 const Index = () => {
-  return <Game3D />;
+  return (
+    <div className="game-container">
+      <Game3D />
+    </div>
+  );
 };
 
 export default Index;
