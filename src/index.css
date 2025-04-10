@@ -174,7 +174,7 @@ canvas {
   margin-top: 16px !important;
 }
 
-/* Mobile game stats grid - Always create the space whether visible or not */
+/* Mobile game stats grid - Always visible on mobile */
 .mobile-game-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -184,6 +184,7 @@ canvas {
   border-radius: 0.5rem;
   margin-bottom: 0.5rem;
   max-height: 110px;
+  height: 110px; /* Fixed height to prevent layout shifts */
 }
 
 .mobile-game-stats > div {
@@ -194,10 +195,6 @@ canvas {
 
 /* Ensure consistent layout with media queries */
 @media (max-width: 768px) {
-  .mobile-game-stats {
-    display: grid;
-  }
-  
   .game-score {
     display: none !important;
   }
@@ -212,4 +209,3 @@ canvas {
     display: flex !important;
   }
 }
-

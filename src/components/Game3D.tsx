@@ -151,7 +151,7 @@ const Game3D: React.FC = () => {
     // Show toast that doesn't affect layout
     toast({
       title: "New Game",
-      description: "Game has been reset. Click Start to begin!",
+      description: "Game has been reset. Click Play to begin!",
     });
   };
 
@@ -827,8 +827,8 @@ const Game3D: React.FC = () => {
       
       <div className={`game-container rounded-lg overflow-hidden w-full max-w-full md:max-w-[92vw] lg:max-w-[95vw] 2xl:max-w-[80vw] flex flex-col md:flex-row gap-1 md:gap-2 ${arModeEnabled ? 'bg-transparent' : 'bg-black bg-opacity-30'}`}>
         <div className="flex-1 min-h-[400px] sm:min-h-[500px] md:min-h-[700px] lg:min-h-[750px] xl:min-h-[800px]">
-          {/* Mobile Game Stats Grid - Always rendered but only visible on mobile */}
-          <div className={`mobile-game-stats grid grid-cols-2 grid-rows-2 gap-1 mb-1 p-1 rounded-lg ${arModeEnabled ? 'bg-transparent' : 'bg-black bg-opacity-30'} ${isMobile ? 'block' : 'hidden'}`}>
+          {/* Mobile Game Stats Grid - Always present in the DOM for layout stability */}
+          <div className={`mobile-game-stats grid grid-cols-2 grid-rows-2 gap-1 mb-1 p-1 rounded-lg ${arModeEnabled ? 'bg-transparent' : 'bg-black bg-opacity-30'}`}>
             <ScoreDisplay score={score} />
             <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
             <div className={`rounded-lg p-2 text-center ${arModeEnabled ? 'bg-black bg-opacity-30' : 'bg-black bg-opacity-30'}`}>
@@ -911,7 +911,7 @@ const Game3D: React.FC = () => {
         </div>
         
         {/* Desktop Game Stats - Always rendered but only visible on desktop */}
-        <div className={`game-score p-2 md:p-3 rounded-lg w-full md:w-60 flex flex-col gap-2 md:gap-3 ${isMobile ? 'hidden' : 'block'}`}>
+        <div className={`game-score p-2 md:p-3 rounded-lg w-full md:w-60 flex flex-col gap-2 md:gap-3`}>
           <ScoreDisplay score={score} />
           <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
           <div className="p-3 rounded-lg bg-black bg-opacity-30">
