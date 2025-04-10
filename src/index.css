@@ -132,6 +132,7 @@ body.ar-mode {
   max-width: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Ensure the game area expands to fit available space */
@@ -141,10 +142,16 @@ body.ar-mode {
   flex-direction: column;
   width: 100%;
   height: 100%;
+  max-height: calc(100vh - 60px);
 }
 
 /* Adjust canvas to take full height */
 canvas {
   width: 100% !important;
   height: 100% !important;
+}
+
+/* Make sure text is readable in the game area */
+.game-board {
+  position: relative;
 }

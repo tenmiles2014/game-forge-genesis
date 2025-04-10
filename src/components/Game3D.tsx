@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -822,15 +823,15 @@ const Game3D: React.FC = () => {
 
   return (
     <div className={`flex flex-col justify-center items-center min-h-screen p-2 md:p-4 ${arModeEnabled ? 'ar-mode-container' : ''}`}>
-      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 md:mb-4 text-white text-center">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 md:mb-2 text-white text-center">
         3D Block Busters
       </h1>
       
-      <div className={`game-container rounded-lg overflow-hidden w-full max-w-full md:max-w-[90vw] lg:max-w-[85vw] 2xl:max-w-[75vw] flex flex-col md:flex-row gap-2 md:gap-4 ${arModeEnabled ? 'bg-transparent' : 'bg-black bg-opacity-30'}`}>
-        <div className="flex-1 min-h-[350px] sm:min-h-[400px] md:min-h-[550px] lg:min-h-[650px]">
+      <div className={`game-container rounded-lg overflow-hidden w-full max-w-full md:max-w-[92vw] lg:max-w-[95vw] 2xl:max-w-[80vw] flex flex-col md:flex-row gap-1 md:gap-2 ${arModeEnabled ? 'bg-transparent' : 'bg-black bg-opacity-30'}`}>
+        <div className="flex-1 min-h-[400px] sm:min-h-[500px] md:min-h-[700px] lg:min-h-[750px] xl:min-h-[800px]">
           {/* Mobile Game Stats Grid - Only visible on mobile */}
           {isMobile && (
-            <div className={`grid grid-cols-2 grid-rows-2 gap-1 mb-2 p-1 rounded-lg max-h-[110px] ${arModeEnabled ? 'bg-transparent' : 'bg-black bg-opacity-30'}`}>
+            <div className={`grid grid-cols-2 grid-rows-2 gap-1 mb-1 p-1 rounded-lg max-h-[110px] ${arModeEnabled ? 'bg-transparent' : 'bg-black bg-opacity-30'}`}>
               <ScoreDisplay score={score} />
               <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
               <div className={`rounded-lg p-2 text-center ${arModeEnabled ? 'bg-black bg-opacity-30' : 'bg-black bg-opacity-30'}`}>
@@ -853,13 +854,13 @@ const Game3D: React.FC = () => {
             </div>
           )}
           
-          <div className="flex flex-wrap justify-between items-center mb-1 sm:mb-2 p-1 sm:p-2">
+          <div className="flex flex-wrap justify-between items-center mb-1 p-1">
             <ViewControls 
               viewPoints={VIEW_POINTS} 
               onSelectView={handleViewChange}
               className="flex-1 mr-1"
               arModeEnabled={arModeEnabled}
-              onToggleARMode={isMobile ? toggleARMode : undefined}
+              onToggleARMode={undefined}
             />
             
             <GameControls3D 
@@ -872,7 +873,7 @@ const Game3D: React.FC = () => {
           </div>
           
           <div 
-            className={`game-board rounded-lg overflow-hidden h-[350px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[650px] relative ${arModeEnabled ? 'ar-mode-game-board' : ''}`}
+            className={`game-board rounded-lg overflow-hidden h-[calc(100vh-150px)] sm:h-[calc(100vh-160px)] md:h-[calc(100vh-170px)] lg:h-[calc(100vh-180px)] xl:h-[calc(100vh-190px)] relative ${arModeEnabled ? 'ar-mode-game-board' : ''}`}
             ref={gameBoardRef}
             tabIndex={0}
             onTouchStart={handleTouchStart}
@@ -915,14 +916,14 @@ const Game3D: React.FC = () => {
         
         {/* Desktop Game Stats - Only visible on non-mobile */}
         {!isMobile && (
-          <div className="game-score p-2 md:p-4 rounded-lg w-full md:w-64 flex flex-col gap-2 md:gap-4">
+          <div className="game-score p-2 md:p-3 rounded-lg w-full md:w-60 flex flex-col gap-2 md:gap-3">
             <ScoreDisplay score={score} />
             <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
-            <div className="p-4 rounded-lg bg-black bg-opacity-30">
+            <div className="p-3 rounded-lg bg-black bg-opacity-30">
               <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Next Block</h3>
-              <BlockPreview block={nextBlock} className="w-24 h-24 mx-auto" />
+              <BlockPreview block={nextBlock} className="w-20 h-20 mx-auto" />
             </div>
-            <div className="p-4 rounded-lg bg-black bg-opacity-30">
+            <div className="p-3 rounded-lg bg-black bg-opacity-30">
               <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">BLOCK LIMITS</h3>
               <div className="text-sm">
                 <div className="flex justify-between items-center">
