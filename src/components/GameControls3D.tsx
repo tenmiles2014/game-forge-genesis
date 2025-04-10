@@ -22,7 +22,7 @@ const GameControls3D: React.FC<GameControls3DProps> = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className={`flex gap-1 md:gap-2 ${className}`}>
+    <div className={`flex gap-1 md:gap-2 ${className || ''}`}>
       <Button 
         variant="outline"
         size={isMobile ? "sm" : "default"}
