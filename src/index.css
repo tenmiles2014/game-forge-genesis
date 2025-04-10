@@ -142,7 +142,8 @@ body.ar-mode {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  max-height: calc(100vh - 60px);
+  max-height: 100vh; /* Changed to ensure it always takes full height */
+  overflow: hidden;
 }
 
 /* Adjust canvas to take full height */
@@ -154,4 +155,9 @@ canvas {
 /* Make sure text is readable in the game area */
 .game-board {
   position: relative;
+}
+
+/* Ensure toast notifications appear above everything else */
+.sonner-toast-container {
+  z-index: 9999 !important;
 }
