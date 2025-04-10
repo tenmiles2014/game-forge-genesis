@@ -157,26 +157,59 @@ canvas {
   position: relative;
 }
 
-/* Ensure toast notifications appear above everything else */
+/* Ensure toast notifications appear above everything else and don't shift layout */
 .sonner-toast-container {
   z-index: 9999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: auto !important;
+  max-width: 100% !important;
+  pointer-events: none !important;
 }
 
-/* Mobile game stats grid */
+.sonner-toast {
+  pointer-events: auto !important;
+  margin-top: 16px !important;
+}
+
+/* Mobile game stats grid - Always create the space whether visible or not */
+.mobile-game-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  max-height: 110px;
+}
+
+.mobile-game-stats > div {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
+
+/* Ensure consistent layout with media queries */
 @media (max-width: 768px) {
   .mobile-game-stats {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
   }
   
-  .mobile-game-stats > div {
-    background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 0.5rem;
-    padding: 0.5rem;
+  .game-score {
+    display: none !important;
   }
 }
+
+@media (min-width: 769px) {
+  .mobile-game-stats {
+    display: none !important;
+  }
+  
+  .game-score {
+    display: flex !important;
+  }
+}
+

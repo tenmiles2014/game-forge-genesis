@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -126,6 +125,7 @@ const Game3D: React.FC = () => {
   };
 
   const resetGame = () => {
+    // Initialize a new grid without affecting layout
     const newGrid = initializeGrid();
     setGrid(newGrid);
     setScore(0);
@@ -135,10 +135,9 @@ const Game3D: React.FC = () => {
     setPosition({...INITIAL_POSITION});
     setGameOver(false);
     setControlsEnabled(true);
-    setLevel(1);
     setGamePaused(true);
     
-    // Reset layer block counts
+    // Reset layer block counts without affecting layout
     setLayerBlockCounts({ layer1: 0, layer2: 0 });
     
     // Reset the countdown counter
@@ -149,6 +148,7 @@ const Game3D: React.FC = () => {
       gravityTimerRef.current = null;
     }
     
+    // Show toast that doesn't affect layout
     toast({
       title: "New Game",
       description: "Game has been reset. Click Start to begin!",
@@ -156,7 +156,9 @@ const Game3D: React.FC = () => {
   };
 
   useEffect(() => {
-    resetGame();
+    // Initialize grid on first load
+    const initialGrid = initializeGrid();
+    setGrid(initialGrid);
   }, []);
 
   useEffect(() => {
@@ -699,9 +701,7 @@ const Game3D: React.FC = () => {
       });
       
       if (gameBoardRef.current) {
-        setTimeout(() => {
-          gameBoardRef.current?.focus();
-        }, 0);
+        gameBoardRef.current.focus();
       }
     }
   };
@@ -713,9 +713,7 @@ const Game3D: React.FC = () => {
     setControlsEnabled(true);
     
     if (gameBoardRef.current) {
-      setTimeout(() => {
-        gameBoardRef.current?.focus();
-      }, 0);
+      gameBoardRef.current.focus();
     }
     
     toast({
@@ -829,30 +827,28 @@ const Game3D: React.FC = () => {
       
       <div className={`game-container rounded-lg overflow-hidden w-full max-w-full md:max-w-[92vw] lg:max-w-[95vw] 2xl:max-w-[80vw] flex flex-col md:flex-row gap-1 md:gap-2 ${arModeEnabled ? 'bg-transparent' : 'bg-black bg-opacity-30'}`}>
         <div className="flex-1 min-h-[400px] sm:min-h-[500px] md:min-h-[700px] lg:min-h-[750px] xl:min-h-[800px]">
-          {/* Mobile Game Stats Grid - Only visible on mobile */}
-          {isMobile && (
-            <div className={`grid grid-cols-2 grid-rows-2 gap-1 mb-1 p-1 rounded-lg max-h-[110px] ${arModeEnabled ? 'bg-transparent' : 'bg-black bg-opacity-30'}`}>
-              <ScoreDisplay score={score} />
-              <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
-              <div className={`rounded-lg p-2 text-center ${arModeEnabled ? 'bg-black bg-opacity-30' : 'bg-black bg-opacity-30'}`}>
-                <h3 className="text-xs uppercase tracking-wide font-medium text-gray-300 mb-1">NEXT</h3>
-                <BlockPreview block={nextBlock} className="w-10 h-10 mx-auto" />
-              </div>
-              <div className={`rounded-lg p-2 ${arModeEnabled ? 'bg-black bg-opacity-30' : 'bg-black bg-opacity-30'}`}>
-                <h3 className="text-xs uppercase tracking-wide font-medium text-white mb-1">BLOCK LIMITS</h3>
-                <div className="text-[10px] text-white">
-                  <div className="flex justify-between">
-                    <span className="text-white">Layer 2:</span>
-                    <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : "text-white"}>{layerBlockCounts.layer2}/8</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white">Layer 3:</span>
-                    <span className="text-white">0/5</span>
-                  </div>
+          {/* Mobile Game Stats Grid - Always rendered but only visible on mobile */}
+          <div className={`mobile-game-stats grid grid-cols-2 grid-rows-2 gap-1 mb-1 p-1 rounded-lg ${arModeEnabled ? 'bg-transparent' : 'bg-black bg-opacity-30'} ${isMobile ? 'block' : 'hidden'}`}>
+            <ScoreDisplay score={score} />
+            <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
+            <div className={`rounded-lg p-2 text-center ${arModeEnabled ? 'bg-black bg-opacity-30' : 'bg-black bg-opacity-30'}`}>
+              <h3 className="text-xs uppercase tracking-wide font-medium text-gray-300 mb-1">NEXT</h3>
+              <BlockPreview block={nextBlock} className="w-10 h-10 mx-auto" />
+            </div>
+            <div className={`rounded-lg p-2 ${arModeEnabled ? 'bg-black bg-opacity-30' : 'bg-black bg-opacity-30'}`}>
+              <h3 className="text-xs uppercase tracking-wide font-medium text-white mb-1">BLOCK LIMITS</h3>
+              <div className="text-[10px] text-white">
+                <div className="flex justify-between">
+                  <span className="text-white">Layer 2:</span>
+                  <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : "text-white"}>{layerBlockCounts.layer2}/8</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white">Layer 3:</span>
+                  <span className="text-white">0/5</span>
                 </div>
               </div>
             </div>
-          )}
+          </div>
           
           <div className="flex flex-wrap justify-between items-center mb-1 p-1">
             <ViewControls 
@@ -860,7 +856,7 @@ const Game3D: React.FC = () => {
               onSelectView={handleViewChange}
               className="flex-1 mr-1"
               arModeEnabled={arModeEnabled}
-              onToggleARMode={undefined}
+              onToggleARMode={toggleARMode}
             />
             
             <GameControls3D 
@@ -914,31 +910,29 @@ const Game3D: React.FC = () => {
           </div>
         </div>
         
-        {/* Desktop Game Stats - Only visible on non-mobile */}
-        {!isMobile && (
-          <div className="game-score p-2 md:p-3 rounded-lg w-full md:w-60 flex flex-col gap-2 md:gap-3">
-            <ScoreDisplay score={score} />
-            <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
-            <div className="p-3 rounded-lg bg-black bg-opacity-30">
-              <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Next Block</h3>
-              <BlockPreview block={nextBlock} className="w-20 h-20 mx-auto" />
-            </div>
-            <div className="p-3 rounded-lg bg-black bg-opacity-30">
-              <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">BLOCK LIMITS</h3>
-              <div className="text-sm">
-                <div className="flex justify-between items-center">
-                  <span>Layer 2:</span>
-                  <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : ""}>{layerBlockCounts.layer2}/8</span>
-                </div>
-                <div className="flex justify-between items-center mt-1">
-                  <span>Layer 3:</span>
-                  <span>0/5</span>
-                </div>
+        {/* Desktop Game Stats - Always rendered but only visible on desktop */}
+        <div className={`game-score p-2 md:p-3 rounded-lg w-full md:w-60 flex flex-col gap-2 md:gap-3 ${isMobile ? 'hidden' : 'block'}`}>
+          <ScoreDisplay score={score} />
+          <LevelDisplay level={level} maxLevel={MAX_LEVEL} />
+          <div className="p-3 rounded-lg bg-black bg-opacity-30">
+            <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">Next Block</h3>
+            <BlockPreview block={nextBlock} className="w-20 h-20 mx-auto" />
+          </div>
+          <div className="p-3 rounded-lg bg-black bg-opacity-30">
+            <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">BLOCK LIMITS</h3>
+            <div className="text-sm">
+              <div className="flex justify-between items-center">
+                <span>Layer 2:</span>
+                <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : ""}>{layerBlockCounts.layer2}/8</span>
+              </div>
+              <div className="flex justify-between items-center mt-1">
+                <span>Layer 3:</span>
+                <span>0/5</span>
               </div>
             </div>
-            <Grid3DLabels layerBlockCounts={layerBlockCounts} />
           </div>
-        )}
+          <Grid3DLabels layerBlockCounts={layerBlockCounts} />
+        </div>
       </div>
       
       <GuidelineOverlay />
