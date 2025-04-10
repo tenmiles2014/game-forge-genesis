@@ -161,3 +161,22 @@ canvas {
 .sonner-toast-container {
   z-index: 9999 !important;
 }
+
+/* Mobile game stats grid */
+@media (max-width: 768px) {
+  .mobile-game-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .mobile-game-stats > div {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+  }
+}
