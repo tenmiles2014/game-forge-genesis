@@ -92,7 +92,7 @@ const Game3D: React.FC = () => {
     console.log(`Level ${currentLevel}: Blocks per layer: `, 
       layerBlockCounts.map((count, idx) => `Layer ${idx + 1}: ${count}`).join(', '));
     
-    // Update the layer block counts state with all three layers
+    // Update the layer block counts state with all three layers regardless of game state
     setLayerBlockCounts({
       layer1: layerBlockCounts[0],
       layer2: layerBlockCounts[1],
@@ -153,6 +153,7 @@ const Game3D: React.FC = () => {
     toast({
       title: "New Game",
       description: "Game has been reset. Click Play to begin!",
+      duration: 1000, // Shorter toast duration
     });
   };
 
@@ -163,17 +164,23 @@ const Game3D: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (grid.length > 0 && !gameOver && !gamePaused) {
-      const { isGameOver, reason } = checkGameOverRules(grid);
+    if (grid.length > 0) {
+      // Always count the blocks, regardless of game state
+      countBlocksByLayers(grid, level);
       
-      if (isGameOver) {
-        setGameOver(true);
-        setControlsEnabled(false);
-        setGamePaused(true);
-        toast({
-          title: "Game Over!",
-          description: `Rule violation: ${reason}. Final score: ${score} | Level: ${level}`,
-        });
+      if (!gameOver && !gamePaused) {
+        const { isGameOver, reason } = checkGameOverRules(grid);
+        
+        if (isGameOver) {
+          setGameOver(true);
+          setControlsEnabled(false);
+          setGamePaused(true);
+          toast({
+            title: "Game Over!",
+            description: `Rule violation: ${reason}. Final score: ${score} | Level: ${level}`,
+            duration: 1000, // Shorter toast duration
+          });
+        }
       }
     }
   }, [grid, gameOver, gamePaused]);
@@ -338,6 +345,7 @@ const Game3D: React.FC = () => {
       toast({
         title: "Game Over!",
         description: `No space for new block. Final score: ${score} | Level: ${level}`,
+        duration: 1000, // Shorter toast duration
       });
       return;
     }
@@ -694,11 +702,13 @@ const Game3D: React.FC = () => {
       toast({
         title: "Game Paused",
         description: "Take a breather!",
+        duration: 1000, // Shorter toast duration
       });
     } else {
       toast({
         title: "Game Resumed",
         description: "Let's go!",
+        duration: 1000, // Shorter toast duration
       });
       
       if (gameBoardRef.current) {
@@ -720,6 +730,7 @@ const Game3D: React.FC = () => {
     toast({
       title: "Game Started",
       description: "Good luck!",
+      duration: 1000, // Shorter toast duration
     });
   };
 
@@ -870,7 +881,7 @@ const Game3D: React.FC = () => {
           </div>
           
           <div 
-            className={`game-board rounded-lg overflow-hidden h-[calc(100vh-150px)] sm:h-[calc(100vh-160px)] md:h-[calc(100vh-170px)] lg:h-[calc(100vh-180px)] xl:h-[calc(100vh-190px)] relative ${arModeEnabled ? 'ar-mode-game-board' : ''}`}
+            className={`game-board rounded-lg overflow-hidden h-[calc(100vh-280px)] sm:h-[calc(100vh-280px)] md:h-[calc(100vh-170px)] lg:h-[calc(100vh-180px)] xl:h-[calc(100vh-190px)] relative ${arModeEnabled ? 'ar-mode-game-board' : ''}`}
             ref={gameBoardRef}
             tabIndex={0}
             onTouchStart={handleTouchStart}
@@ -920,8 +931,8 @@ const Game3D: React.FC = () => {
             <BlockPreview block={nextBlock} className="w-20 h-20 mx-auto" />
           </div>
           <div className="p-3 rounded-lg bg-black bg-opacity-30">
-            <h3 className="text-sm uppercase tracking-wide font-medium text-gray-300 mb-2">BLOCK LIMITS</h3>
-            <div className="text-sm">
+            <h3 className="text-sm uppercase tracking-wide font-medium text-white mb-2">BLOCK LIMITS</h3>
+            <div className="text-sm text-white">
               <div className="flex justify-between items-center">
                 <span>Layer 2:</span>
                 <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : ""}>{layerBlockCounts.layer2}/8</span>

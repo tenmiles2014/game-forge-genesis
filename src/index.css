@@ -155,6 +155,7 @@ canvas {
 /* Make sure text is readable in the game area */
 .game-board {
   position: relative;
+  height: calc(100vh - 280px) !important; /* Fixed height to prevent layout shifts */
 }
 
 /* Ensure toast notifications appear above everything else and don't shift layout */
