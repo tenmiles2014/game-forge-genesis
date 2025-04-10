@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -13,11 +14,15 @@ interface Grid3DLabelsProps {
   layerBlockCounts?: {
     layer1: number;
     layer2: number;
+    layer3: number;
   }
 }
 
 const Grid3DLabels: React.FC<Grid3DLabelsProps> = ({ layerBlockCounts }) => {
   const isMobile = useIsMobile();
+  
+  // Default values if not provided
+  const counts = layerBlockCounts || { layer1: 0, layer2: 0, layer3: 0 };
 
   return (
     <div className="grid-labels absolute w-full h-full pointer-events-none">
@@ -68,11 +73,11 @@ const Grid3DLabels: React.FC<Grid3DLabelsProps> = ({ layerBlockCounts }) => {
           <div className="text-[10px] text-white">
             <div className="flex justify-between">
               <span className="text-white">Layer 2:</span>
-              <span className={layerBlockCounts.layer2 > 8 ? "text-red-400" : "text-white"}>{layerBlockCounts.layer2}/8</span>
+              <span className={counts.layer2 > 8 ? "text-red-400" : "text-white"}>{counts.layer2}/8</span>
             </div>
             <div className="flex justify-between">
               <span className="text-white">Layer 3:</span>
-              <span className="text-white">0/5</span>
+              <span className={counts.layer3 > 5 ? "text-red-400" : "text-white"}>{counts.layer3}/5</span>
             </div>
           </div>
         </div>

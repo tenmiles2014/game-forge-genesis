@@ -43,7 +43,7 @@ const Game3D: React.FC = () => {
   const gravityTimerRef = useRef<number | null>(null);
   const gameBoardRef = useRef<HTMLDivElement>(null);
   const [linesCleared, setLinesCleared] = useState(0);
-  const [layerBlockCounts, setLayerBlockCounts] = useState({ layer1: 0, layer2: 0 });
+  const [layerBlockCounts, setLayerBlockCounts] = useState({ layer1: 0, layer2: 0, layer3: 0 });
   const [blinkingLayers, setBlinkingLayers] = useState<Array<{
     type: 'row' | 'column' | 'layer', 
     y?: number, 
@@ -92,10 +92,11 @@ const Game3D: React.FC = () => {
     console.log(`Level ${currentLevel}: Blocks per layer: `, 
       layerBlockCounts.map((count, idx) => `Layer ${idx + 1}: ${count}`).join(', '));
     
-    // Update the layer block counts state
+    // Update the layer block counts state with all three layers
     setLayerBlockCounts({
-      layer1: layerBlockCounts[1],
-      layer2: layerBlockCounts[2]
+      layer1: layerBlockCounts[0],
+      layer2: layerBlockCounts[1],
+      layer3: layerBlockCounts[2]
     });
       
     return layerBlockCounts;
@@ -138,7 +139,7 @@ const Game3D: React.FC = () => {
     setGamePaused(true);
     
     // Reset layer block counts without affecting layout
-    setLayerBlockCounts({ layer1: 0, layer2: 0 });
+    setLayerBlockCounts({ layer1: 0, layer2: 0, layer3: 0 });
     
     // Reset the countdown counter
     setLayersUntilCollision(0);
@@ -844,7 +845,7 @@ const Game3D: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-white">Layer 3:</span>
-                  <span className="text-white">0/5</span>
+                  <span className={layerBlockCounts.layer3 > 5 ? "text-red-400" : "text-white"}>{layerBlockCounts.layer3}/5</span>
                 </div>
               </div>
             </div>
@@ -927,7 +928,7 @@ const Game3D: React.FC = () => {
               </div>
               <div className="flex justify-between items-center mt-1">
                 <span>Layer 3:</span>
-                <span>0/5</span>
+                <span className={layerBlockCounts.layer3 > 5 ? "text-red-400" : ""}>{layerBlockCounts.layer3}/5</span>
               </div>
             </div>
           </div>
