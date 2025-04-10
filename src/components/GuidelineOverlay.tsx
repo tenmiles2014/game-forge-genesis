@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Info, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -68,6 +67,10 @@ const GuidelineOverlay: React.FC = () => {
                 <li>Level up for bigger score multipliers (but faster drop speed).</li>
               </ul>
             </div>
+            
+            <div className="text-center text-xs text-gray-400 mt-6">
+              © 2025 by Joseph Lin. All rights reserved.
+            </div>
           </div>
         </div>
       )}
@@ -76,4 +79,3 @@ const GuidelineOverlay: React.FC = () => {
 };
 
 export default GuidelineOverlay;
-
