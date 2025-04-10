@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { CircleHelp } from 'lucide-react';
+import { CircleHelp, Package } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -20,9 +20,21 @@ interface Grid3DLabelsProps {
 
 const Grid3DLabels: React.FC<Grid3DLabelsProps> = ({ layerBlockCounts }) => {
   const isMobile = useIsMobile();
+  const [buildVersion, setBuildVersion] = useState(0);
   
   // Default values if not provided
   const counts = layerBlockCounts || { layer1: 0, layer2: 0, layer3: 0 };
+
+  // Increment build version on component mount
+  useEffect(() => {
+    // Get current build version from localStorage or initialize at 1
+    const currentVersion = parseInt(localStorage.getItem('buildVersion') || '0', 10);
+    const newVersion = currentVersion + 1;
+    
+    // Save updated version to localStorage
+    localStorage.setItem('buildVersion', newVersion.toString());
+    setBuildVersion(newVersion);
+  }, []);
 
   return (
     <div className="grid-labels absolute w-full h-full pointer-events-none">
@@ -79,6 +91,15 @@ const Grid3DLabels: React.FC<Grid3DLabelsProps> = ({ layerBlockCounts }) => {
               <span className="text-white">Layer 3:</span>
               <span className={counts.layer3 > 5 ? "text-red-400" : "text-white"}>{counts.layer3}/5</span>
             </div>
+          </div>
+          
+          {/* Build version display */}
+          <div className="flex items-center justify-between mt-1 pt-1 border-t border-white/20">
+            <div className="flex items-center text-[10px] text-white">
+              <Package className="h-2.5 w-2.5 mr-1 text-white/70" />
+              <span>Build:</span>
+            </div>
+            <span className="text-[10px] text-white/80">v{buildVersion}</span>
           </div>
         </div>
       )}
